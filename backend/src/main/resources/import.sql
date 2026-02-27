@@ -1,0 +1,2 @@
+INSERT INTO users (id, email, password_hash, first_name, last_name, authority) VALUES ('00000000-0000-0000-0000-000000000001', 'admin@expmatik.com', 'admin123', 'David', 'Admin', 'ADMINISTRATOR');
+INSERT INTO users (id, email, password_hash, first_name, last_name, authority) VALUES ('00000000-0000-0000-0000-000000000002', 'repo@expmatik.com', 'repo123', 'Juan', 'Reponedor', 'MAINTAINER');

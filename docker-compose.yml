@@ -2,10 +2,8 @@ services:
   postgres:
     image: postgres:15
     container_name: expmatik-postgres
-    environment:
-      POSTGRES_DB: expmatik
-      POSTGRES_USER: expmatik
-      POSTGRES_PASSWORD: expmatik
+    env_file:
+      - ./backend/.env
     ports:
       - "5432:5432"
     volumes:
@@ -18,10 +16,9 @@ services:
       - "8080:8080"
     depends_on:
       - postgres
+    env_file:
+      - ./backend/.env
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/expmatik
-      SPRING_DATASOURCE_USERNAME: expmatik
-      SPRING_DATASOURCE_PASSWORD: expmatik
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
 
   frontend:
