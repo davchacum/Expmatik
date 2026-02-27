@@ -26,7 +26,6 @@ public class User extends BaseEntity{
     @Column(name = "username", nullable = false, unique = true, length = 100)
     private String email;
 
-    //Hash contraseña
     @NotBlank
     @Size(max = 255)
     @Column(name = "password_hash", nullable = false, length = 255)
