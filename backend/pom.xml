@@ -8,10 +8,10 @@
 		<version>3.5.10</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.vending</groupId>
-	<artifactId>vending-backend</artifactId>
+	<groupId>com.expmatik</groupId>
+	<artifactId>expmatik-backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>vending-backend</name>
+	<name>expmatik-backend</name>
 	<description>TFG project</description>
 	<url/>
 	<licenses>
