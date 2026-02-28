@@ -1,2 +1,3 @@
-INSERT INTO users (id, email, password_hash, first_name, last_name, authority) VALUES ('00000000-0000-0000-0000-000000000001', 'admin@expmatik.com', 'admin123', 'David', 'Admin', 'ADMINISTRATOR');
-INSERT INTO users (id, email, password_hash, first_name, last_name, authority) VALUES ('00000000-0000-0000-0000-000000000002', 'repo@expmatik.com', 'repo123', 'Juan', 'Reponedor', 'MAINTAINER');
+-- admin123          repo123
+INSERT INTO users (id, email, password_hash, first_name, last_name, authority) VALUES ('00000000-0000-0000-0000-000000000001', 'admin@expmatik.com', '$2a$10$5BGIgOYcf7HuuDRAc4bZAeLd89eMmQ9GF74PZYhfm430Kyj9vzV.W', 'Admin', 'Admin', 'ADMINISTRATOR');
+INSERT INTO users (id, email, password_hash, first_name, last_name, authority) VALUES ('00000000-0000-0000-0000-000000000002', 'repo@expmatik.com', '$2a$10$cY1q1xQ/c/1Is.GmrygolOdbesLtX2MmzhAEyOUB5M/T.zQXnjeuW', 'Reponedor', 'Reponedor', 'MAINTAINER');

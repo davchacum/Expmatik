@@ -16,3 +16,16 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+jwt:
+  secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationMustBeAtLeast256BitsLongForHS256Algorithm}
+  expiration: ${JWT_EXPIRATION:86400000} # 24 horas en milisegundos
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
