@@ -12,14 +12,18 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: create-drop
+    defer-datasource-initialization: true
     show-sql: true
     properties:
       hibernate:
         format_sql: true
-
+  sql:
+    init:
+      mode: always
 jwt:
-  secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationMustBeAtLeast256BitsLongForHS256Algorithm}
-  expiration: ${JWT_EXPIRATION:86400000} # 24 horas en milisegundos
+  expiration-at: ${JWT_EXPIRATION_AT:900000}
+  expiration-rt: ${JWT_EXPIRATION_RT:604800000}
+  secret-key: ${JWT_SECRET_KEY:bient7UNdfnJQwSCieEN3mH/6APi7s7pyWwCmwWyHQY=}
 
 springdoc:
   api-docs:

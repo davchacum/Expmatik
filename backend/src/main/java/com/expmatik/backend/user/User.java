@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "users")
+@Table(name = "app_user")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -31,8 +31,8 @@ public class User extends BaseEntity{
 
     @NotBlank
     @Size(max = 255)
-    @Column(name = "password_hash", nullable = false, length = 255)
-    private String passwordHash;
+    @Column(name = "password", nullable = false, length = 255)
+    private String password;
 
     @NotBlank
     @Size(max = 100)
@@ -46,7 +46,7 @@ public class User extends BaseEntity{
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "authority", nullable = false)
-    private Authorities authority;
+    @Column(name = "role", nullable = false)
+    private Role role;
 
 }

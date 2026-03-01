@@ -1,105 +1,138 @@
 package com.expmatik.backend.auth;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.expmatik.backend.auth.dto.AuthResponse;
-import com.expmatik.backend.auth.dto.LoginRequest;
-import com.expmatik.backend.auth.dto.LogoutResponse;
-import com.expmatik.backend.auth.dto.RegisterRequest;
+import com.expmatik.backend.auth.DTOs.AuthRequest;
+import com.expmatik.backend.auth.DTOs.AuthRequestLogin;
+import com.expmatik.backend.auth.DTOs.AuthResponse;
+import com.expmatik.backend.auth.DTOs.AuthResult;
+import com.expmatik.backend.auth.DTOs.RefreshTokenRequest;
+import com.expmatik.backend.auth.DTOs.ValidateTokenResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*", maxAge = 3600)
-@Tag(name = "Autenticación", description = "Endpoints para registro, login y gestión de tokens JWT")
+@Tag(name = "Authentication", description = "Endpoints para autenticación y autorización")
 public class AuthController {
 
-    @Autowired
-    private AuthService authService;
+    private final int secondsExpirationRt;
+    private final AuthService authService;
 
-    @Operation(summary = "Registrar nuevo usuario", description = "Crea una nueva cuenta de usuario y devuelve un token JWT")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Usuario registrado exitosamente",
-                content = @Content(schema = @Schema(implementation = AuthResponse.class))),
-        @ApiResponse(responseCode = "400", description = "Error en los datos proporcionados o email ya registrado",
-                content = @Content)
-    })
+    public AuthController(AuthService authService, @Value("${jwt.expiration-rt}") int expirationRt) {
+        this.authService = authService;
+        this.secondsExpirationRt = expirationRt/1000;
+
+    }
+
     @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
-        try {
-            AuthResponse response = authService.register(request);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Error al registrar usuario: " + e.getMessage());
-        }
+    @Operation(summary = "Registrar nuevo usuario", description = "Crea una nueva cuenta de usuario")
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody AuthRequest request, HttpServletResponse response) {
+        AuthResult registerRes = authService.register(request.email(), request.password(), request.deviceId(), request.role(), request.firstName(), request.lastName());
+        Cookie cookie = new Cookie("refresh_token", registerRes.refreshToken());
+        cookie.setMaxAge(secondsExpirationRt);
+        cookie.setSecure(false);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        AuthResponse authResponse = new AuthResponse(registerRes.accessToken(), registerRes.role());
+        response.addCookie(cookie);
+        return ResponseEntity.ok().body(authResponse);
     }
 
-    @Operation(summary = "Iniciar sesión", description = "Autentica un usuario y devuelve un token JWT")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Login exitoso",
-                content = @Content(schema = @Schema(implementation = AuthResponse.class))),
-        @ApiResponse(responseCode = "401", description = "Credenciales inválidas",
-                content = @Content)
-    })
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
-        try {
-            AuthResponse response = authService.login(request);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Credenciales inválidas: " + e.getMessage());
-        }
+    @Operation(summary = "Iniciar sesión", description = "Autentica un usuario con email y contraseña")
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequestLogin request, HttpServletResponse response) {
+        AuthResult loginRes = authService.login(request.email(), request.password(), request.deviceId());
+        Cookie cookie = new Cookie("refresh_token", loginRes.refreshToken());
+        cookie.setMaxAge(secondsExpirationRt);
+        cookie.setSecure(false);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        AuthResponse authResponse = new AuthResponse(loginRes.accessToken(), loginRes.role());
+        response.addCookie(cookie);
+        return ResponseEntity.ok().body(authResponse);
     }
 
-    
-    @Operation(summary = "Cerrar sesión", 
-               description = "Invalida el token JWT del usuario autenticado agregándolo a una blacklist. Requiere autenticación.",
-               security = @SecurityRequirement(name = "bearerAuth"))
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Logout exitoso",
-                content = @Content(schema = @Schema(implementation = LogoutResponse.class))),
-        @ApiResponse(responseCode = "401", description = "No autenticado",
-                content = @Content),
-        @ApiResponse(responseCode = "400", description = "Token no válido",
-                content = @Content)
-    })
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletRequest request) {
-        try {
-            // Extraer el token del header Authorization
-            String authHeader = request.getHeader("Authorization");
-            
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("Token JWT no encontrado en la sesión");
-            }
-            
-            // Extraer el token (eliminar "Bearer ")
-            String token = authHeader.substring(7);
-            
-            LogoutResponse response = authService.logout(token);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Error al cerrar sesión: " + e.getMessage());
-        }
+    @PostMapping("/refresh")
+    @Operation(summary = "Refrescar token", description = "Obtiene un nuevo access token usando el refresh token")
+    @SecurityRequirement(name = "bearer-jwt")
+    public ResponseEntity<AuthResponse> refresh(@RequestBody RefreshTokenRequest refreshTokenRequest,
+                                                @CookieValue(value = "refresh_token", required = true) String token,
+                                                HttpServletResponse response) {
+        AuthResult refreshRes = authService.refreshToken(token, refreshTokenRequest.deviceId());
+        Cookie cookie = new Cookie("refresh_token", refreshRes.refreshToken());
+        cookie.setMaxAge(secondsExpirationRt);
+        cookie.setSecure(false);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        AuthResponse authResponse = new AuthResponse(refreshRes.accessToken(), refreshRes.role());
+        response.addCookie(cookie);
+        return ResponseEntity.ok().body(authResponse);
     }
+
+    @PostMapping("/logout")
+    @Operation(summary = "Cerrar sesión", description = "Invalida el refresh token y cierra la sesión")
+    @SecurityRequirement(name = "bearer-jwt")
+    public ResponseEntity<Void> logout(
+            @CookieValue(value = "refresh_token", required = true) String token,
+            @RequestBody RefreshTokenRequest refreshTokenRequest,
+            HttpServletResponse response) {
+
+        authService.logout(token, refreshTokenRequest.deviceId());
+
+        Cookie cookie = new Cookie("refresh_token", null);
+        cookie.setMaxAge(0);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false);
+        cookie.setPath("/");
+
+        response.addCookie(cookie);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/validate")
+    @Operation(summary = "Validar token", description = "Verifica si un token JWT es válido y no está expirado")
+    @SecurityRequirement(name = "bearer-jwt")
+    public ResponseEntity<ValidateTokenResponse> validateToken(
+            @RequestHeader(value = "Authorization", required = false) String authHeader
+    ) {
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.badRequest().body(
+                    new ValidateTokenResponse(false, "Missing token")
+            );
+        }
+
+        String token = authHeader.substring(7);
+
+        boolean valid = authService.validateAccessToken(token);
+
+        if (!valid) {
+            return ResponseEntity.ok(
+                    new ValidateTokenResponse(false, "Invalid or expired token")
+            );
+        }
+
+        return ResponseEntity.ok(new ValidateTokenResponse(true, "Token valid"));
+    }
+
 }
+
+
+

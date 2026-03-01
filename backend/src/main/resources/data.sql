@@ -1,0 +1,3 @@
+-- admin123          repo123
+INSERT INTO app_user (id, email, password, first_name, last_name, role) VALUES ('00000000-0000-0000-0000-000000000001', 'admin@expmatik.com', '$2a$10$XUck0ZZl9lU8iRQpWexSy.izAOIXNW7XowjPL2Q4DUlNeljX/2tGu', 'Admin', 'Admin', 'ADMINISTRATOR');
+INSERT INTO app_user (id, email, password, first_name, last_name, role) VALUES ('00000000-0000-0000-0000-000000000002', 'repo@expmatik.com', '$2a$10$HtXpXb2XGvjL8MeO4Zcn.ee0SSKMi5hHcyM5hAg3BH6Da3j1hqEb6', 'Reponedor', 'Reponedor', 'MAINTAINER');

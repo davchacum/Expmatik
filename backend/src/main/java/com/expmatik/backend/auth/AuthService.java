@@ -1,85 +1,172 @@
 package com.expmatik.backend.auth;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
+import java.util.Optional;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.expmatik.backend.auth.dto.AuthResponse;
-import com.expmatik.backend.auth.dto.LoginRequest;
-import com.expmatik.backend.auth.dto.LogoutResponse;
-import com.expmatik.backend.auth.dto.RegisterRequest;
+import com.expmatik.backend.auth.DTOs.AuthResult;
+import com.expmatik.backend.exceptions.InvalidHashException;
+import com.expmatik.backend.exceptions.InvalidPasswordException;
+import com.expmatik.backend.exceptions.InvalidRefreshTokenException;
+import com.expmatik.backend.exceptions.ResourceNotFoundException;
+import com.expmatik.backend.exceptions.UserExistsException;
+import com.expmatik.backend.jwt.JwtService;
+import com.expmatik.backend.user.RefreshToken;
+import com.expmatik.backend.user.RefreshTokenService;
+import com.expmatik.backend.user.Role;
 import com.expmatik.backend.user.User;
-import com.expmatik.backend.user.UserRepository;
+import com.expmatik.backend.user.UserService;
 
 @Service
 public class AuthService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserService userService;
+    private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    public AuthService(UserService userService, JwtService jwtService, RefreshTokenService refreshTokenService,
+            PasswordEncoder passwordEncoder) {
+        this.userService = userService;
+        this.jwtService = jwtService;
+        this.refreshTokenService = refreshTokenService;
+        this.passwordEncoder = passwordEncoder;
+    }
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    @Transactional
+    public AuthResult register(String email, String password, String deviceId, Role role, String firstName, String lastName) {
+        Optional<User> existingUser = userService.findByEmail(email);
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private TokenBlacklistService tokenBlacklistService;
-
-    public AuthResponse register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("El email ya está registrado");
+        if (existingUser.isPresent()) {
+            throw new UserExistsException("User already exists");
         }
-        User user = new User();
-        user.setEmail(request.getEmail());
-        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
-        user.setAuthority(request.getAuthority());
 
-        user = userRepository.save(user);
+        User newUser = new User();
+        newUser.setEmail(email);
+        newUser.setPassword(passwordEncoder.encode(password));
+        newUser.setRole(role);
+        newUser.setFirstName(firstName);
+        newUser.setLastName(lastName);
+        userService.save(newUser);
 
-        String token = jwtUtil.generateToken(user.getEmail());
+        String accessToken = jwtService.generateAccessTokenFromEmail(newUser.getEmail());
+        String refreshToken = jwtService.generateRefreshTokenFromEmail(newUser.getEmail());
 
-        return new AuthResponse(token, user.getEmail(), user.getFirstName(), user.getLastName());
+        RefreshToken newRefreshToken = new RefreshToken();
+        newRefreshToken.setToken(hashToken(refreshToken));
+        newRefreshToken.setExpiration(jwtService.getExpirarationFromToken(refreshToken));
+        newRefreshToken.setDeviceId(deviceId);
+        newRefreshToken.setUser(newUser);
+
+        refreshTokenService.save(newRefreshToken);
+
+        return new AuthResult(accessToken, refreshToken, newUser.getRole().name());
     }
 
-    public AuthResponse login(LoginRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-        );
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+    @Transactional
+    public AuthResult login(String email, String password, String deviceId) {
+        User user = userService.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        String token = jwtUtil.generateToken(user.getEmail());
+        boolean validPassword = passwordEncoder.matches(password, user.getPassword());
 
-        return new AuthResponse(token, user.getEmail(), user.getFirstName(), user.getLastName());
+        if (!validPassword) {
+            throw new InvalidPasswordException("Invalid password");
+        }
+
+        String accessToken = jwtService.generateAccessTokenFromEmail(user.getEmail());
+        String refreshToken = jwtService.generateRefreshTokenFromEmail(user.getEmail());
+
+        RefreshToken rt = refreshTokenService.findByUserAndDeviceId(user, deviceId);
+
+        rt.setToken(hashToken(refreshToken));
+        rt.setExpiration(jwtService.getExpirarationFromToken(refreshToken));
+        rt.setDeviceId(deviceId);
+        rt.setUser(user);
+
+        refreshTokenService.save(rt);
+
+        return new AuthResult(accessToken, refreshToken, user.getRole().name());
     }
 
-    public LogoutResponse logout(String token) {
+    @Transactional
+    public AuthResult refreshToken(String refreshToken, String deviceId) {
+
+        if (!jwtService.verifyToken(refreshToken)) {
+            throw new InvalidRefreshTokenException("Invalid Refresh Token");
+        }
+
+        String email = jwtService.getEmailFromToken(refreshToken);
+        User user = userService.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        RefreshToken storedToken = refreshTokenService.findByUserAndDeviceId(user, deviceId);
+
+        String incomingTokenHash = hashToken(refreshToken);
+        if (!incomingTokenHash.equals(storedToken.getToken())) {
+            throw new InvalidRefreshTokenException("Token does not match records");
+        }
+
+        if (storedToken.getExpiration().before(new java.util.Date())) {
+            refreshTokenService.delete(storedToken);
+            throw new InvalidRefreshTokenException("Refresh token expired");
+        }
+
+        String newAccessToken = jwtService.generateAccessTokenFromEmail(user.getEmail());
+        String newRefreshToken = jwtService.generateRefreshTokenFromEmail(user.getEmail());
+
+        storedToken.setToken(hashToken(newRefreshToken));
+        storedToken.setExpiration(jwtService.getExpirarationFromToken(newRefreshToken));
+
+        refreshTokenService.save(storedToken);
+
+        return new AuthResult(newAccessToken, newRefreshToken, user.getRole().name());
+    }
+
+    @Transactional
+    public void logout(String refreshToken, String deviceId) {
+
+        if (!jwtService.verifyToken(refreshToken)) {
+            throw new InvalidRefreshTokenException("Invalid Refresh Token");
+        }
+
+        String username = jwtService.getEmailFromToken(refreshToken);
+
+        User user = userService.findByEmail(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        RefreshToken storedToken = refreshTokenService.findByUserAndDeviceId(user, deviceId);
+
+        String incomingTokenHash = hashToken(refreshToken);
+
+        if (!incomingTokenHash.equals(storedToken.getToken())) {
+            throw new InvalidRefreshTokenException("Token does not match records");
+        }
+
+        refreshTokenService.delete(storedToken);
+    }
+
+    public boolean validateAccessToken(String token) {
+        return jwtService.verifyToken(token);
+    }
+
+    private String hashToken(String token) {
         try {
-            System.out.println("=== Iniciando logout ===");
-            System.out.println("Token recibido: " + token.substring(0, Math.min(20, token.length())) + "...");
-            
-            String email = jwtUtil.extractEmail(token);
-            System.out.println("Email del token: " + email);
-            
-            java.util.Date expirationDate = jwtUtil.extractExpiration(token);
-            System.out.println("Fecha de expiración: " + expirationDate);
-            
-            tokenBlacklistService.blacklistToken(token, expirationDate);
-            
-            System.out.println("=== Logout completado ===");
-            return new LogoutResponse("Sesión cerrada correctamente", true, email);
-        } catch (Exception e) {
-            System.out.println("Error en logout: " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("Error al cerrar sesión: " + e.getMessage());
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
+            return Base64.getEncoder().encodeToString(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new InvalidHashException("Error hashing token");
         }
     }
+
 }
+
+
+
