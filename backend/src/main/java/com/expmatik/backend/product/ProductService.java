@@ -13,6 +13,7 @@ import com.expmatik.backend.exceptions.ConflictException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
 import com.expmatik.backend.file.FileStorageService;
 import com.expmatik.backend.product.DTOs.ProductCreate;
+import com.expmatik.backend.product.DTOs.ProductCreateCustom;
 
 
 @Service
@@ -28,8 +29,8 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public Product findByBarcode(String barcode) {
-        return productRepository.findByBarcode(barcode)
+    public Product findByBarcode(UUID userId,String barcode) {
+        return productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with barcode: " + barcode));
     }
 
@@ -45,8 +46,26 @@ public class ProductService {
     }
 
     public void checkUniqueBarcode(String barcode) {
-        if (productRepository.findByBarcode(barcode).isPresent()) {
+        if (productRepository.findByBarcodeAndIsCustomFalse(barcode).isPresent()) {
             throw new ConflictException("A product with this barcode already exists.");
+        }
+    }
+
+    public void checkUniqueBarcodeCustom(String barcode, UUID userId) {
+        if (productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId).isPresent()) {
+            throw new ConflictException("A product with this barcode already exists.");
+        }
+    }
+
+    public void checkUniqueName(String name) {
+        if (productRepository.findByNameAndIsCustomFalse(name).isPresent()) {
+            throw new ConflictException("A product with this name already exists.");
+        }
+    }
+
+    public void checkUniqueNameCustom(String name, UUID userId) {
+        if (productRepository.findByNameAndIsCustomFalseOrNameAndIsCustomTrueAndCreatedById(name, userId).isPresent()) {
+            throw new ConflictException("A product with this name already exists.");
         }
     }
     
@@ -105,11 +124,61 @@ public class ProductService {
         return productRepository.findByIsCustomFalse();
     }
 
+    @Transactional(readOnly = true)
+    public List<Product> searchAllProducts(UUID userId, String name, String brand, String barcode) {
+        List<Product> results = new java.util.ArrayList<>();
+        
+        // Si se proporciona código de barras, búsqueda exacta (catálogo solo)
+        if (barcode != null && !barcode.isBlank()) {
+            var product = productRepository.findByBarcodeAndIsCustomFalse(barcode);
+            if (product.isPresent()) {
+                results.add(product.get());
+            }
+            return results;
+        }
+        
+        // Si se proporcionan nombre y marca
+        if (name != null && !name.isBlank() && brand != null && !brand.isBlank()) {
+            results.addAll(productRepository.findByNameContainingIgnoreCaseAndBrandContainingIgnoreCaseAndIsCustomFalse(name, brand));
+            results.addAll(productRepository.findByIsCustomTrueAndNameContainingIgnoreCaseAndBrandContainingIgnoreCaseAndCreatedById(name, brand, userId));
+            return results;
+        }
+        
+        // Si solo se proporciona nombre
+        if (name != null && !name.isBlank()) {
+            results.addAll(productRepository.findByNameContainingIgnoreCaseAndIsCustomFalse(name));
+            results.addAll(productRepository.findByIsCustomTrueAndNameContainingIgnoreCaseAndCreatedById(name, userId));
+            return results;
+        }
+        
+        // Si solo se proporciona marca
+        if (brand != null && !brand.isBlank()) {
+            results.addAll(productRepository.findByBrandContainingIgnoreCaseAndIsCustomFalse(brand));
+            results.addAll(productRepository.findByIsCustomTrueAndBrandContainingIgnoreCaseAndCreatedById(brand, userId));
+            return results;
+        }
+        
+        // Si no hay filtros, devuelve catálogo + todos mis productos personalizados
+        results.addAll(productRepository.findByIsCustomFalse());
+        results.addAll(productRepository.findByIsCustomTrueAndCreatedById(userId));
+        return results;
+    }
+
+
     @Transactional
-    public Product createProduct(ProductCreate productDTO,MultipartFile image,String imageUrl) {
+    public Product createProduct(UUID userId, ProductCreate productDTO,String imageUrl) {
         Product product = productDTO.toEntity();
         checkUniqueBarcode(product.getBarcode());
-        return updateProductImage(product, image, imageUrl);
+        checkUniqueName(product.getName());
+        return updateProductImage(product, null, imageUrl);
+    }
+
+    @Transactional
+    public Product createProductCustom(UUID userId, ProductCreateCustom productDTO,MultipartFile image) {
+        Product product = productDTO.toEntity();
+        checkUniqueBarcodeCustom(product.getBarcode(), userId);
+        checkUniqueNameCustom(product.getName(), userId);
+        return updateProductImage(product, image, null);
     }
     
 }

@@ -23,7 +23,7 @@ import lombok.Setter;
 public class Product extends BaseEntity{
 
     @NotBlank
-    @Column(name = "name",nullable = false, unique = true,length = 100)
+    @Column(name = "name",nullable = false,length = 100)
     @Size(max = 100)
     private String name;
 
@@ -36,7 +36,8 @@ public class Product extends BaseEntity{
     @Size(max = 1000,min = 0)
     private String description;
 
-    @Column(name = "image_url",length = 1000)
+    @NotNull
+    @Column(name = "image_url",length = 1000, nullable = false)
     @Size(max = 1000)
     private String imageUrl;
 
@@ -45,7 +46,7 @@ public class Product extends BaseEntity{
     private Boolean isPerishable;
 
     @NotBlank
-    @Column(name = "barcode",nullable = false, unique = true,length = 20)
+    @Column(name = "barcode",nullable = false,length = 20)
     @Size(max = 20)
     private String barcode;
 

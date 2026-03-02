@@ -14,7 +14,8 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.expmatik.backend.product.DTOs.ProductCreate;
+import com.expmatik.backend.product.DTOs.ProductCreateCustom;
+import com.expmatik.backend.user.User;
 import com.expmatik.backend.user.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,7 +37,7 @@ public class ProductController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getProductById(@PathVariable UUID id) {
         Product product = productService.findById(id);
-        if(product.getIsCustom() && product.getCreatedBy().equals(userService.getUserProfile())) {
+        if(product.getIsCustom() && !product.getCreatedBy().getId().equals(userService.getUserProfile().getId())) {
             return ResponseEntity.badRequest().body("You are not authorized to view this product.");
         }
         return ResponseEntity.ok(productService.findById(id));
@@ -44,11 +45,8 @@ public class ProductController {
 
     @GetMapping("/barcode/{barcode}")
     public ResponseEntity<?> getProductByBarcode(@PathVariable String barcode) {
-        Product product = productService.findByBarcode(barcode);
-        if(product.getIsCustom() && product.getCreatedBy().equals(userService.getUserProfile())) {
-            return ResponseEntity.badRequest().body("You are not authorized to view this product.");
-        }
-        return ResponseEntity.ok(productService.findByBarcode(barcode));
+        User currentUser = userService.getUserProfile();
+        return ResponseEntity.ok(productService.findByBarcode(currentUser.getId(), barcode));
     }
 
     @PutMapping("/{id}/image")
@@ -64,33 +62,54 @@ public class ProductController {
         return ResponseEntity.ok(updatedProduct);
     }
 
-    @GetMapping("/custom/user/{userId}")
+    @GetMapping("/custom")
     @Operation(summary = "Obtener productos personalizados por usuario", description = "Devuelve una lista de productos personalizados creados por un usuario específico")
-    public ResponseEntity<?> getCustomProductsByUserId(@PathVariable UUID userId) {
-        return ResponseEntity.ok(productService.getCustomProductsByUserId(userId));
+    public ResponseEntity<?> getCustomProductsByUserId() {
+        User currentUser = userService.getUserProfile();
+        return ResponseEntity.ok(productService.getCustomProductsByUserId(currentUser.getId()));
     }
 
-    @GetMapping("/non-custom")
-    @Operation(summary = "Obtener productos no personalizados", description = "Devuelve una lista de productos no personalizados")
-    public ResponseEntity<?> getAllNonCustomProducts() {
-        return ResponseEntity.ok(productService.getAllNonCustomProducts());
+    @GetMapping
+    @Operation(summary = "Buscar productos", description = "Devuelve una lista de productos no personalizados (catálogo) + productos personalizados del usuario autenticado. Soporta filtros opcionales por nombre, marca y código de barras")
+    public ResponseEntity<?> searchAllProducts(
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "brand", required = false) String brand,
+            @RequestParam(value = "barcode", required = false) String barcode
+    ) {
+        User currentUser = userService.getUserProfile();
+        return ResponseEntity.ok(productService.searchAllProducts(currentUser.getId(), name, brand, barcode));
     }
 
-    @PostMapping(consumes = "multipart/form-data")
+    @PostMapping(value = "/custom", consumes = "multipart/form-data")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     @Operation(summary = "Crear nuevo producto", description = "Crea un nuevo producto personalizado o no personalizado. Para productos personalizados se requiere un archivo de imagen, para no personalizados se requiere una URL de imagen.")
-    public ResponseEntity<?> createProduct(
+    public ResponseEntity<?> createCustomProduct(
             @RequestParam("name") String name,
             @RequestParam("brand") String brand,
             @RequestParam(value = "description", required = false) String description,
             @RequestParam(value = "isPerishable", required = false, defaultValue = "false") Boolean isPerishable,
             @RequestParam("barcode") String barcode,
-            @RequestParam(value = "isCustom", required = false, defaultValue = "false") Boolean isCustom,
-            @RequestPart(value = "file", required = false) MultipartFile file,
-            @RequestParam(value = "imageUrl", required = false) String imageUrl
+            @RequestPart(value = "file", required = false) MultipartFile file
     ) {
-        ProductCreate productDTO = new ProductCreate(name, brand, description, isPerishable, barcode, isCustom);
-        Product createdProduct = productService.createProduct(productDTO, file, imageUrl);
+        
+        User currentUser = userService.getUserProfile();
+        ProductCreateCustom productDTO = new ProductCreateCustom(name, brand, description, isPerishable, barcode, file,currentUser);
+        Product createdProduct = productService.createProductCustom(currentUser.getId(), productDTO, file);
         return ResponseEntity.ok(createdProduct);
+    }
+
+    @PostMapping(value = "/non-custom", consumes = "multipart/form-data")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    @Operation(summary = "Crear nuevo producto no personalizado", description = "Crea un nuevo producto no personalizado. Se requiere una URL de imagen.")
+    public ResponseEntity<?> createNonCustomProduct(
+            @RequestParam("name") String name,
+            @RequestParam("barcode") String barcode
+    ) {
+        //LLAMADA A LA API EXTERNA PARA OBTENER DATOS DE PRODUCTO A PARTIR DEL CÓDIGO DE BARRAS
+        // ProductCreate productDTO = new ProductCreate(name, brand, description, isPerishable, barcode, isCustom);
+        // User currentUser = userService.getUserProfile();
+        // Product createdProduct = productService.createProduct(currentUser.getId(), productDTO, null, imageUrl);
+        // return ResponseEntity.ok(createdProduct);
+        return ResponseEntity.badRequest().body("Creating non-custom products is not supported yet. Please provide more details on the required fields.");
     }
 }
