@@ -1,15 +1,17 @@
 package com.expmatik.backend.exceptions;
 
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.http.converter.HttpMessageNotReadableException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -78,6 +80,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
     }
 
+    @ExceptionHandler(FileSizeExceededException.class)
+    @ResponseStatus(value = HttpStatus.PAYLOAD_TOO_LARGE)
+    public ResponseEntity<ErrorResponse> fileSizeExceededException(FileSizeExceededException ex) {
+        ErrorResponse message = new ErrorResponse(ex.getMessage(), HttpStatus.PAYLOAD_TOO_LARGE.value(), new Date());
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(message);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(value = HttpStatus.BAD_REQUEST)
     public ResponseEntity<Map<String, Object>> methodArgumentNotValidException(MethodArgumentNotValidException ex) {
@@ -101,6 +110,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> httpMessageNotReadableException(HttpMessageNotReadableException ex) {
         ErrorResponse message = new ErrorResponse("Invalid request body: " + ex.getMessage(), HttpStatus.BAD_REQUEST.value(), new Date());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    @ResponseStatus(value = HttpStatus.PAYLOAD_TOO_LARGE)
+    public ResponseEntity<ErrorResponse> max2mbUploadSizeExceededException(MaxUploadSizeExceededException ex) {
+        ErrorResponse message = new ErrorResponse("File size exceeds maximum allowed size (2MB)", HttpStatus.PAYLOAD_TOO_LARGE.value(), new Date());
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(message);
     }
 
     @ExceptionHandler(Exception.class)

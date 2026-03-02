@@ -34,11 +34,11 @@ public class Product extends BaseEntity{
 
     @Column(name = "description",length = 1000)
     @Size(max = 1000,min = 0)
-    private String description = "";
+    private String description;
 
     @Column(name = "image_url",length = 1000)
     @Size(max = 1000)
-    private String imageUrl = "";
+    private String imageUrl;
 
     @NotNull
     @Column(name = "is_perishable",nullable = false)
