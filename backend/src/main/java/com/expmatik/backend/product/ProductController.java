@@ -3,6 +3,7 @@ package com.expmatik.backend.product;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -51,6 +52,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}/image")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     @Operation(summary = "Actualizar imagen del producto", description = "Sube un archivo (productos personalizados) o establece una URL (productos no personalizados)")
     public ResponseEntity<?> updateProductImage(
             @PathVariable UUID id,
@@ -75,6 +77,7 @@ public class ProductController {
     }
 
     @PostMapping(consumes = "multipart/form-data")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     @Operation(summary = "Crear nuevo producto", description = "Crea un nuevo producto personalizado o no personalizado. Para productos personalizados se requiere un archivo de imagen, para no personalizados se requiere una URL de imagen.")
     public ResponseEntity<?> createProduct(
             @RequestParam("name") String name,

@@ -7,6 +7,7 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -117,6 +118,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> max2mbUploadSizeExceededException(MaxUploadSizeExceededException ex) {
         ErrorResponse message = new ErrorResponse("File size exceeds maximum allowed size (2MB)", HttpStatus.PAYLOAD_TOO_LARGE.value(), new Date());
         return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(message);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(value = HttpStatus.FORBIDDEN)
+    public ResponseEntity<ErrorResponse> accessDeniedException(AccessDeniedException ex) {
+        ErrorResponse message = new ErrorResponse("Access denied: " + ex.getMessage(), HttpStatus.FORBIDDEN.value(), new Date());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(message);
     }
 
     @ExceptionHandler(Exception.class)
