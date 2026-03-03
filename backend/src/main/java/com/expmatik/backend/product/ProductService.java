@@ -26,6 +26,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class ProductService {
 
     private static final String OpenFoodFactsApiUrl = "https://world.openfoodfacts.org/api/v3/product/";
+    private static final long MIN_WAIT_INTERVAL = 700; 
+    private long lastCallTimestamp = 0;
 
     private final ProductRepository productRepository;
     private final FileStorageService fileStorageService;
@@ -53,27 +55,71 @@ public class ProductService {
         return productRepository.save(product);
     }
 
-    private Optional<JsonNode> findProductInOpenFoodFacts(String barcode) {
+    private synchronized void controlRateLimit() {
+        long now = System.currentTimeMillis();
+        long timeSinceLastCall = now - lastCallTimestamp;
+
+        if (timeSinceLastCall < MIN_WAIT_INTERVAL) {
+            try {
+                // El hilo se duerme el tiempo que falta para cumplir el intervalo
+                Thread.sleep(MIN_WAIT_INTERVAL - timeSinceLastCall);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        // Actualizamos el timestamp al momento actual (post-espera)
+        lastCallTimestamp = System.currentTimeMillis();
+    }
+
+    @Transactional(readOnly = true)
+    Optional<Product> findProductInOpenFoodFacts(String barcode) {
+        controlRateLimit(); // Controlar el rate limit antes de hacer la llamada
+        
         ObjectMapper mapper = new ObjectMapper();
         try {
             String apiUrl = OpenFoodFactsApiUrl + barcode;
             URL url = URI.create(apiUrl).toURL();
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
+            connection.setRequestProperty("User-Agent", "Expmatik - Universidad de Sevilla - TFG - (davchacum@alum.us.es)");
+
+            connection.setConnectTimeout(5000);
+            connection.setReadTimeout(5000);
+
             
             JsonNode response = mapper.readTree(connection.getInputStream());
             String status = response.path("status").asText();
             
             // Si el producto no fue encontrado, devolver Optional vacío
             if ("failure".equals(status) || "product_not_found".equals(response.path("result").path("id").asText())) {
-                return java.util.Optional.empty();
+                return Optional.empty();
             }
+                    if (response.isEmpty()) {
+            throw new ResourceNotFoundException("Product not found with barcode: " + barcode);
+            }
+        
+            String name = response.path("product").path("product_name_es").asText();
+            String brand = response.path("product").path("brands").asText();
+            String description = response.path("product").path("generic_name_es").asText();
+            String quantity = response.path("product").path("quantity").asText();
+            name = name + " " + quantity;
+            String imageUrl = response.path("product").path("image_url").asText();
             
-            return java.util.Optional.of(response);
+            Product product = new Product();
+            product.setName(name);
+            product.setBrand(brand);
+            product.setDescription(description);
+            product.setImageUrl(imageUrl);
+            product.setIsPerishable(true);
+            product.setBarcode(barcode);
+            product.setIsCustom(false);
+            product.setCreatedBy(null);
+            product.setImageUrl(imageUrl);
+            return Optional.of(product);
         } catch (IOException e) {
             // Si hay error de conexión, devolver Optional vacío
             System.err.println("Error connecting to Open Food Facts API: " + e.getMessage());
-            return java.util.Optional.empty();
+            return Optional.empty();
         }
     }
 
@@ -89,7 +135,7 @@ public class ProductService {
             throw new ConflictException("A product with this barcode already exists.");
         }
 
-        Optional<JsonNode> openFoodFactsProduct = findProductInOpenFoodFacts(barcode);
+        Optional<Product> openFoodFactsProduct = findProductInOpenFoodFacts(barcode);
         
         if (openFoodFactsProduct.isPresent()) {
             throw new ConflictException("A product with this barcode already exists in the external catalog.");
@@ -204,31 +250,15 @@ public class ProductService {
 
         checkUniqueBarcode(barcode);
 
-        Optional<JsonNode> responseOpt = findProductInOpenFoodFacts(barcode);
+        Optional<Product> openFoodFactsProduct = findProductInOpenFoodFacts(barcode);
         
-        if (responseOpt.isEmpty()) {
-            throw new ResourceNotFoundException("Product not found with barcode: " + barcode);
+        if (openFoodFactsProduct.isEmpty()) {
+            throw new ResourceNotFoundException("Product not found in OpenFoodFacts");
         }
         
-        JsonNode response = responseOpt.get();
-        String name = response.path("product").path("product_name_es").asText();
-        String brand = response.path("product").path("brands").asText();
-        String description = response.path("product").path("generic_name_es").asText();
-        String quantity = response.path("product").path("quantity").asText();
-        name = name + " " + quantity;
-        String imageUrl = response.path("product").path("image_url").asText();
-        
-        Product product = new Product();
-        product.setName(name);
-        product.setBrand(brand);
-        product.setDescription(description);
-        product.setImageUrl(imageUrl);
-        product.setIsPerishable(true);
-        product.setBarcode(barcode);
+        Product product = openFoodFactsProduct.get();
         product.setIsCustom(false);
-        product.setCreatedBy(null);
-        product = updateProductImage(product, null, imageUrl);
-        
+        product = updateProductImage(product, null, product.getImageUrl());
         return product;
     }
 }

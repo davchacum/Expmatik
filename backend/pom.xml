@@ -101,6 +101,11 @@
 			<artifactId>nimbus-jose-jwt</artifactId>
 			<version>9.37.3</version>
 		</dependency>
+		<dependency>
+			<groupId>com.giffing.bucket4j.spring.boot.starter</groupId>
+			<artifactId>bucket4j-spring-boot-starter</artifactId>
+			<version>0.8.0</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
