@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.expmatik.backend.product.DTOs.ProductCreateCustom;
 import com.expmatik.backend.user.User;
 import com.expmatik.backend.user.UserService;
+import com.expmatik.backend.validation.ValidBarcode;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,6 +26,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RestController
 @RequestMapping("/api/products")
 @Tag(name = "Products", description = "Endpoints para gestionar productos e imágenes")
+@Validated
 public class ProductController {
 
     private final ProductService productService;
@@ -44,7 +47,7 @@ public class ProductController {
     }
 
     @GetMapping("/barcode/{barcode}")
-    public ResponseEntity<?> getProductByBarcode(@PathVariable String barcode) {
+    public ResponseEntity<?> getProductByBarcode(@PathVariable @ValidBarcode String barcode) {
         User currentUser = userService.getUserProfile();
         return ResponseEntity.ok(productService.findByBarcode(currentUser.getId(), barcode));
     }
@@ -74,7 +77,7 @@ public class ProductController {
     public ResponseEntity<?> searchAllProducts(
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "brand", required = false) String brand,
-            @RequestParam(value = "barcode", required = false) String barcode
+            @RequestParam(value = "barcode", required = false) @ValidBarcode String barcode
     ) {
         User currentUser = userService.getUserProfile();
         return ResponseEntity.ok(productService.searchAllProducts(currentUser.getId(), name, brand, barcode));
@@ -86,9 +89,9 @@ public class ProductController {
     public ResponseEntity<?> createCustomProduct(
             @RequestParam("name") String name,
             @RequestParam("brand") String brand,
-            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "description", required = false, defaultValue = "") String description,
             @RequestParam(value = "isPerishable", required = false, defaultValue = "false") Boolean isPerishable,
-            @RequestParam("barcode") String barcode,
+            @RequestParam("barcode") @ValidBarcode String barcode,
             @RequestPart(value = "file", required = false) MultipartFile file
     ) {
         
@@ -98,18 +101,14 @@ public class ProductController {
         return ResponseEntity.ok(createdProduct);
     }
 
-    @PostMapping(value = "/non-custom", consumes = "multipart/form-data")
+    @PostMapping(value = "/non-custom")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     @Operation(summary = "Crear nuevo producto no personalizado", description = "Crea un nuevo producto no personalizado. Se requiere una URL de imagen.")
     public ResponseEntity<?> createNonCustomProduct(
-            @RequestParam("name") String name,
-            @RequestParam("barcode") String barcode
+            @RequestParam("barcode") @ValidBarcode String barcode
     ) {
-        //LLAMADA A LA API EXTERNA PARA OBTENER DATOS DE PRODUCTO A PARTIR DEL CÓDIGO DE BARRAS
-        // ProductCreate productDTO = new ProductCreate(name, brand, description, isPerishable, barcode, isCustom);
-        // User currentUser = userService.getUserProfile();
-        // Product createdProduct = productService.createProduct(currentUser.getId(), productDTO, null, imageUrl);
-        // return ResponseEntity.ok(createdProduct);
-        return ResponseEntity.badRequest().body("Creating non-custom products is not supported yet. Please provide more details on the required fields.");
+        User currentUser = userService.getUserProfile();
+        Product product = productService.createProductOpenFoodFacts(barcode, currentUser.getId());
+        return ResponseEntity.ok(product);
     }
 }

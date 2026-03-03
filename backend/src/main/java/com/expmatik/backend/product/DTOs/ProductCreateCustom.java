@@ -4,6 +4,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.expmatik.backend.product.Product;
 import com.expmatik.backend.user.User;
+import com.expmatik.backend.validation.ValidBarcode;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -25,7 +26,7 @@ public record ProductCreateCustom(
     Boolean isPerishable,
 
     @NotBlank
-    @Size(max = 20)
+    @ValidBarcode
     String barcode,
 
     @NotNull

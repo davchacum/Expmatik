@@ -1,6 +1,11 @@
 package com.expmatik.backend.product;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URL;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,12 +17,15 @@ import com.expmatik.backend.exceptions.BadRequestException;
 import com.expmatik.backend.exceptions.ConflictException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
 import com.expmatik.backend.file.FileStorageService;
-import com.expmatik.backend.product.DTOs.ProductCreate;
 import com.expmatik.backend.product.DTOs.ProductCreateCustom;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 @Service
 public class ProductService {
+
+    private static final String OpenFoodFactsApiUrl = "https://world.openfoodfacts.org/api/v3/product/";
 
     private final ProductRepository productRepository;
     private final FileStorageService fileStorageService;
@@ -45,28 +53,48 @@ public class ProductService {
         return productRepository.save(product);
     }
 
-    public void checkUniqueBarcode(String barcode) {
-        if (productRepository.findByBarcodeAndIsCustomFalse(barcode).isPresent()) {
-            throw new ConflictException("A product with this barcode already exists.");
+    private Optional<JsonNode> findProductInOpenFoodFacts(String barcode) {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            String apiUrl = OpenFoodFactsApiUrl + barcode;
+            URL url = URI.create(apiUrl).toURL();
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            
+            JsonNode response = mapper.readTree(connection.getInputStream());
+            String status = response.path("status").asText();
+            
+            // Si el producto no fue encontrado, devolver Optional vacío
+            if ("failure".equals(status) || "product_not_found".equals(response.path("result").path("id").asText())) {
+                return java.util.Optional.empty();
+            }
+            
+            return java.util.Optional.of(response);
+        } catch (IOException e) {
+            // Si hay error de conexión, devolver Optional vacío
+            System.err.println("Error connecting to Open Food Facts API: " + e.getMessage());
+            return java.util.Optional.empty();
         }
     }
 
-    public void checkUniqueBarcodeCustom(String barcode, UUID userId) {
+    public void checkUniqueBarcode(String barcode) {
+        if (productRepository.findByBarcodeAndIsCustomFalse(barcode).isPresent()) {
+            throw new ConflictException("A product with this barcode already exists in the catalog.");
+        }
+    }
+
+    public void checkUniqueBarcodeCustom(String barcode, UUID userId) {        
+        
         if (productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId).isPresent()) {
             throw new ConflictException("A product with this barcode already exists.");
         }
-    }
 
-    public void checkUniqueName(String name) {
-        if (productRepository.findByNameAndIsCustomFalse(name).isPresent()) {
-            throw new ConflictException("A product with this name already exists.");
+        Optional<JsonNode> openFoodFactsProduct = findProductInOpenFoodFacts(barcode);
+        
+        if (openFoodFactsProduct.isPresent()) {
+            throw new ConflictException("A product with this barcode already exists in the external catalog.");
         }
-    }
 
-    public void checkUniqueNameCustom(String name, UUID userId) {
-        if (productRepository.findByNameAndIsCustomFalseOrNameAndIsCustomTrueAndCreatedById(name, userId).isPresent()) {
-            throw new ConflictException("A product with this name already exists.");
-        }
     }
     
     @Transactional
@@ -164,21 +192,43 @@ public class ProductService {
         return results;
     }
 
-
-    @Transactional
-    public Product createProduct(UUID userId, ProductCreate productDTO,String imageUrl) {
-        Product product = productDTO.toEntity();
-        checkUniqueBarcode(product.getBarcode());
-        checkUniqueName(product.getName());
-        return updateProductImage(product, null, imageUrl);
-    }
-
     @Transactional
     public Product createProductCustom(UUID userId, ProductCreateCustom productDTO,MultipartFile image) {
         Product product = productDTO.toEntity();
         checkUniqueBarcodeCustom(product.getBarcode(), userId);
-        checkUniqueNameCustom(product.getName(), userId);
         return updateProductImage(product, image, null);
     }
-    
+
+    @Transactional
+    public Product createProductOpenFoodFacts(String barcode,UUID userId) {
+
+        checkUniqueBarcode(barcode);
+
+        Optional<JsonNode> responseOpt = findProductInOpenFoodFacts(barcode);
+        
+        if (responseOpt.isEmpty()) {
+            throw new ResourceNotFoundException("Product not found with barcode: " + barcode);
+        }
+        
+        JsonNode response = responseOpt.get();
+        String name = response.path("product").path("product_name_es").asText();
+        String brand = response.path("product").path("brands").asText();
+        String description = response.path("product").path("generic_name_es").asText();
+        String quantity = response.path("product").path("quantity").asText();
+        name = name + " " + quantity;
+        String imageUrl = response.path("product").path("image_url").asText();
+        
+        Product product = new Product();
+        product.setName(name);
+        product.setBrand(brand);
+        product.setDescription(description);
+        product.setImageUrl(imageUrl);
+        product.setIsPerishable(true);
+        product.setBarcode(barcode);
+        product.setIsCustom(false);
+        product.setCreatedBy(null);
+        product = updateProductImage(product, null, imageUrl);
+        
+        return product;
+    }
 }

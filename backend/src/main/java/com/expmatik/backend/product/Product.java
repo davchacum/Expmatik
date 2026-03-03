@@ -2,6 +2,7 @@ package com.expmatik.backend.product;
 
 import com.expmatik.backend.model.BaseEntity;
 import com.expmatik.backend.user.User;
+import com.expmatik.backend.validation.ValidBarcode;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -46,8 +47,8 @@ public class Product extends BaseEntity{
     private Boolean isPerishable;
 
     @NotBlank
-    @Column(name = "barcode",nullable = false,length = 20)
-    @Size(max = 20)
+    @ValidBarcode
+    @Column(name = "barcode",nullable = false,length = 13)
     private String barcode;
 
     @NotNull
