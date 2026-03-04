@@ -1,6 +1,6 @@
 package com.expmatik.backend.invoice;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 import com.expmatik.backend.batch.Batch;
@@ -30,7 +30,7 @@ public class Invoice extends BaseEntity {
 
     @NotNull
     @Column(name="invoice_date",nullable = false)
-    private LocalDateTime invoiceDate;
+    private LocalDate invoiceDate;
 
     @NotBlank
     @Column(name="invoice_number",nullable = false, unique = true)
