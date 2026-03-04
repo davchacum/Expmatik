@@ -1,5 +1,6 @@
 package com.expmatik.backend.invoice;
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -45,7 +46,7 @@ public class InvoiceService {
         newInvoice.setSupplier(supplier);
         newInvoice.setUser(user);
         
-        newInvoice.setInvoiceDate(LocalDateTime.now());
+        newInvoice.setInvoiceDate(LocalDate.now());
         newInvoice.setBatch(new ArrayList<>());
         return invoiceRepository.save(newInvoice);
     }
@@ -104,6 +105,14 @@ public class InvoiceService {
         return invoiceRepository.findByUserId(user.getId());
     }
 
+    @Transactional(readOnly = true)
+    public List<Invoice> searchInvoices(InvoiceStatus status, LocalDate startDate, LocalDate endDate, 
+                                        String invoiceNumber, String supplierName, BigDecimal minPrice, BigDecimal maxPrice) {
+        User user = userService.getUserProfile();
+        String statusStr = status != null ? status.name() : null;
+        return invoiceRepository.searchInvoices(user.getId(), statusStr, startDate, endDate, invoiceNumber, supplierName, minPrice, maxPrice);
+    }
+
     @Transactional
     public void deleteInvoice(String invoiceNumber) {
         Invoice invoice = findInvoiceByInvoiceNumber(invoiceNumber);
@@ -115,5 +124,31 @@ public class InvoiceService {
             throw new ConflictException("Only pending invoices can be deleted");
         }
         invoiceRepository.delete(invoice);
+    }
+
+    @Transactional
+    public Invoice updateInvoice(UUID id, InvoiceRequest invoiceRequest ) {
+        Invoice existingInvoice = invoiceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Invoice not found"));
+        User user = userService.getUserProfile();
+        if (!existingInvoice.getUser().getId().equals(user.getId())) {
+            throw new UnauthorizedActionException("Unauthorized access to invoice");
+        }
+        if(existingInvoice.getStatus() != InvoiceStatus.PENDING) {
+            throw new ConflictException("Only pending invoices can be updated");
+        }
+        existingInvoice.setInvoiceNumber(invoiceRequest.invoiceNumber());
+
+        if(!existingInvoice.getInvoiceNumber().equals(invoiceRequest.invoiceNumber())) {
+            if(invoiceRepository.findByInvoiceNumber(invoiceRequest.invoiceNumber()).isPresent()) {
+                throw new ConflictException("Invoice number already exists");
+            }
+        }
+        // existingInvoice.setBatch(invoiceRequest.batch());
+        // existingInvoice.setInvoiceDate(invoiceRequest.invoiceDate());
+        Supplier supplier = supplierService.findOrRegister(invoiceRequest.supplierName());
+        existingInvoice.setStatus(invoiceRequest.status());
+        existingInvoice.setSupplier(supplier);
+        existingInvoice.setInvoiceDate(LocalDate.now());
+        return invoiceRepository.save(existingInvoice);
     }
 }
