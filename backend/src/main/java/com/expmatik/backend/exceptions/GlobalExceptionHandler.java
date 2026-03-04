@@ -127,6 +127,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(message);
     }
 
+    @ExceptionHandler(UnauthorizedActionException.class)
+    @ResponseStatus(value = HttpStatus.FORBIDDEN)
+    public ResponseEntity<ErrorResponse> unauthorizedActionException(UnauthorizedActionException ex) {
+        ErrorResponse message = new ErrorResponse(ex.getMessage(), HttpStatus.FORBIDDEN.value(), new Date());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(message);
+    }
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<ErrorResponse> globalExceptionHandler(Exception ex) {
