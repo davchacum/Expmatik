@@ -1,5 +1,6 @@
 package com.expmatik.backend.invoice;
 
+import java.beans.Transient;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -7,6 +8,7 @@ import com.expmatik.backend.batch.Batch;
 import com.expmatik.backend.model.BaseEntity;
 import com.expmatik.backend.user.User;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -14,6 +16,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -29,6 +32,7 @@ import lombok.Setter;
 public class Invoice extends BaseEntity {
 
     @NotNull
+    @FutureOrPresent
     @Column(name="invoice_date",nullable = false)
     private LocalDate invoiceDate;
 
@@ -52,8 +56,15 @@ public class Invoice extends BaseEntity {
     private User user;
 
     @NotNull
-    @OneToMany
-    @JoinColumn(name = "invoice_id", nullable = false)
+    @OneToMany(mappedBy = "invoice", orphanRemoval = true, cascade = CascadeType.ALL)
     private List<Batch> batch;
+
+    @Transient
+    public double getTotalAmount() {
+        return batch.stream()
+                .map(batch -> batch.getTotalPrice())
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add)
+                .doubleValue();
+    }
 
 }

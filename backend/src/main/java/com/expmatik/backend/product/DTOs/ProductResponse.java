@@ -4,10 +4,10 @@ import java.util.List;
 
 import com.expmatik.backend.product.Product;
 
-public record ProductAnswer(String name, String brand, String description, String imageUrl, Boolean isPerishable, String barcode, Boolean isCustom, String createdByEmail) {
+public record ProductResponse(String name, String brand, String description, String imageUrl, Boolean isPerishable, String barcode, Boolean isCustom, String createdByEmail) {
 
-    public static ProductAnswer fromProduct(Product product) {
-        return new ProductAnswer(
+    public static ProductResponse fromProduct(Product product) {
+        return new ProductResponse(
             product.getName(),
             product.getBrand(),
             product.getDescription(),
@@ -19,8 +19,8 @@ public record ProductAnswer(String name, String brand, String description, Strin
         );
     }
 
-    public static List<ProductAnswer> fromProductList(List<Product> products) {
-        return products.stream().map(ProductAnswer::fromProduct).toList();
+    public static List<ProductResponse> fromProductList(List<Product> products) {
+        return products.stream().map(ProductResponse::fromProduct).toList();
     }
     
 }

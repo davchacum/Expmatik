@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.expmatik.backend.product.DTOs.ProductAnswer;
-import com.expmatik.backend.product.DTOs.ProductCreateCustom;
+import com.expmatik.backend.product.DTOs.ProductResponse;
+import com.expmatik.backend.product.DTOs.ProductCreate;
 import com.expmatik.backend.user.User;
 import com.expmatik.backend.user.UserService;
 import com.expmatik.backend.validation.ValidBarcode;
@@ -46,8 +46,8 @@ public class ProductController {
         if(product.getIsCustom() && !product.getCreatedBy().getId().equals(userService.getUserProfile().getId())) {
             return ResponseEntity.badRequest().body("You are not authorized to view this product.");
         }
-        ProductAnswer productAnswer = ProductAnswer.fromProduct(productService.findById(id));
-        return ResponseEntity.ok(productAnswer);
+        ProductResponse productResponseDTO = ProductResponse.fromProduct(productService.findById(id));
+        return ResponseEntity.ok(productResponseDTO);
     }
 
     @PutMapping("/{id}/image")
@@ -60,8 +60,8 @@ public class ProductController {
     ) {
         Product product = productService.findById(id);
         Product updatedProduct = productService.updateProductImage(product, file, imageUrl);
-        ProductAnswer productAnswer = ProductAnswer.fromProduct(updatedProduct);
-        return ResponseEntity.ok(productAnswer);
+        ProductResponse productResponseDTO = ProductResponse.fromProduct(updatedProduct);
+        return ResponseEntity.ok(productResponseDTO);
     }
 
     @GetMapping("/custom")
@@ -69,8 +69,8 @@ public class ProductController {
     public ResponseEntity<?> getCustomProductsByUserId() {
         User currentUser = userService.getUserProfile();
         List<Product> products = productService.getCustomProductsByUserId(currentUser.getId());
-        List<ProductAnswer> productAnswers = ProductAnswer.fromProductList(products);
-        return ResponseEntity.ok(productAnswers);
+        List<ProductResponse> productResponseDTOs = ProductResponse.fromProductList(products);
+        return ResponseEntity.ok(productResponseDTOs);
     }
 
     @GetMapping
@@ -82,27 +82,26 @@ public class ProductController {
     ) {
         User currentUser = userService.getUserProfile();
         List<Product> products = productService.searchAllProducts(currentUser.getId(), name, brand, barcode);
-        List<ProductAnswer> productAnswers = ProductAnswer.fromProductList(products);
-        return ResponseEntity.ok(productAnswers);
+        List<ProductResponse> productResponseDTOs = ProductResponse.fromProductList(products);
+        return ResponseEntity.ok(productResponseDTOs);
     }
 
     @PostMapping(value = "/custom", consumes = "multipart/form-data")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     @Operation(summary = "Crear nuevo producto", description = "Crea un nuevo producto personalizado o no personalizado. Para productos personalizados se requiere un archivo de imagen, para no personalizados se requiere una URL de imagen.")
     public ResponseEntity<?> createCustomProduct(
-            @RequestParam("name") String name,
-            @RequestParam("brand") String brand,
-            @RequestParam(value = "description", required = false, defaultValue = "") String description,
-            @RequestParam(value = "isPerishable", required = false, defaultValue = "false") Boolean isPerishable,
-            @RequestParam("barcode") @ValidBarcode String barcode,
+            @RequestParam ProductCreate productCreate,
             @RequestPart(value = "file", required = false) MultipartFile file
     ) {
         
         User currentUser = userService.getUserProfile();
-        ProductCreateCustom productDTO = new ProductCreateCustom(name, brand, description, isPerishable, barcode, file,currentUser);
-        Product createdProduct = productService.createProductCustom(currentUser.getId(), productDTO, file);
-        ProductAnswer productAnswer = ProductAnswer.fromProduct(createdProduct);
-        return ResponseEntity.ok(productAnswer);
+        Product product = productCreate.toEntity();
+        product.setCreatedBy(currentUser);
+        product.setIsCustom(true);
+        product.setImageUrl(null);
+        Product createdProduct = productService.createProductCustom( product, file);
+        ProductResponse productResponseDTO = ProductResponse.fromProduct(createdProduct);
+        return ResponseEntity.ok(productResponseDTO);
     }
 
     @PostMapping(value = "/non-custom")
@@ -113,8 +112,8 @@ public class ProductController {
     ) {
         User currentUser = userService.getUserProfile();
         Product product = productService.createProductOpenFoodFacts(barcode, currentUser.getId());
-        ProductAnswer productAnswer = ProductAnswer.fromProduct(product);
-        return ResponseEntity.ok(productAnswer);
+        ProductResponse productResponseDTO = ProductResponse.fromProduct(product);
+        return ResponseEntity.ok(productResponseDTO);
     }
 
     @GetMapping("/openfoodfacts/{barcode}")
@@ -124,7 +123,7 @@ public class ProductController {
         if (!product.isPresent()) {
             return ResponseEntity.notFound().build();
         }
-        ProductAnswer productAnswer = ProductAnswer.fromProduct(product.get());
-        return ResponseEntity.ok(productAnswer);
+        ProductResponse productResponseDTO = ProductResponse.fromProduct(product.get());
+        return ResponseEntity.ok(productResponseDTO);
     }
 }

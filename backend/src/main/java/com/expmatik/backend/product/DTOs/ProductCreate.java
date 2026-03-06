@@ -1,6 +1,7 @@
 package com.expmatik.backend.product.DTOs;
 
 import com.expmatik.backend.product.Product;
+import com.expmatik.backend.validation.ValidBarcode;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -20,10 +21,8 @@ public record ProductCreate(
     Boolean isPerishable,
 
     @NotBlank
-    @Size(max = 20)
-    String barcode,
-
-    Boolean isCustom
+    @ValidBarcode
+    String barcode
 ) {
     public Product toEntity() {
         Product product = new Product();
@@ -32,7 +31,6 @@ public record ProductCreate(
         product.setDescription(this.description);
         product.setIsPerishable(this.isPerishable);
         product.setBarcode(this.barcode);
-        product.setIsCustom(this.isCustom);
         return product;
     }
 

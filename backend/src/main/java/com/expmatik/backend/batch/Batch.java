@@ -2,8 +2,9 @@ package com.expmatik.backend.batch;
 
 import java.beans.Transient;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
+import com.expmatik.backend.invoice.Invoice;
 import com.expmatik.backend.model.BaseEntity;
 import com.expmatik.backend.product.Product;
 
@@ -12,6 +13,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
@@ -25,10 +27,9 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Batch extends BaseEntity {
-
-    @NotNull
-    @Column(name="expiration_date",nullable = false)
-    private LocalDateTime expirationDate;
+    @FutureOrPresent
+    @Column(name="expiration_date")
+    private LocalDate expirationDate;
 
     @NotNull
     @Positive
@@ -45,6 +46,11 @@ public class Batch extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
+
+    @NotNull
+    @ManyToOne
+    @JoinColumn(name = "invoice_id", nullable = false)
+    private Invoice invoice;
 
     @Transient
     public BigDecimal getTotalPrice() {
