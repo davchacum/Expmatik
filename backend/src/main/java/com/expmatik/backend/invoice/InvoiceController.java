@@ -19,9 +19,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.expmatik.backend.batch.DTOs.BatchCreate;
+import com.expmatik.backend.batch.DTOs.BatchValidationResponse;
 import com.expmatik.backend.invoice.DTOs.InvoiceRequest;
 import com.expmatik.backend.invoice.DTOs.InvoiceRequestUpdate;
 import com.expmatik.backend.invoice.DTOs.InvoiceResponse;
+import com.expmatik.backend.product.ProductService;
+import com.expmatik.backend.user.User;
+import com.expmatik.backend.user.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -34,22 +39,28 @@ import jakarta.validation.Valid;
 public class InvoiceController {
 
     private final InvoiceService invoiceService;
+    private final ProductService productService;
+    private final UserService userService;
 
-    public InvoiceController(InvoiceService invoiceService) {
+    public InvoiceController(InvoiceService invoiceService, ProductService productService, UserService userService) {
         this.invoiceService = invoiceService;
+        this.productService = productService;
+        this.userService = userService;
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> getInvoiceById(UUID id) {
-        Invoice invoice = invoiceService.findInvoiceById(id);
+        User user = userService.getUserProfile();
+        Invoice invoice = invoiceService.findInvoiceById(id, user.getId());
         return ResponseEntity.ok(InvoiceResponse.fromInvoice(invoice));
     }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> getAllInvoices() {
-        return ResponseEntity.ok(InvoiceResponse.fromInvoiceList(invoiceService.getAllInvoices()));
+        User user = userService.getUserProfile();
+        return ResponseEntity.ok(InvoiceResponse.fromInvoiceList(invoiceService.getAllInvoices(user.getId())));
     }
 
     @GetMapping("/search")
@@ -64,41 +75,60 @@ public class InvoiceController {
             @RequestParam(required = false) String supplierName,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice) {
-        return ResponseEntity.ok(InvoiceResponse.fromInvoiceList(invoiceService.searchInvoices(status, startDate, endDate, invoiceNumber, supplierName, minPrice, maxPrice)));
+        User user = userService.getUserProfile();
+        return ResponseEntity.ok(InvoiceResponse.fromInvoiceList(invoiceService.searchInvoices(user.getId(), status, startDate, endDate, invoiceNumber, supplierName, minPrice, maxPrice)));
     }
 
     @GetMapping("/number/{invoiceNumber}")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> getInvoiceByInvoiceNumber(String invoiceNumber) {
-        Invoice invoice = invoiceService.findInvoiceByInvoiceNumber(invoiceNumber);
+        User user = userService.getUserProfile();
+        Invoice invoice = invoiceService.findInvoiceByInvoiceNumber(invoiceNumber, user.getId());
         return ResponseEntity.ok(InvoiceResponse.fromInvoice(invoice));
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> createInvoice(@RequestBody @Valid InvoiceRequest invoiceRequest) {
-        Invoice invoice = invoiceService.createInvoice(invoiceRequest);
+        
+        User user = userService.getUserProfile();
+
+        List<String> barcodes = invoiceRequest.batches()
+        .stream()
+        .map(BatchCreate::productBarcode)
+        .toList();
+
+        BatchValidationResponse validation = productService.validateBarcodes(barcodes, user.getId());
+
+        if (!validation.notFound().isEmpty()) {
+            return ResponseEntity.badRequest().body(validation);
+        }
+
+        Invoice invoice = invoiceService.createInvoice(user, invoiceRequest);
         return ResponseEntity.ok(InvoiceResponse.fromInvoice(invoice));
     }
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> updateInvoiceStatus(UUID id, InvoiceStatus status) {
-        Invoice updatedInvoice = invoiceService.updateInvoiceStatus(id, status);
+        User user = userService.getUserProfile();
+        Invoice updatedInvoice = invoiceService.updateInvoiceStatus(id, status, user.getId());
         return ResponseEntity.ok(InvoiceResponse.fromInvoice(updatedInvoice));
     }
 
     @DeleteMapping("/{invoiceNumber}")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> deleteInvoice(String invoiceNumber) {
-        invoiceService.deleteInvoice(invoiceNumber);
+        User user = userService.getUserProfile();
+        invoiceService.deleteInvoice(invoiceNumber, user.getId());
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> updateInvoice(UUID id, @RequestBody @Valid InvoiceRequestUpdate invoiceRequest) {
-        Invoice updatedInvoice = invoiceService.updateInvoice(id,invoiceRequest);
+        User user = userService.getUserProfile();
+        Invoice updatedInvoice = invoiceService.updateInvoice(id, invoiceRequest, user.getId());
         return ResponseEntity.ok(InvoiceResponse.fromInvoice(updatedInvoice));
     }
 
