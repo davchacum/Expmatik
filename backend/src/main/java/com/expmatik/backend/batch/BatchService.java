@@ -13,8 +13,6 @@ import com.expmatik.backend.invoice.InvoiceRepository;
 import com.expmatik.backend.invoice.InvoiceStatus;
 import com.expmatik.backend.product.Product;
 import com.expmatik.backend.product.ProductService;
-import com.expmatik.backend.user.User;
-import com.expmatik.backend.user.UserService;
 
 import jakarta.transaction.Transactional;
 
@@ -23,14 +21,12 @@ public class BatchService {
 
     private final BatchRepository batchRepository;
     private final ProductService productService;
-    private final UserService userService;
     private final InvoiceRepository invoiceRepository;
 
     @Autowired
-    public BatchService(BatchRepository batchRepository, ProductService productService, UserService userService, InvoiceRepository invoiceRepository) {
+    public BatchService(BatchRepository batchRepository, ProductService productService, InvoiceRepository invoiceRepository) {
         this.batchRepository = batchRepository;
         this.productService = productService;
-        this.userService = userService;
         this.invoiceRepository = invoiceRepository;
     }
 
@@ -40,17 +36,16 @@ public class BatchService {
     }
 
     @Transactional
-    public Batch createBatch(BatchCreate batch, UUID invoiceId) {
-        User user = userService.getUserProfile();
+    public Batch createBatch(UUID userId, BatchCreate batch, UUID invoiceId) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new ConflictException("Invoice not found with id: " + invoiceId));
-        if (!invoice.getUser().getId().equals(user.getId())) {
+        if (!invoice.getUser().getId().equals(userId)) {
             throw new ConflictException("You don't have permission to edit this invoice.");
         }
-        Optional<Product> productOptional = productService.findByBarcodeOptional(user.getId(), batch.productBarcode());
+        Optional<Product> productOptional = productService.findByBarcodeOptional(userId, batch.productBarcode());
         Product product;
         if (productOptional.isEmpty()) {
-            product = productService.createProductOpenFoodFacts(batch.productBarcode(), user.getId());
+            product = productService.createProductOpenFoodFacts(batch.productBarcode(), userId);
         }else {
             product = productOptional.get();
         }
@@ -69,18 +64,16 @@ public class BatchService {
     }
 
     @Transactional
-    public Batch updateBatch(UUID batchId, BatchCreate batch) {
-        User user = userService.getUserProfile();
-        
+    public Batch updateBatch(UUID userId, UUID batchId, BatchCreate batch) {
         
         Batch existingBatch = batchRepository.findById(batchId)
                 .orElseThrow(() -> new ConflictException("Batch not found with id: " + batchId));
         
-        Optional<Product> productOptional = productService.findByBarcodeOptional(user.getId(), batch.productBarcode());
+        Optional<Product> productOptional = productService.findByBarcodeOptional(userId, batch.productBarcode());
         Product product;
         if (productOptional.isEmpty()) {
             
-            product = productService.createProductOpenFoodFacts(batch.productBarcode(), user.getId());
+            product = productService.createProductOpenFoodFacts(batch.productBarcode(), userId);
         }else {
             product = productOptional.get();
             if(product.getIsPerishable() == true && batch.expirationDate() == null) {
@@ -97,11 +90,10 @@ public class BatchService {
     }   
 
     @Transactional
-    public void deleteBatch(UUID batchId) {
-        User user = userService.getUserProfile();
+    public void deleteBatch(UUID userId, UUID batchId) {
         Batch existingBatch = batchRepository.findById(batchId)
                 .orElseThrow(() -> new ConflictException("Batch not found with id: " + batchId));
-        if (!existingBatch.getInvoice().getUser().getId().equals(user.getId())) {
+        if (!existingBatch.getInvoice().getUser().getId().equals(userId)) {
             throw new ConflictException("You don't have permission to edit this invoice.");
         }
         if(existingBatch.getInvoice().getStatus() != InvoiceStatus.PENDING) {
@@ -113,7 +105,5 @@ public class BatchService {
         existingBatch.getInvoice().getBatch().remove(existingBatch);
         invoiceRepository.save(existingBatch.getInvoice());
     }
-
-
 
 }

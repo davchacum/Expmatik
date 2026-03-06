@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.expmatik.backend.product.DTOs.ProductResponse;
 import com.expmatik.backend.product.DTOs.ProductCreate;
+import com.expmatik.backend.product.DTOs.ProductResponse;
 import com.expmatik.backend.user.User;
 import com.expmatik.backend.user.UserService;
 import com.expmatik.backend.validation.ValidBarcode;

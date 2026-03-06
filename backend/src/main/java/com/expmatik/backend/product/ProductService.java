@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.expmatik.backend.batch.DTOs.BatchValidationResponse;
 import com.expmatik.backend.exceptions.BadRequestException;
 import com.expmatik.backend.exceptions.ConflictException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
@@ -76,7 +78,7 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    Optional<Product> findProductInOpenFoodFacts(String barcode) {
+    public Optional<Product> findProductInOpenFoodFacts(String barcode) {
         controlRateLimit(); // Controlar el rate limit antes de hacer la llamada
         
         ObjectMapper mapper = new ObjectMapper();
@@ -256,12 +258,37 @@ public class ProductService {
         Optional<Product> openFoodFactsProduct = findProductInOpenFoodFacts(barcode);
         
         if (openFoodFactsProduct.isEmpty()) {
-            throw new ResourceNotFoundException("Product not found in OpenFoodFacts");
+            throw new ResourceNotFoundException(
+                "Product with barcode " + barcode + " not found in Open Food Facts external catalog. Consider creating it as a custom product."
+            );
         }
         
         Product product = openFoodFactsProduct.get();
         product.setIsCustom(false);
         product = updateProductImage(product, null, product.getImageUrl());
         return product;
+    }
+
+    public BatchValidationResponse validateBarcodes(List<String> barcodes, UUID userId) {
+        List<String> valid = new ArrayList<>();
+        List<String> notFound = new ArrayList<>();
+        
+        for (String barcode : barcodes) {
+            Optional<Product> productInDb = findByBarcodeOptional(userId, barcode);
+            
+            if (productInDb.isPresent()) {
+                valid.add(barcode);
+            } else {
+                Optional<Product> productInApi = findProductInOpenFoodFacts(barcode);
+                
+                if (productInApi.isPresent()) {
+                    valid.add(barcode);
+                } else {
+                    notFound.add(barcode);
+                }
+            }
+        }
+        
+        return BatchValidationResponse.of(valid, notFound);
     }
 }

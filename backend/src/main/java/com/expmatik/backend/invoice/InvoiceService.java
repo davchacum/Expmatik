@@ -17,7 +17,6 @@ import com.expmatik.backend.exceptions.UnauthorizedActionException;
 import com.expmatik.backend.invoice.DTOs.InvoiceRequest;
 import com.expmatik.backend.invoice.DTOs.InvoiceRequestUpdate;
 import com.expmatik.backend.user.User;
-import com.expmatik.backend.user.UserService;
 
 
 @Service
@@ -25,20 +24,17 @@ public class InvoiceService {
 
     private final InvoiceRepository invoiceRepository;
     private final SupplierService supplierService;
-    private final UserService userService;
     private final BatchService batchService;
 
     @Autowired
-    public InvoiceService(InvoiceRepository invoiceRepository, SupplierService supplierService, UserService userService, BatchService batchService) {
+    public InvoiceService(InvoiceRepository invoiceRepository, SupplierService supplierService, BatchService batchService) {
         this.invoiceRepository = invoiceRepository;
         this.supplierService = supplierService;
-        this.userService = userService;
         this.batchService = batchService;
     }
 
     @Transactional
-    public Invoice createInvoice(InvoiceRequest invoice) {
-        User user = userService.getUserProfile();
+    public Invoice createInvoice(User user, InvoiceRequest invoice) {
         Supplier supplier = supplierService.findOrRegister(invoice.supplierName());
         
         if(invoiceRepository.findByInvoiceNumber(invoice.invoiceNumber()).isPresent()) {
@@ -55,7 +51,7 @@ public class InvoiceService {
 
         List<Batch> batches = new ArrayList<>();
         for(var batch : invoice.batches()) {
-            Batch createdBatch = batchService.createBatch(batch, newInvoice.getId());
+            Batch createdBatch = batchService.createBatch(user.getId(), batch, newInvoice.getId());
             batches.add(createdBatch);
         }
         newInvoice.setBatch(batches);
@@ -63,30 +59,27 @@ public class InvoiceService {
     }
 
     @Transactional(readOnly = true)
-    public Invoice findInvoiceById(UUID id) {
+    public Invoice findInvoiceById(UUID id,UUID userId) {
         Invoice invoice = invoiceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Invoice not found"));
-        User user = userService.getUserProfile();
-        if (!invoice.getUser().getId().equals(user.getId())) {
+        if (!invoice.getUser().getId().equals(userId)) {
             throw new UnauthorizedActionException("Unauthorized access to invoice");
         }
         return invoice;
     }
 
     @Transactional(readOnly = true)
-    public Invoice findInvoiceByInvoiceNumber(String invoiceNumber) {
+    public Invoice findInvoiceByInvoiceNumber(String invoiceNumber, UUID userId) {
         Invoice invoice = invoiceRepository.findByInvoiceNumber(invoiceNumber).orElseThrow(() -> new ResourceNotFoundException("Invoice not found"));
-        User user = userService.getUserProfile();
-        if (!invoice.getUser().getId().equals(user.getId())) {
+        if (!invoice.getUser().getId().equals(userId)) {
             throw new UnauthorizedActionException("Unauthorized access to invoice");
         }
         return invoice;
     }
 
     @Transactional
-    public Invoice updateInvoiceStatus(UUID id, InvoiceStatus status) {
+    public Invoice updateInvoiceStatus(UUID id, InvoiceStatus status, UUID userId) {
         Invoice invoice = invoiceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Invoice not found"));
-        User user = userService.getUserProfile();
-        if (!invoice.getUser().getId().equals(user.getId())) {
+        if (!invoice.getUser().getId().equals(userId)) {
             throw new UnauthorizedActionException("Unauthorized access to invoice");
         }
         if(invoice.getStatus() == InvoiceStatus.RECEIVED) {
@@ -111,24 +104,21 @@ public class InvoiceService {
     }
 
     @Transactional(readOnly = true)
-    public List<Invoice> getAllInvoices() {
-        User user = userService.getUserProfile();
-        return invoiceRepository.findByUserId(user.getId());
+    public List<Invoice> getAllInvoices(UUID userId) {
+        return invoiceRepository.findByUserId(userId);
     }
 
     @Transactional(readOnly = true)
-    public List<Invoice> searchInvoices(InvoiceStatus status, LocalDate startDate, LocalDate endDate, 
+    public List<Invoice> searchInvoices(UUID userId, InvoiceStatus status, LocalDate startDate, LocalDate endDate, 
                                         String invoiceNumber, String supplierName, BigDecimal minPrice, BigDecimal maxPrice) {
-        User user = userService.getUserProfile();
         String statusStr = status != null ? status.name() : null;
-        return invoiceRepository.searchInvoices(user.getId(), statusStr, startDate, endDate, invoiceNumber, supplierName, minPrice, maxPrice);
+        return invoiceRepository.searchInvoices(userId, statusStr, startDate, endDate, invoiceNumber, supplierName, minPrice, maxPrice);
     }
 
     @Transactional
-    public void deleteInvoice(String invoiceNumber) {
-        Invoice invoice = findInvoiceByInvoiceNumber(invoiceNumber);
-        User user = userService.getUserProfile();
-        if (!invoice.getUser().getId().equals(user.getId())) {
+    public void deleteInvoice(String invoiceNumber, UUID userId) {
+        Invoice invoice = findInvoiceByInvoiceNumber(invoiceNumber, userId);
+        if (!invoice.getUser().getId().equals(userId)) {
             throw new UnauthorizedActionException("Unauthorized access to invoice");
         }
         if(invoice.getStatus() != InvoiceStatus.PENDING) {
@@ -138,10 +128,9 @@ public class InvoiceService {
     }
 
     @Transactional
-    public Invoice updateInvoice(UUID id, InvoiceRequestUpdate invoiceRequest ) {
+    public Invoice updateInvoice(UUID id, InvoiceRequestUpdate invoiceRequest, UUID userId) {
         Invoice existingInvoice = invoiceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Invoice not found"));
-        User user = userService.getUserProfile();
-        if (!existingInvoice.getUser().getId().equals(user.getId())) {
+        if (!existingInvoice.getUser().getId().equals(userId)) {
             throw new UnauthorizedActionException("Unauthorized access to invoice");
         }
         if(existingInvoice.getStatus() != InvoiceStatus.PENDING) {
