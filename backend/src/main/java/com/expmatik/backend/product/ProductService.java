@@ -17,7 +17,6 @@ import com.expmatik.backend.exceptions.BadRequestException;
 import com.expmatik.backend.exceptions.ConflictException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
 import com.expmatik.backend.file.FileStorageService;
-import com.expmatik.backend.product.DTOs.ProductCreateCustom;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -42,6 +41,11 @@ public class ProductService {
     public Product findByBarcode(UUID userId,String barcode) {
         return productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with barcode: " + barcode));
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Product> findByBarcodeOptional(UUID userId, String barcode) {
+        return productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId);
     }
 
     @Transactional(readOnly = true)
@@ -239,9 +243,8 @@ public class ProductService {
     }
 
     @Transactional
-    public Product createProductCustom(UUID userId, ProductCreateCustom productDTO,MultipartFile image) {
-        Product product = productDTO.toEntity();
-        checkUniqueBarcodeCustom(product.getBarcode(), userId);
+    public Product createProductCustom(Product product,MultipartFile image) {
+        checkUniqueBarcodeCustom(product.getBarcode(), product.getCreatedBy().getId());
         return updateProductImage(product, image, null);
     }
 

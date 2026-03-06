@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.expmatik.backend.invoice.DTOs.InvoiceRequest;
+import com.expmatik.backend.invoice.DTOs.InvoiceRequestUpdate;
+import com.expmatik.backend.invoice.DTOs.InvoiceResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -41,20 +43,20 @@ public class InvoiceController {
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> getInvoiceById(UUID id) {
         Invoice invoice = invoiceService.findInvoiceById(id);
-        return ResponseEntity.ok(invoice);
+        return ResponseEntity.ok(InvoiceResponse.fromInvoice(invoice));
     }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> getAllInvoices() {
-        return ResponseEntity.ok(invoiceService.getAllInvoices());
+        return ResponseEntity.ok(InvoiceResponse.fromInvoiceList(invoiceService.getAllInvoices()));
     }
 
     @GetMapping("/search")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     @Operation(summary = "Buscar facturas con filtros opcionales", 
                description = "Todos los parámetros son opcionales. Puedes filtrar por estado, rango de fechas, rango de precios (precio total de la factura), número de factura o proveedor")
-    public ResponseEntity<List<Invoice>> searchInvoices(
+    public ResponseEntity<List<InvoiceResponse>> searchInvoices(
             @RequestParam(required = false) InvoiceStatus status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
@@ -62,28 +64,28 @@ public class InvoiceController {
             @RequestParam(required = false) String supplierName,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice) {
-        return ResponseEntity.ok(invoiceService.searchInvoices(status, startDate, endDate, invoiceNumber, supplierName, minPrice, maxPrice));
+        return ResponseEntity.ok(InvoiceResponse.fromInvoiceList(invoiceService.searchInvoices(status, startDate, endDate, invoiceNumber, supplierName, minPrice, maxPrice)));
     }
 
     @GetMapping("/number/{invoiceNumber}")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> getInvoiceByInvoiceNumber(String invoiceNumber) {
         Invoice invoice = invoiceService.findInvoiceByInvoiceNumber(invoiceNumber);
-        return ResponseEntity.ok(invoice);
+        return ResponseEntity.ok(InvoiceResponse.fromInvoice(invoice));
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> createInvoice(@RequestBody @Valid InvoiceRequest invoiceRequest) {
         Invoice invoice = invoiceService.createInvoice(invoiceRequest);
-        return ResponseEntity.ok(invoice);
+        return ResponseEntity.ok(InvoiceResponse.fromInvoice(invoice));
     }
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> updateInvoiceStatus(UUID id, InvoiceStatus status) {
         Invoice updatedInvoice = invoiceService.updateInvoiceStatus(id, status);
-        return ResponseEntity.ok(updatedInvoice);
+        return ResponseEntity.ok(InvoiceResponse.fromInvoice(updatedInvoice));
     }
 
     @DeleteMapping("/{invoiceNumber}")
@@ -95,9 +97,9 @@ public class InvoiceController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public ResponseEntity<?> updateInvoice(UUID id, @RequestBody @Valid InvoiceRequest invoiceRequest) {
+    public ResponseEntity<?> updateInvoice(UUID id, @RequestBody @Valid InvoiceRequestUpdate invoiceRequest) {
         Invoice updatedInvoice = invoiceService.updateInvoice(id,invoiceRequest);
-        return ResponseEntity.ok(updatedInvoice);
+        return ResponseEntity.ok(InvoiceResponse.fromInvoice(updatedInvoice));
     }
 
 }
