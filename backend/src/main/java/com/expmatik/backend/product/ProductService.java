@@ -112,8 +112,8 @@ public class ProductService {
             String imageUrl = response.path("product").path("image_url").asText();
             
             Product product = new Product();
-            product.setName(name);
-            product.setBrand(brand);
+            product.setName(name.trim());
+            product.setBrand(brand.equals("") ? "Unknown" : brand.trim());
             product.setDescription(description);
             product.setImageUrl(imageUrl);
             product.setIsPerishable(true);
