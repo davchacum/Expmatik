@@ -16,7 +16,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -32,7 +31,6 @@ import lombok.Setter;
 public class Invoice extends BaseEntity {
 
     @NotNull
-    @FutureOrPresent
     @Column(name="invoice_date",nullable = false)
     private LocalDate invoiceDate;
 

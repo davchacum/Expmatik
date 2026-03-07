@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -17,7 +18,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.expmatik.backend.batch.DTOs.BatchCreate;
 import com.expmatik.backend.batch.DTOs.BatchValidationResponse;
@@ -130,6 +133,14 @@ public class InvoiceController {
         User user = userService.getUserProfile();
         Invoice updatedInvoice = invoiceService.updateInvoice(id, invoiceRequest, user.getId());
         return ResponseEntity.ok(InvoiceResponse.fromInvoice(updatedInvoice));
+    }
+
+    @PostMapping(value = "/csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    public ResponseEntity<?> createInvoicesFromCSV(@RequestPart(value = "file") MultipartFile csvContent) {
+        User user = userService.getUserProfile();
+        List<Invoice> createdInvoices = invoiceService.createInvoicesFromCSV(csvContent, user.getId());
+        return ResponseEntity.ok(InvoiceResponse.fromInvoiceList(createdInvoices));
     }
 
 }

@@ -1,22 +1,28 @@
 package com.expmatik.backend.invoice;
+import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.expmatik.backend.batch.Batch;
 import com.expmatik.backend.batch.BatchService;
+import com.expmatik.backend.exceptions.BadRequestException;
 import com.expmatik.backend.exceptions.ConflictException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
 import com.expmatik.backend.exceptions.UnauthorizedActionException;
 import com.expmatik.backend.invoice.DTOs.InvoiceRequest;
 import com.expmatik.backend.invoice.DTOs.InvoiceRequestUpdate;
 import com.expmatik.backend.user.User;
+import com.expmatik.backend.user.UserService;
 
 
 @Service
@@ -25,12 +31,21 @@ public class InvoiceService {
     private final InvoiceRepository invoiceRepository;
     private final SupplierService supplierService;
     private final BatchService batchService;
+    private final InvoiceCSVLector invoiceCSVLector;
+    private final UserService userService;
 
     @Autowired
-    public InvoiceService(InvoiceRepository invoiceRepository, SupplierService supplierService, BatchService batchService) {
+    public InvoiceService(
+            InvoiceRepository invoiceRepository,
+            SupplierService supplierService,
+            BatchService batchService,
+            InvoiceCSVLector invoiceCSVLector,
+            UserService userService) {
         this.invoiceRepository = invoiceRepository;
         this.supplierService = supplierService;
         this.batchService = batchService;
+        this.invoiceCSVLector = invoiceCSVLector;
+        this.userService = userService;
     }
 
     @Transactional
@@ -47,14 +62,14 @@ public class InvoiceService {
         newInvoice.setSupplier(supplier);
         newInvoice.setUser(user);
         newInvoice.setInvoiceDate(invoice.invoiceDate());
+        newInvoice.setBatch(new ArrayList<>());
         newInvoice = invoiceRepository.save(newInvoice);
 
-        List<Batch> batches = new ArrayList<>();
+        List<Batch> batches = newInvoice.getBatch();
         for(var batch : invoice.batches()) {
             Batch createdBatch = batchService.createBatch(user.getId(), batch, newInvoice.getId());
             batches.add(createdBatch);
         }
-        newInvoice.setBatch(batches);
         return invoiceRepository.save(newInvoice);
     }
 
@@ -152,5 +167,36 @@ public class InvoiceService {
         existingInvoice.setSupplier(supplier);
         existingInvoice.setInvoiceDate(LocalDate.now());
         return invoiceRepository.save(existingInvoice);
+    }
+    @Transactional
+    public List<Invoice> createInvoicesFromCSV(MultipartFile csvContent, UUID id) {
+        if (csvContent == null || csvContent.isEmpty()) {
+            throw new BadRequestException("Debe adjuntar un archivo CSV.");
+        }
+        String originalFilename = csvContent.getOriginalFilename();
+        if (originalFilename == null || !originalFilename.toLowerCase(Locale.ROOT).endsWith(".csv")) {
+            throw new BadRequestException("El archivo debe tener extension .csv.");
+        }
+
+        File tempCsv;
+        try {
+            tempCsv = File.createTempFile("invoice-import-", ".csv");
+            csvContent.transferTo(tempCsv);
+        } catch (IOException ex) {
+            throw new BadRequestException("No se pudo procesar el archivo CSV: " + ex.getMessage());
+        }
+
+        User user = userService.findById(id);
+        List<Invoice> createdInvoices = new ArrayList<>();
+        try {
+            List<InvoiceRequest> requests = invoiceCSVLector.readCSV(tempCsv);
+            for (InvoiceRequest request : requests) {
+                createdInvoices.add(createInvoice(user, request));
+            }
+        } finally {
+            tempCsv.delete();
+        }
+        return createdInvoices;
+
     }
 }

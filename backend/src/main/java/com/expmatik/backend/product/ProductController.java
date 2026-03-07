@@ -25,6 +25,8 @@ import com.expmatik.backend.validation.ValidBarcode;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 @RestController
 @RequestMapping("/api/products")
@@ -90,16 +92,21 @@ public class ProductController {
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     @Operation(summary = "Crear nuevo producto", description = "Crea un nuevo producto personalizado o no personalizado. Para productos personalizados se requiere un archivo de imagen, para no personalizados se requiere una URL de imagen.")
     public ResponseEntity<?> createCustomProduct(
-            @RequestParam ProductCreate productCreate,
+            @RequestParam @NotBlank @Size(max = 100) String name,
+            @RequestParam @NotBlank @Size(max = 100)String brand,
+            @RequestParam(required = false) @Size(max = 1000) String description,
+            @RequestParam(required = false) Boolean isPerishable,
+            @RequestParam @NotBlank @ValidBarcode String barcode,
             @RequestPart(value = "file", required = false) MultipartFile file
     ) {
         
         User currentUser = userService.getUserProfile();
+        ProductCreate productCreate = new ProductCreate(name, brand, description, isPerishable, barcode);
         Product product = productCreate.toEntity();
         product.setCreatedBy(currentUser);
         product.setIsCustom(true);
         product.setImageUrl(null);
-        Product createdProduct = productService.createProductCustom( product, file);
+        Product createdProduct = productService.createProductCustom(product, file);
         ProductResponse productResponseDTO = ProductResponse.fromProduct(createdProduct);
         return ResponseEntity.ok(productResponseDTO);
     }
