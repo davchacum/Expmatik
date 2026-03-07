@@ -53,7 +53,7 @@ public class ProductInfoController {
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> getOrCreateProductInfo(@PathVariable UUID productId) {
         User user = userService.getUserProfile();
-        ProductInfo productInfo = productInfoService.getOrCreateProductInfo(productId, user,null);
+        ProductInfo productInfo = productInfoService.getOrCreateProductInfo(productId, user, null);
         return ResponseEntity.ok(ProductInfoResponse.fromProductInfo(productInfo));
     }
 
@@ -61,7 +61,7 @@ public class ProductInfoController {
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> addStockQuantity(@PathVariable UUID productInfoId, @RequestBody Integer newStockQuantity) {
         User user = userService.getUserProfile();
-        ProductInfo updatedProductInfo = productInfoService.addStockQuantity(productInfoId, user, newStockQuantity);
+        ProductInfo updatedProductInfo = productInfoService.addStockQuantity(productInfoId, user, newStockQuantity, null);
         return ResponseEntity.ok(ProductInfoResponse.fromProductInfo(updatedProductInfo));
     }
 

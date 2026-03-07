@@ -1,6 +1,5 @@
 package com.expmatik.backend.productInfo;
 
-import java.beans.Transient;
 import java.math.BigDecimal;
 
 import com.expmatik.backend.model.BaseEntity;
@@ -12,6 +11,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -50,6 +50,11 @@ public class ProductInfo extends BaseEntity {
     @Column(name = "sale_unit_price", nullable = false, precision = 12, scale = 2)
     private BigDecimal saleUnitPrice;
 
+    @Positive
+    @Digits(integer = 10, fraction = 2)
+    @Column(name = "last_purchase_unit_price", precision = 12, scale = 2)
+    private BigDecimal lastPurchaseUnitPrice;
+
     @NotNull
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
@@ -64,5 +69,22 @@ public class ProductInfo extends BaseEntity {
     public BigDecimal getTotalStockValue() {
         if (saleUnitPrice == null || vatRate == null || stockQuantity == null) return BigDecimal.ZERO;
         return saleUnitPrice.multiply(BigDecimal.valueOf(stockQuantity));
+    }
+
+    @Transient
+    public BigDecimal getLastPurchaseUnitPriceWithVat() {
+        if (lastPurchaseUnitPrice == null || vatRate == null) return BigDecimal.ZERO;
+        return lastPurchaseUnitPrice.multiply(BigDecimal.ONE.add(vatRate));
+    }
+    @Transient
+    public BigDecimal getUnitProfit() {
+        if (saleUnitPrice == null || lastPurchaseUnitPrice == null) return BigDecimal.ZERO;
+        return saleUnitPrice.subtract(getLastPurchaseUnitPriceWithVat());
+    }
+
+    @Transient
+    public BigDecimal getTotalProfit() {
+        if (getUnitProfit() == null || stockQuantity == null) return BigDecimal.ZERO;
+        return getUnitProfit().multiply(BigDecimal.valueOf(stockQuantity));
     }
 }

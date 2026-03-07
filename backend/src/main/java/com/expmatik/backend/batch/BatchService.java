@@ -1,6 +1,5 @@
 package com.expmatik.backend.batch;
 
-import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -114,7 +113,7 @@ public class BatchService {
 
     public void addStockQuantity(Batch batch, Integer quantity, User user) {
         ProductInfo productInfo =productInfoService.getOrCreateProductInfo(batch.getProduct().getId(), user,batch.getUnitPrice());
-        productInfoService.addStockQuantity(productInfo.getId(), user, quantity);
+        productInfoService.addStockQuantity(productInfo.getId(), user, quantity, batch.getUnitPrice());
     }
 
 }

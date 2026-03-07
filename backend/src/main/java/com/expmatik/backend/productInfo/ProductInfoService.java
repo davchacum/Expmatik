@@ -91,7 +91,7 @@ public class ProductInfoService {
     }
 
     @Transactional
-    public ProductInfo addStockQuantity(UUID productInfoId, User user, Integer newStockQuantity) {
+    public ProductInfo addStockQuantity(UUID productInfoId, User user, Integer newStockQuantity, BigDecimal lastPurchaseUnitPrice) {
         ProductInfo existingInfo = findById(productInfoId);
         if(!existingInfo.getUser().getId().equals(user.getId())) {
             throw new ResourceNotFoundException("You are not authorized to update this product info.");
@@ -100,6 +100,9 @@ public class ProductInfoService {
             throw new ConflictException("New stock quantity must be non-negative.");
         }
         existingInfo.setStockQuantity(existingInfo.getStockQuantity() + newStockQuantity);
+        if(lastPurchaseUnitPrice != null) {
+            existingInfo.setLastPurchaseUnitPrice(lastPurchaseUnitPrice);
+        }
         return productInfoRepository.save(existingInfo);
     }
 

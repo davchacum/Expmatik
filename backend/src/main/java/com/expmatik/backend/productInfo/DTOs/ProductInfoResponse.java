@@ -9,22 +9,30 @@ import com.expmatik.backend.productInfo.ProductInfo;
 public record ProductInfoResponse(
 
     UUID productId,
+    String productName,
     Integer stockQuantity,
     BigDecimal saleUnitPrice,
+    BigDecimal lastPurchaseUnitPrice,
     BigDecimal vatRate,
-    String productName,
-    BigDecimal totalStockValue
+    BigDecimal totalStockValue,
+    BigDecimal lastPurchaseUnitPriceWithVat,
+    BigDecimal unitProfit,
+    BigDecimal totalProfit
     
 ) {
 
     public static ProductInfoResponse fromProductInfo(ProductInfo productInfo) {
         return new ProductInfoResponse(
             productInfo.getProduct().getId(),
+            productInfo.getProduct().getName(),
             productInfo.getStockQuantity(),
             productInfo.getSaleUnitPrice(),
+            productInfo.getLastPurchaseUnitPrice(),
             productInfo.getVatRate(),
-            productInfo.getProduct().getName(),
-            productInfo.getTotalStockValue()
+            productInfo.getTotalStockValue(),
+            productInfo.getLastPurchaseUnitPriceWithVat(),
+            productInfo.getUnitProfit(),
+            productInfo.getTotalProfit()
         );
     }
 

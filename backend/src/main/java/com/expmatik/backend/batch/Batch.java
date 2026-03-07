@@ -1,6 +1,5 @@
 package com.expmatik.backend.batch;
 
-import java.beans.Transient;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -12,6 +11,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;

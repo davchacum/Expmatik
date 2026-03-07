@@ -12,7 +12,7 @@ public record ProductInfoUpdate(
 
     @NotNull Integer stockQuantity,
     @NotNull @Positive @Digits(integer = 10, fraction = 2) BigDecimal saleUnitPrice,
-    @NotNull @DecimalMin(value = "0.0") @DecimalMax(value = "1.0") @Digits(integer = 1, fraction = 2) BigDecimal vatRate
+    @NotNull @DecimalMin(value = "0.0") @DecimalMax(value = "0.21") @Digits(integer = 1, fraction = 2) BigDecimal vatRate
 
 ) {
 
