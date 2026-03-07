@@ -1,6 +1,8 @@
 package com.expmatik.backend.productInfo;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -46,7 +48,7 @@ public class ProductInfoService {
     }
 
     @Transactional
-    public ProductInfo getOrCreateProductInfo(UUID productId, User user) {
+    public ProductInfo getOrCreateProductInfo(UUID productId, User user, BigDecimal unitPrice) {
 
         Product product = productService.findById(productId);
         if(product.getIsCustom() && !product.getCreatedBy().getId().equals(user.getId())) {
@@ -56,16 +58,20 @@ public class ProductInfoService {
         if(optionalProductInfo.isPresent()) {
             return optionalProductInfo.get();
         }
-        ProductInfo productInfo = createProductInfoForProduct(product, user);
+        ProductInfo productInfo = createProductInfoForProduct(product, user, unitPrice);
         return productInfo;
     }
 
     @Transactional
-    public ProductInfo createProductInfoForProduct(Product product, User user) {
+    public ProductInfo createProductInfoForProduct(Product product, User user, BigDecimal unitPrice) {
+        if(unitPrice == null) {
+            unitPrice = BigDecimal.ONE;
+        }
+        BigDecimal vatRate = new BigDecimal("0.21");
         ProductInfo productInfo = new ProductInfo();
         productInfo.setStockQuantity(0);
-        productInfo.setUnitPrice(BigDecimal.ONE);
-        productInfo.setVatRate(new BigDecimal("0.21"));
+        productInfo.setVatRate(vatRate);
+        productInfo.setSaleUnitPrice(unitPrice.multiply(vatRate.add(BigDecimal.ONE)).setScale(2, RoundingMode.CEILING));
         productInfo.setProduct(product);
         productInfo.setUser(user);
         return productInfoRepository.save(productInfo);
@@ -79,13 +85,13 @@ public class ProductInfoService {
             throw new ResourceNotFoundException("You are not authorized to update this product info.");
         }
         existingInfo.setStockQuantity(updatedInfo.stockQuantity());
-        existingInfo.setUnitPrice(updatedInfo.unitPrice());
+        existingInfo.setSaleUnitPrice(updatedInfo.saleUnitPrice());
         existingInfo.setVatRate(updatedInfo.vatRate());
         return productInfoRepository.save(existingInfo);
     }
 
     @Transactional
-    public ProductInfo addStockQuantity(UUID productInfoId, User user, Integer newStockQuantity, BigDecimal lastPurchaseUnitPrice) {
+    public ProductInfo addStockQuantity(UUID productInfoId, User user, Integer newStockQuantity) {
         ProductInfo existingInfo = findById(productInfoId);
         if(!existingInfo.getUser().getId().equals(user.getId())) {
             throw new ResourceNotFoundException("You are not authorized to update this product info.");
@@ -95,5 +101,10 @@ public class ProductInfoService {
         }
         existingInfo.setStockQuantity(existingInfo.getStockQuantity() + newStockQuantity);
         return productInfoRepository.save(existingInfo);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductInfo> findAllByUserIdOrderByStockQuantityDesc(UUID userId) {
+        return productInfoRepository.findAllByUserIdOrderByStockQuantityDesc(userId);
     }
 }

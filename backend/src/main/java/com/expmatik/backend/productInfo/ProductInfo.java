@@ -1,5 +1,6 @@
 package com.expmatik.backend.productInfo;
 
+import java.beans.Transient;
 import java.math.BigDecimal;
 
 import com.expmatik.backend.model.BaseEntity;
@@ -46,8 +47,8 @@ public class ProductInfo extends BaseEntity {
     @NotNull
     @Positive
     @Digits(integer = 10, fraction = 2)
-    @Column(name = "unit_price", nullable = false, precision = 12, scale = 2)
-    private BigDecimal unitPrice;
+    @Column(name = "sale_unit_price", nullable = false, precision = 12, scale = 2)
+    private BigDecimal saleUnitPrice;
 
     @NotNull
     @ManyToOne
@@ -59,8 +60,9 @@ public class ProductInfo extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    public BigDecimal getTotalPrice() {
-        if (unitPrice == null || vatRate == null) return BigDecimal.ZERO;
-        return unitPrice.multiply(BigDecimal.ONE.add(vatRate));
+    @Transient
+    public BigDecimal getTotalStockValue() {
+        if (saleUnitPrice == null || vatRate == null || stockQuantity == null) return BigDecimal.ZERO;
+        return saleUnitPrice.multiply(BigDecimal.valueOf(stockQuantity));
     }
 }

@@ -1,6 +1,7 @@
 package com.expmatik.backend.productInfo.DTOs;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 import com.expmatik.backend.productInfo.ProductInfo;
@@ -9,10 +10,10 @@ public record ProductInfoResponse(
 
     UUID productId,
     Integer stockQuantity,
-    BigDecimal unitPrice,
+    BigDecimal saleUnitPrice,
     BigDecimal vatRate,
     String productName,
-    UUID createdByUserId
+    BigDecimal totalStockValue
     
 ) {
 
@@ -20,11 +21,15 @@ public record ProductInfoResponse(
         return new ProductInfoResponse(
             productInfo.getProduct().getId(),
             productInfo.getStockQuantity(),
-            productInfo.getUnitPrice(),
+            productInfo.getSaleUnitPrice(),
             productInfo.getVatRate(),
             productInfo.getProduct().getName(),
-            productInfo.getProduct().getCreatedBy().getId()
+            productInfo.getTotalStockValue()
         );
+    }
+
+    public static List<ProductInfoResponse> fromProductInfoList(List<ProductInfo> productInfos) {
+        return productInfos.stream().map(ProductInfoResponse::fromProductInfo).toList();
     }
 
 }

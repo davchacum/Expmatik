@@ -34,12 +34,11 @@ public class ProductInfoController {
         this.userService = userService;
     }
 
-    @GetMapping("/{productId}")
+    @GetMapping()
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public ResponseEntity<?> getProductInfoByProductId(@PathVariable UUID productId) {
+    public ResponseEntity<?> getAllProductInfoForUser() {
         User user = userService.getUserProfile();
-        ProductInfo productInfo = productInfoService.getOrCreateProductInfo(productId, user);
-        return ResponseEntity.ok(ProductInfoResponse.fromProductInfo(productInfo));
+        return ResponseEntity.ok(ProductInfoResponse.fromProductInfoList(productInfoService.findAllByUserIdOrderByStockQuantityDesc(user.getId())));
     }
 
     @PutMapping("/{productInfoId}")
@@ -50,11 +49,11 @@ public class ProductInfoController {
         return ResponseEntity.ok(ProductInfoResponse.fromProductInfo(updatedProductInfo));
     }
 
-    @GetMapping("/get-or-create/{productId}")
+    @GetMapping("/get-or-create-product/{productId}")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> getOrCreateProductInfo(@PathVariable UUID productId) {
         User user = userService.getUserProfile();
-        ProductInfo productInfo = productInfoService.getOrCreateProductInfo(productId, user);
+        ProductInfo productInfo = productInfoService.getOrCreateProductInfo(productId, user,null);
         return ResponseEntity.ok(ProductInfoResponse.fromProductInfo(productInfo));
     }
 
@@ -62,7 +61,7 @@ public class ProductInfoController {
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> addStockQuantity(@PathVariable UUID productInfoId, @RequestBody Integer newStockQuantity) {
         User user = userService.getUserProfile();
-        ProductInfo updatedProductInfo = productInfoService.addStockQuantity(productInfoId, user, newStockQuantity, null);
+        ProductInfo updatedProductInfo = productInfoService.addStockQuantity(productInfoId, user, newStockQuantity);
         return ResponseEntity.ok(ProductInfoResponse.fromProductInfo(updatedProductInfo));
     }
 
