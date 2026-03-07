@@ -11,6 +11,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
@@ -23,7 +24,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "product_info")
+@Table(name = "product_info",uniqueConstraints = {@UniqueConstraint(columnNames = {"product_id", "user_id"})})
 @Getter
 @Setter
 @AllArgsConstructor
@@ -37,7 +38,7 @@ public class ProductInfo extends BaseEntity {
 
     @NotNull
     @DecimalMin(value = "0.0")
-    @DecimalMax(value = "1.0")
+    @DecimalMax(value = "0.21")
     @Digits(integer = 1, fraction = 2)
     @Column(name = "vat_rate", nullable = false, precision = 3, scale = 2)
     private BigDecimal vatRate;
@@ -50,7 +51,7 @@ public class ProductInfo extends BaseEntity {
 
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "product_id", nullable = false, unique = true)
+    @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
     @NotNull

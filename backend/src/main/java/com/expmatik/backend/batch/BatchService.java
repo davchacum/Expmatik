@@ -13,6 +13,9 @@ import com.expmatik.backend.invoice.InvoiceRepository;
 import com.expmatik.backend.invoice.InvoiceStatus;
 import com.expmatik.backend.product.Product;
 import com.expmatik.backend.product.ProductService;
+import com.expmatik.backend.productInfo.ProductInfo;
+import com.expmatik.backend.productInfo.ProductInfoService;
+import com.expmatik.backend.user.User;
 
 import jakarta.transaction.Transactional;
 
@@ -22,12 +25,14 @@ public class BatchService {
     private final BatchRepository batchRepository;
     private final ProductService productService;
     private final InvoiceRepository invoiceRepository;
+    private final ProductInfoService productInfoService;
 
     @Autowired
-    public BatchService(BatchRepository batchRepository, ProductService productService, InvoiceRepository invoiceRepository) {
+    public BatchService(BatchRepository batchRepository, ProductService productService, InvoiceRepository invoiceRepository, ProductInfoService productInfoService) {
         this.batchRepository = batchRepository;
         this.productService = productService;
         this.invoiceRepository = invoiceRepository;
+        this.productInfoService = productInfoService;
     }
 
     @Transactional
@@ -104,6 +109,11 @@ public class BatchService {
         }
         existingBatch.getInvoice().getBatch().remove(existingBatch);
         invoiceRepository.save(existingBatch.getInvoice());
+    }
+
+    public void addStockQuantity(Batch batch, Integer quantity, User user) {
+        ProductInfo productInfo =productInfoService.getOrCreateProductInfo(batch.getProduct().getId(), user);
+        productInfoService.addStockQuantity(productInfo.getId(), user, quantity, batch.getUnitPrice());
     }
 
 }

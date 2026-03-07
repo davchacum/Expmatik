@@ -7,6 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ProductInfoRepository extends JpaRepository<ProductInfo, UUID> {
 
-    Optional<ProductInfo> findByProductId(UUID productId);
+    Optional<ProductInfo> findByProductIdAndUserId(UUID productId, UUID userId);
 
 }

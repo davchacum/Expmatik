@@ -98,7 +98,9 @@ public class InvoiceService {
 
     @Transactional
     public Invoice markInvoiceAsReceived(Invoice invoice) {
-        //Lógica verificar lotes, asignar productos del catalogo global o privado, en caso de no encontrar pedir crear producto personalizado y actualizar stock
+        for(Batch batch : invoice.getBatch()) {
+            batchService.addStockQuantity(batch, batch.getQuantity(), invoice.getUser());
+        }
         invoice.setStatus(InvoiceStatus.RECEIVED);
         return invoiceRepository.save(invoice);
     }
