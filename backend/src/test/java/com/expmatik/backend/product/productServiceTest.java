@@ -562,7 +562,6 @@ public class productServiceTest {
         when(productRepository.findByBarcodeAndIsCustomFalse(barcode))
                 .thenReturn(java.util.Optional.empty());
 
-        // No debería lanzar excepción
         productService.checkUniqueBarcode(barcode);
 
         verify(productRepository).findByBarcodeAndIsCustomFalse(barcode);
@@ -595,7 +594,6 @@ public class productServiceTest {
                 .thenReturn(java.util.Optional.empty());
         doReturn(java.util.Optional.empty()).when(productService).findProductInOpenFoodFacts(barcode);
 
-        // No debería lanzar excepción
         productService.checkUniqueBarcodeCustom(barcode, userId);
 
         verify(productRepository).findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId);
@@ -654,24 +652,20 @@ public class productServiceTest {
         productCustom.setBarcode(barcode);
         UUID userId = user1.getId();
 
-        // Mock checkUniqueBarcodeCustom (no lanza excepción)
         when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
                 .thenReturn(java.util.Optional.empty());
         doReturn(java.util.Optional.empty()).when(productService).findProductInOpenFoodFacts(barcode);
 
-        // Mock updateProductImage
         when(fileStorageService.saveCustomProductImage(image)).thenReturn("uploads/images/custom-new.png");
         when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Product result = productService.createProductCustom(productCustom, image);
 
-        // Verificar que se llamaron los métodos en orden
         verify(productRepository).findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId);
         verify(productService).findProductInOpenFoodFacts(barcode);
         verify(fileStorageService).saveCustomProductImage(image);
         verify(productRepository).save(productCustom);
 
-        // Verificar resultado
         assertThat(result.getImageUrl()).isEqualTo("uploads/images/custom-new.png");
         assertThat(result.getBarcode()).isEqualTo(barcode);
     }
@@ -768,19 +762,15 @@ public class productServiceTest {
         String barcode = "9999999999999";
         UUID userId = user1.getId();
 
-        // Mock checkUniqueBarcode (no lanza excepción)
         when(productRepository.findByBarcodeAndIsCustomFalse(barcode))
                 .thenReturn(java.util.Optional.empty());
 
-        // Mock findProductInOpenFoodFacts devuelve vacío
         doReturn(java.util.Optional.empty()).when(productService).findProductInOpenFoodFacts(barcode);
 
-        // Debe lanzar ResourceNotFoundException
         assertThatThrownBy(() -> productService.createProductOpenFoodFacts(barcode, userId))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Product with barcode " + barcode + " not found in Open Food Facts external catalog. Consider creating it as a custom product.");
 
-        // Verificar que updateProductImage NO se ejecutó
         verify(productRepository, never()).save(any(Product.class));
     }
 
