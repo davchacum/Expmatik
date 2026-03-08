@@ -1,0 +1,27 @@
+{
+  "code": "78436548736534287654328",
+  "errors": [
+    {
+      "field": { "id": "code", "value": "78436548736534287654328" },
+      "impact": { "id": "failure", "lc_name": "Failure", "name": "Failure" },
+      "message": { "id": "product_not_found", "lc_name": "", "name": "" }
+    }
+  ],
+  "result": {
+    "id": "product_not_found",
+    "lc_name": "Product not found",
+    "name": "Product not found"
+  },
+  "status": "failure",
+  "warnings": [
+    {
+      "field": { "id": "code", "value": "78436548736534287654328" },
+      "impact": { "id": "none", "lc_name": "None", "name": "None" },
+      "message": {
+        "id": "different_normalized_product_code",
+        "lc_name": "",
+        "name": ""
+      }
+    }
+  ]
+}

@@ -83,25 +83,18 @@ public class ProductService {
         
         ObjectMapper mapper = new ObjectMapper();
         try {
-            String apiUrl = OpenFoodFactsApiUrl + barcode;
-            URL url = URI.create(apiUrl).toURL();
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setRequestProperty("User-Agent", "Expmatik - Universidad de Sevilla - TFG - (davchacum@alum.us.es)");
-
-            connection.setConnectTimeout(5000);
-            connection.setReadTimeout(5000);
-
-            
-            JsonNode response = mapper.readTree(connection.getInputStream());
+            JsonNode response = fetchOpenFoodFactsResponse(barcode, mapper);
             String status = response.path("status").asText();
+            int empty = response.path("product").path("empty").asInt(0);
             
             // Si el producto no fue encontrado, devolver Optional vacío
-            if ("failure".equals(status) || "product_not_found".equals(response.path("result").path("id").asText())) {
+            if ("failure".equals(status) || 
+                "product_not_found".equals(response.path("result").path("id").asText()) ||
+                empty == 1) {
                 return Optional.empty();
             }
-                    if (response.isEmpty()) {
-            throw new ResourceNotFoundException("Product not found with barcode: " + barcode);
+            if (response.isEmpty()) {
+                throw new ResourceNotFoundException("Product not found with barcode: " + barcode);
             }
         
             String name = response.path("product").path("product_name_es").asText();
@@ -127,6 +120,17 @@ public class ProductService {
             System.err.println("Error connecting to Open Food Facts API: " + e.getMessage());
             return Optional.empty();
         }
+    }
+
+    protected JsonNode fetchOpenFoodFactsResponse(String barcode, ObjectMapper mapper) throws IOException {
+        String apiUrl = OpenFoodFactsApiUrl + barcode;
+        URL url = URI.create(apiUrl).toURL();
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        connection.setRequestProperty("User-Agent", "Expmatik - Universidad de Sevilla - TFG - (davchacum@alum.us.es)");
+        connection.setConnectTimeout(5000);
+        connection.setReadTimeout(5000);
+        return mapper.readTree(connection.getInputStream());
     }
 
     public void checkUniqueBarcode(String barcode) {
@@ -268,7 +272,8 @@ public class ProductService {
         product = updateProductImage(product, null, product.getImageUrl());
         return product;
     }
-
+    
+    @Transactional(readOnly = true)
     public BatchValidationResponse validateBarcodes(List<String> barcodes, UUID userId) {
         List<String> valid = new ArrayList<>();
         List<String> notFound = new ArrayList<>();
