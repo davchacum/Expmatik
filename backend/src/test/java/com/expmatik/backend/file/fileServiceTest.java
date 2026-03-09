@@ -112,7 +112,7 @@ public class fileServiceTest {
 
         assertThatThrownBy(() -> fileStorageService.saveCustomProductImage(largeImage))
             .isInstanceOf(FileSizeExceededException.class)
-            .hasMessage("Image size exceeds 2MB limit");
+            .hasMessage("File size exceeds 2MB limit");
     }
 
     @Test
@@ -136,65 +136,6 @@ public class fileServiceTest {
             .hasMessageContaining("not a valid image");
     }
 
-    // ==================== saveProductImage Tests ====================
-
-    @Test
-    @DisplayName("Should save product image successfully")
-    void testSaveProductImage_Success() throws IOException {
-        MultipartFile validImageFile = createMockMultipartFile("test.jpg", "image/jpeg", validImageBytes);
-        String result = fileStorageService.saveProductImage(validImageFile);
-
-        assertThat(result).isNotNull();
-        assertThat(result).startsWith("/uploads/products/");
-        assertThat(result).endsWith(".jpg");
-
-        String fileName = result.substring(result.lastIndexOf("/") + 1);
-        Path savedFile = tempDir.resolve("products").resolve(fileName);
-        assertThat(Files.exists(savedFile)).isTrue();
-    }
-
-    @Test
-    @DisplayName("Should save PNG product image successfully")
-    void testSaveProductImage_PNG_Success() throws IOException {
-        MultipartFile pngFile = createMockMultipartFile("test.png", "image/png", smallImageBytes);
-
-        String result = fileStorageService.saveProductImage(pngFile);
-
-        assertThat(result).isNotNull();
-        assertThat(result).startsWith("/uploads/products/");
-        assertThat(result).endsWith(".png");
-    }
-
-    @Test
-    @DisplayName("Should throw BadRequestException when product image is null")
-    void testSaveProductImage_NullFile() {
-        assertThatThrownBy(() -> fileStorageService.saveProductImage(null))
-            .isInstanceOf(BadRequestException.class)
-            .hasMessage("File is empty");
-    }
-
-    @Test
-    @DisplayName("Should throw BadRequestException when product image filename is null")
-    void testSaveProductImage_NullFilename() {
-        MultipartFile fileWithNullName = mock(MultipartFile.class);
-        when(fileWithNullName.isEmpty()).thenReturn(false);
-        when(fileWithNullName.getSize()).thenReturn(1024L);
-        when(fileWithNullName.getOriginalFilename()).thenReturn(null);
-
-        assertThatThrownBy(() -> fileStorageService.saveProductImage(fileWithNullName))
-            .isInstanceOf(BadRequestException.class)
-            .hasMessage("Filename is null");
-    }
-
-    @Test
-    @DisplayName("Should throw FileSizeExceededException when product image exceeds 2MB")
-    void testSaveProductImage_ExceedsSizeLimit() {
-        MultipartFile largeImage = createMockMultipartFile("large.jpg", "image/jpeg", largeImageBytes);
-
-        assertThatThrownBy(() -> fileStorageService.saveProductImage(largeImage))
-            .isInstanceOf(FileSizeExceededException.class)
-            .hasMessage("File size exceeds 2MB limit");
-    }
 
     // ==================== deleteProductImage Tests ====================
 
@@ -334,34 +275,6 @@ public class fileServiceTest {
         assertThatThrownBy(() -> fileStorageService.saveCustomProductImage(problematicFile))
             .isInstanceOf(RuntimeException.class)
             .hasMessageContaining("Could not store image");
-    }
-
-    @Test
-    @DisplayName("Should handle IOException when saving product image")
-    void testSaveProductImage_IOExceptionOnWrite() throws IOException {
-        MultipartFile problematicFile = mock(MultipartFile.class);
-        lenient().when(problematicFile.isEmpty()).thenReturn(false);
-        lenient().when(problematicFile.getSize()).thenReturn(1024L);
-        lenient().when(problematicFile.getOriginalFilename()).thenReturn("test.jpg");
-        lenient().when(problematicFile.getInputStream()).thenReturn(new ByteArrayInputStream(validImageBytes));
-        when(problematicFile.getBytes()).thenThrow(new IOException("Cannot read bytes"));
-
-        assertThatThrownBy(() -> fileStorageService.saveProductImage(problematicFile))
-            .isInstanceOf(BadRequestException.class)
-            .hasMessageContaining("Failed to save image");
-    }
-
-    @Test
-    @DisplayName("Should validate all conditions in validateFile")
-    void testSaveProductImage_WithValidFileCheckingAllValidations() throws IOException {
-        
-        MultipartFile validFile = createMockMultipartFile("valid-image.jpg", "image/jpeg", validImageBytes);
-        
-        String result = fileStorageService.saveProductImage(validFile);
-        
-        assertThat(result).isNotNull();
-        assertThat(result).contains("/uploads/products/");
-        assertThat(result).endsWith(".jpg");
     }
 
     // ==================== Helper Methods ====================

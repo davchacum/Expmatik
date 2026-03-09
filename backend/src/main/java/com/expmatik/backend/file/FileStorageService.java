@@ -33,7 +33,7 @@ public class FileStorageService {
 
     public String saveCustomProductImage(MultipartFile image) {
         try {
-            validateCustomProductImage(image);
+            validateFile(image);
             String fileName = UUID.randomUUID().toString() + ".jpg";
 
             Path uploadPath = Paths.get(uploadDir, "images").toAbsolutePath();
@@ -51,29 +51,6 @@ public class FileStorageService {
         } catch (IOException e) {
             logger.error("Error storing custom product image", e);
             throw new RuntimeException("Could not store image. Please try again!", e);
-        }
-    }
-
-    public String saveProductImage(MultipartFile file) {
-        validateFile(file);
-
-        try {
-            Path uploadPath = Paths.get(uploadDir, "products").toAbsolutePath();
-            Files.createDirectories(uploadPath);
-
-            String originalFilename = file.getOriginalFilename();
-            String extension = getFileExtension(originalFilename);
-            String filename = UUID.randomUUID().toString() + "." + extension;
-
-            Path filePath = uploadPath.resolve(filename);
-            Files.write(filePath, file.getBytes());
-
-            logger.info("File saved: {}", filename);
-
-            return "/uploads/products/" + filename;
-        } catch (IOException e) {
-            logger.error("Error saving file", e);
-            throw new BadRequestException("Failed to save image: " + e.getMessage());
         }
     }
 
@@ -114,16 +91,6 @@ public class FileStorageService {
 
         checkIfFileTypeIsAllowed(file);
 
-        checkIfFileContentIsValidImage(file);
-    }
-
-    private void validateCustomProductImage(MultipartFile file) {
-        checkIfFileIsEmpty(file);
-        
-        checkIfFileSizeExceedsLimit(file);
-        
-        checkIfFileTypeIsAllowed(file);
-        
         checkIfFileContentIsValidImage(file);
     }
 

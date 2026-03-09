@@ -1,13 +1,15 @@
 package com.expmatik.backend.product.DTOs;
 
 import java.util.List;
+import java.util.UUID;
 
 import com.expmatik.backend.product.Product;
 
-public record ProductResponse(String name, String brand, String description, String imageUrl, Boolean isPerishable, String barcode, Boolean isCustom, String createdByEmail) {
+public record ProductResponse(UUID id, String name, String brand, String description, String imageUrl, Boolean isPerishable, String barcode, Boolean isCustom, String createdByEmail) {
 
     public static ProductResponse fromProduct(Product product) {
         return new ProductResponse(
+            product.getId(),
             product.getName(),
             product.getBrand(),
             product.getDescription(),

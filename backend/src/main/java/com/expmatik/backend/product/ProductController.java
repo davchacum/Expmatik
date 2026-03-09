@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.expmatik.backend.product.DTOs.ProductCreate;
 import com.expmatik.backend.product.DTOs.ProductResponse;
+import com.expmatik.backend.user.Role;
 import com.expmatik.backend.user.User;
 import com.expmatik.backend.user.UserService;
 import com.expmatik.backend.validation.ValidBarcode;
@@ -45,28 +46,30 @@ public class ProductController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getProductById(@PathVariable UUID id) {
         Product product = productService.findById(id);
-        if(product.getIsCustom() && !product.getCreatedBy().getId().equals(userService.getUserProfile().getId())) {
+        User currentUser = userService.getUserProfile();
+        if(currentUser.getRole().equals(Role.ADMINISTRATOR) && product.getIsCustom() && !product.getCreatedBy().getId().equals(currentUser.getId())) {
             return ResponseEntity.badRequest().body("You are not authorized to view this product.");
         }
         ProductResponse productResponseDTO = ProductResponse.fromProduct(productService.findById(id));
         return ResponseEntity.ok(productResponseDTO);
     }
 
-    @PutMapping("/{id}/image")
-    @PreAuthorize("hasRole('ADMINISTRATOR')")
-    @Operation(summary = "Actualizar imagen del producto", description = "Sube un archivo (productos personalizados) o establece una URL (productos no personalizados)")
-    public ResponseEntity<?> updateProductImage(
-            @PathVariable UUID id,
-            @RequestPart(value = "file", required = false) MultipartFile file,
-            @RequestParam(value = "imageUrl", required = false) String imageUrl
-    ) {
-        Product product = productService.findById(id);
-        Product updatedProduct = productService.updateProductImage(product, file, imageUrl);
-        ProductResponse productResponseDTO = ProductResponse.fromProduct(updatedProduct);
-        return ResponseEntity.ok(productResponseDTO);
-    }
+    // @PutMapping("/{id}/image")
+    // @PreAuthorize("hasRole('ADMINISTRATOR')")
+    // @Operation(summary = "Actualizar imagen del producto", description = "Sube un archivo (productos personalizados) o establece una URL (productos no personalizados)")
+    // public ResponseEntity<?> updateProductImage(
+    //         @PathVariable UUID id,
+    //         @RequestPart(value = "file", required = false) MultipartFile file,
+    //         @RequestParam(value = "imageUrl", required = false) String imageUrl
+    // ) {
+    //     Product product = productService.findById(id);
+    //     Product updatedProduct = productService.updateProductImage(product, file, imageUrl);
+    //     ProductResponse productResponseDTO = ProductResponse.fromProduct(updatedProduct);
+    //     return ResponseEntity.ok(productResponseDTO);
+    // }
 
     @GetMapping("/custom")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     @Operation(summary = "Obtener productos personalizados por usuario", description = "Devuelve una lista de productos personalizados creados por un usuario específico")
     public ResponseEntity<?> getCustomProductsByUserId() {
         User currentUser = userService.getUserProfile();
@@ -75,7 +78,17 @@ public class ProductController {
         return ResponseEntity.ok(productResponseDTOs);
     }
 
+    @GetMapping("/non-custom")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    @Operation(summary = "Obtener productos no personalizados", description = "Devuelve una lista de productos no personalizados (catálogo)")
+    public ResponseEntity<?> getNonCustomProducts() {
+        List<Product> products = productService.getAllNonCustomProducts();
+        List<ProductResponse> productResponseDTOs = ProductResponse.fromProductList(products);
+        return ResponseEntity.ok(productResponseDTOs);
+    }
+
     @GetMapping
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     @Operation(summary = "Buscar productos", description = "Devuelve una lista de productos no personalizados (catálogo) + productos personalizados del usuario autenticado. Soporta filtros opcionales por nombre, marca y código de barras")
     public ResponseEntity<?> searchAllProducts(
             @RequestParam(value = "name", required = false) String name,
@@ -90,7 +103,7 @@ public class ProductController {
 
     @PostMapping(value = "/custom", consumes = "multipart/form-data")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    @Operation(summary = "Crear nuevo producto", description = "Crea un nuevo producto personalizado o no personalizado. Para productos personalizados se requiere un archivo de imagen, para no personalizados se requiere una URL de imagen.")
+    @Operation(summary = "Crear nuevo producto", description = "Permite crear un nuevo producto personalizado. Se pueden subir imágenes (opcional) o establecer una URL de imagen (opcional). Si se sube un archivo, se guardará en el servidor y se asociará al producto. Si se proporciona una URL, se asociará directamente al producto sin necesidad de subir un archivo. Si no se proporciona ninguna imagen, el producto se creará sin imagen.")
     public ResponseEntity<?> createCustomProduct(
             @RequestParam @NotBlank @Size(max = 100) String name,
             @RequestParam @NotBlank @Size(max = 100)String brand,
@@ -113,7 +126,7 @@ public class ProductController {
 
     @PostMapping(value = "/non-custom")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    @Operation(summary = "Crear nuevo producto no personalizado", description = "Crea un nuevo producto no personalizado. Se requiere una URL de imagen.")
+    @Operation(summary = "Crear nuevo producto no personalizado", description = "Permite crear un nuevo producto no personalizado a partir de un código de barras. El sistema buscará el producto en la API de OpenFoodFacts utilizando el código de barras proporcionado. Si se encuentra el producto, se guardará en la base de datos y se asociará al usuario autenticado como creador. Si no se encuentra el producto o si el código de barras no es válido, se devolverá un error.")
     public ResponseEntity<?> createNonCustomProduct(
             @RequestParam("barcode") @ValidBarcode String barcode
     ) {

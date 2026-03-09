@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
+import jakarta.validation.ConstraintViolationException;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -104,6 +106,19 @@ public class GlobalExceptionHandler {
         errorResponse.put("date", new Date());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(value = HttpStatus.BAD_REQUEST)
+    public ResponseEntity<ErrorResponse> constraintViolationException(ConstraintViolationException ex) {
+        String messageText = ex.getConstraintViolations()
+                .stream()
+                .findFirst()
+                .map(violation -> violation.getMessage())
+                .orElse("Validation failed");
+
+        ErrorResponse message = new ErrorResponse(messageText, HttpStatus.BAD_REQUEST.value(), new Date());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
