@@ -83,6 +83,8 @@ public class productInfoServiceTest {
         productInfo.setLastPurchaseUnitPrice(new BigDecimal("4.99"));
     }
 
+    // ==================== getOrCreateProductInfo Tests ====================
+
     @Test
     public void testGetOrCreateProductInfo_CustomProduct_OwnedByUser() {
         UUID productId = productCustom.getId();
@@ -173,6 +175,8 @@ public class productInfoServiceTest {
             .isEqualTo(BigDecimal.ONE.multiply(new BigDecimal("1.21")).setScale(2, RoundingMode.CEILING));
     }
 
+    // ==================== updateProductInfo Tests ====================
+
     @Test
     public void testUpdateProductInfo_Success() {
         UUID productInfoId = productInfo.getId();
@@ -197,6 +201,8 @@ public class productInfoServiceTest {
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("You are not authorized to update this product info.");
     }
+
+    // ==================== addStockQuantity Tests ====================
 
     @Test
     public void testAddStockQuantity_Success() {

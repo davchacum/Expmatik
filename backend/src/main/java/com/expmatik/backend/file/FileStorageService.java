@@ -120,9 +120,7 @@ public class FileStorageService {
     private void validateCustomProductImage(MultipartFile file) {
         checkIfFileIsEmpty(file);
         
-        if (file.getSize() > CUSTOM_MAX_FILE_SIZE) {
-            throw new FileSizeExceededException("Image size exceeds 2MB limit");
-        }
+        checkIfFileSizeExceedsLimit(file);
         
         checkIfFileTypeIsAllowed(file);
         

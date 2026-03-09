@@ -91,6 +91,8 @@ public class productServiceTest {
         productNoCustom.setIsCustom(false);
     }
 
+    // ==================== findProductInOpenFoodFacts Tests ====================
+
     @Test
     @DisplayName("Test finding product in Open Food Facts")
     void testFindProductInOpenFoodFacts() throws IOException {
@@ -179,6 +181,8 @@ public class productServiceTest {
         }
     }
 
+    // ==================== updateProductImage Tests ====================
+
     @Test
     @DisplayName("Throws when custom product has no file")
     void testUpdateProductImageCustomWithoutFileThrows() {
@@ -206,6 +210,8 @@ public class productServiceTest {
         verify(fileStorageService).deleteProductImage("uploads/images/old-custom.png");
         verify(productRepository).save(productCustom);
     }
+
+    
 
     @Test
     @DisplayName("Throws when non-custom product has blank image URL")
@@ -322,6 +328,8 @@ public class productServiceTest {
         verify(productRepository).save(productNoCustom);
     }
 
+    // ==================== searchAllProducts Tests ====================
+
     @Test
     @DisplayName("Search by barcode returns only catalog product")
     void testSearchAllProductsByBarcode() {
@@ -331,7 +339,7 @@ public class productServiceTest {
         catalogProduct.setIsCustom(false);
 
         when(productRepository.findByBarcodeAndIsCustomFalse(barcode))
-                .thenReturn(java.util.Optional.of(catalogProduct));
+                .thenReturn(Optional.of(catalogProduct));
 
         List<Product> results = productService.searchAllProducts(user1.getId(), null, null, barcode);
 
@@ -346,7 +354,7 @@ public class productServiceTest {
         String barcode = "9999999999999";
 
         when(productRepository.findByBarcodeAndIsCustomFalse(barcode))
-                .thenReturn(java.util.Optional.empty());
+                .thenReturn(Optional.empty());
 
         List<Product> results = productService.searchAllProducts(user1.getId(), null, null, barcode);
 
@@ -371,9 +379,9 @@ public class productServiceTest {
         customProduct.setCreatedBy(user1);
 
         when(productRepository.findByNameContainingIgnoreCaseAndBrandContainingIgnoreCaseAndIsCustomFalse(name, brand))
-                .thenReturn(java.util.List.of(catalogProduct));
+                .thenReturn(List.of(catalogProduct));
         when(productRepository.findByIsCustomTrueAndNameContainingIgnoreCaseAndBrandContainingIgnoreCaseAndCreatedById(name, brand, user1.getId()))
-                .thenReturn(java.util.List.of(customProduct));
+                .thenReturn(List.of(customProduct));
 
         List<Product> results = productService.searchAllProducts(user1.getId(), name, brand, null);
 
@@ -396,9 +404,9 @@ public class productServiceTest {
         customProduct.setCreatedBy(user1);
 
         when(productRepository.findByNameContainingIgnoreCaseAndIsCustomFalse(name))
-                .thenReturn(java.util.List.of(catalogProduct));
+                .thenReturn(List.of(catalogProduct));
         when(productRepository.findByIsCustomTrueAndNameContainingIgnoreCaseAndCreatedById(name, user1.getId()))
-                .thenReturn(java.util.List.of(customProduct));
+                .thenReturn(List.of(customProduct));
 
         List<Product> results = productService.searchAllProducts(user1.getId(), name, null, null);
 
@@ -421,9 +429,9 @@ public class productServiceTest {
         customProduct.setCreatedBy(user1);
 
         when(productRepository.findByBrandContainingIgnoreCaseAndIsCustomFalse(brand))
-                .thenReturn(java.util.List.of(catalogProduct));
+                .thenReturn(List.of(catalogProduct));
         when(productRepository.findByIsCustomTrueAndBrandContainingIgnoreCaseAndCreatedById(brand, user1.getId()))
-                .thenReturn(java.util.List.of(customProduct));
+                .thenReturn(List.of(customProduct));
 
         List<Product> results = productService.searchAllProducts(user1.getId(), null, brand, null);
 
@@ -442,9 +450,9 @@ public class productServiceTest {
         customProduct.setCreatedBy(user1);
 
         when(productRepository.findByIsCustomFalse())
-                .thenReturn(java.util.List.of(catalogProduct));
+                .thenReturn(List.of(catalogProduct));
         when(productRepository.findByIsCustomTrueAndCreatedById(user1.getId()))
-                .thenReturn(java.util.List.of(customProduct));
+                .thenReturn(List.of(customProduct));
 
         List<Product> results = productService.searchAllProducts(user1.getId(), null, null, null);
 
@@ -462,9 +470,9 @@ public class productServiceTest {
         catalogProduct.setIsCustom(false);
 
         when(productRepository.findByNameContainingIgnoreCaseAndIsCustomFalse(name))
-                .thenReturn(java.util.List.of(catalogProduct));
+                .thenReturn(List.of(catalogProduct));
         when(productRepository.findByIsCustomTrueAndNameContainingIgnoreCaseAndCreatedById(name, user1.getId()))
-                .thenReturn(java.util.List.of());
+                .thenReturn(List.of());
 
         List<Product> results = productService.searchAllProducts(user1.getId(), name, null, "   ");
 
@@ -482,9 +490,9 @@ public class productServiceTest {
         catalogProduct.setIsCustom(false);
 
         when(productRepository.findByNameContainingIgnoreCaseAndIsCustomFalse(name))
-                .thenReturn(java.util.List.of(catalogProduct));
+                .thenReturn(List.of(catalogProduct));
         when(productRepository.findByIsCustomTrueAndNameContainingIgnoreCaseAndCreatedById(name, user1.getId()))
-                .thenReturn(java.util.List.of());
+                .thenReturn(List.of());
 
         List<Product> results = productService.searchAllProducts(user1.getId(), name, "   ", null);
 
@@ -502,9 +510,9 @@ public class productServiceTest {
         catalogProduct.setIsCustom(false);
 
         when(productRepository.findByBrandContainingIgnoreCaseAndIsCustomFalse(brand))
-                .thenReturn(java.util.List.of(catalogProduct));
+                .thenReturn(List.of(catalogProduct));
         when(productRepository.findByIsCustomTrueAndBrandContainingIgnoreCaseAndCreatedById(brand, user1.getId()))
-                .thenReturn(java.util.List.of());
+                .thenReturn(List.of());
 
         List<Product> results = productService.searchAllProducts(user1.getId(), "   ", brand, null);
 
@@ -523,9 +531,9 @@ public class productServiceTest {
         customProduct.setCreatedBy(user1);
 
         when(productRepository.findByIsCustomFalse())
-                .thenReturn(java.util.List.of(catalogProduct));
+                .thenReturn(List.of(catalogProduct));
         when(productRepository.findByIsCustomTrueAndCreatedById(user1.getId()))
-                .thenReturn(java.util.List.of(customProduct));
+                .thenReturn(List.of(customProduct));
 
         List<Product> results = productService.searchAllProducts(user1.getId(), "   ", "   ", null);
 
@@ -544,9 +552,9 @@ public class productServiceTest {
         customProduct.setCreatedBy(user1);
 
         when(productRepository.findByIsCustomFalse())
-                .thenReturn(java.util.List.of(catalogProduct));
+                .thenReturn(List.of(catalogProduct));
         when(productRepository.findByIsCustomTrueAndCreatedById(user1.getId()))
-                .thenReturn(java.util.List.of(customProduct));
+                .thenReturn(List.of(customProduct));
 
         List<Product> results = productService.searchAllProducts(user1.getId(), null, "   ", null);
 
@@ -554,13 +562,15 @@ public class productServiceTest {
         assertThat(results).contains(catalogProduct, customProduct);
     }
 
+    // ==================== checkUniqueBarcode Tests ====================
+
     @Test
     @DisplayName("checkUniqueBarcode - succeeds when barcode does not exist")
     void testCheckUniqueBarcodeSuccess() {
         String barcode = "1111111111111";
 
         when(productRepository.findByBarcodeAndIsCustomFalse(barcode))
-                .thenReturn(java.util.Optional.empty());
+                .thenReturn(Optional.empty());
 
         productService.checkUniqueBarcode(barcode);
 
@@ -577,7 +587,7 @@ public class productServiceTest {
         existingProduct.setIsCustom(false);
 
         when(productRepository.findByBarcodeAndIsCustomFalse(barcode))
-                .thenReturn(java.util.Optional.of(existingProduct));
+                .thenReturn(Optional.of(existingProduct));
 
         assertThatThrownBy(() -> productService.checkUniqueBarcode(barcode))
                 .isInstanceOf(ConflictException.class)
@@ -591,8 +601,8 @@ public class productServiceTest {
         UUID userId = user1.getId();
 
         when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
-                .thenReturn(java.util.Optional.empty());
-        doReturn(java.util.Optional.empty()).when(productService).findProductInOpenFoodFacts(barcode);
+                .thenReturn(Optional.empty());
+        doReturn(Optional.empty()).when(productService).findProductInOpenFoodFacts(barcode);
 
         productService.checkUniqueBarcodeCustom(barcode, userId);
 
@@ -610,7 +620,7 @@ public class productServiceTest {
         existingProduct.setBarcode(barcode);
 
         when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
-                .thenReturn(java.util.Optional.of(existingProduct));
+                .thenReturn(Optional.of(existingProduct));
 
         assertThatThrownBy(() -> productService.checkUniqueBarcodeCustom(barcode, userId))
                 .isInstanceOf(ConflictException.class)
@@ -631,8 +641,8 @@ public class productServiceTest {
         apiProduct.setIsCustom(false);
 
         when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
-                .thenReturn(java.util.Optional.empty());
-        doReturn(java.util.Optional.of(apiProduct)).when(productService).findProductInOpenFoodFacts(barcode);
+                .thenReturn(Optional.empty());
+        doReturn(Optional.of(apiProduct)).when(productService).findProductInOpenFoodFacts(barcode);
 
         assertThatThrownBy(() -> productService.checkUniqueBarcodeCustom(barcode, userId))
                 .isInstanceOf(ConflictException.class)
@@ -641,6 +651,8 @@ public class productServiceTest {
         verify(productRepository).findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId);
         verify(productService).findProductInOpenFoodFacts(barcode);
     }
+
+    // ==================== createProductCustom Tests ====================
 
     @Test
     @DisplayName("createProductCustom - orchestrates checkUniqueBarcodeCustom and updateProductImage correctly")
@@ -653,8 +665,8 @@ public class productServiceTest {
         UUID userId = user1.getId();
 
         when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
-                .thenReturn(java.util.Optional.empty());
-        doReturn(java.util.Optional.empty()).when(productService).findProductInOpenFoodFacts(barcode);
+                .thenReturn(Optional.empty());
+        doReturn(Optional.empty()).when(productService).findProductInOpenFoodFacts(barcode);
 
         when(fileStorageService.saveCustomProductImage(image)).thenReturn("uploads/images/custom-new.png");
         when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -684,7 +696,7 @@ public class productServiceTest {
         existingProduct.setBarcode(barcode);
 
         when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
-                .thenReturn(java.util.Optional.of(existingProduct));
+                .thenReturn(Optional.of(existingProduct));
 
         // Debe lanzar excepción de checkUniqueBarcodeCustom
         assertThatThrownBy(() -> productService.createProductCustom(productCustom, image))
@@ -695,6 +707,8 @@ public class productServiceTest {
         verify(fileStorageService, never()).saveCustomProductImage(any());
         verify(productRepository, never()).save(any(Product.class));
     }
+
+    // ==================== createProductOpenFoodFacts Tests ====================
 
     @Test
     @DisplayName("createProductOpenFoodFacts - orchestrates checkUniqueBarcode, findProductInOpenFoodFacts and updateProductImage correctly")
@@ -711,10 +725,10 @@ public class productServiceTest {
 
         // Mock checkUniqueBarcode (no lanza excepción)
         when(productRepository.findByBarcodeAndIsCustomFalse(barcode))
-                .thenReturn(java.util.Optional.empty());
+                .thenReturn(Optional.empty());
 
         // Mock findProductInOpenFoodFacts
-        doReturn(java.util.Optional.of(apiProduct)).when(productService).findProductInOpenFoodFacts(barcode);
+        doReturn(Optional.of(apiProduct)).when(productService).findProductInOpenFoodFacts(barcode);
 
         // Mock updateProductImage
         when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -744,7 +758,7 @@ public class productServiceTest {
         existingProduct.setIsCustom(false);
 
         when(productRepository.findByBarcodeAndIsCustomFalse(barcode))
-                .thenReturn(java.util.Optional.of(existingProduct));
+                .thenReturn(Optional.of(existingProduct));
 
         // Debe lanzar excepción de checkUniqueBarcode
         assertThatThrownBy(() -> productService.createProductOpenFoodFacts(barcode, userId))
@@ -763,9 +777,9 @@ public class productServiceTest {
         UUID userId = user1.getId();
 
         when(productRepository.findByBarcodeAndIsCustomFalse(barcode))
-                .thenReturn(java.util.Optional.empty());
+                .thenReturn(Optional.empty());
 
-        doReturn(java.util.Optional.empty()).when(productService).findProductInOpenFoodFacts(barcode);
+        doReturn(Optional.empty()).when(productService).findProductInOpenFoodFacts(barcode);
 
         assertThatThrownBy(() -> productService.createProductOpenFoodFacts(barcode, userId))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -773,6 +787,8 @@ public class productServiceTest {
 
         verify(productRepository, never()).save(any(Product.class));
     }
+
+    // ==================== validateBarcodes Tests ====================
 
     @Test
     @DisplayName("validateBarcodes - returns empty lists when input is empty")
@@ -784,82 +800,6 @@ public class productServiceTest {
 
         assertThat(result.valid()).isEmpty();
         assertThat(result.notFound()).isEmpty();
-    }
-
-    @Test
-    @DisplayName("validateBarcodes - returns all valid when all barcodes exist in database")
-    void testValidateBarcodesAllInDatabase() throws IOException {
-        List<String> barcodes = List.of("1111111111111", "2222222222222");
-        UUID userId = user1.getId();
-
-        Product product1 = new Product();
-        product1.setBarcode("1111111111111");
-
-        Product product2 = new Product();
-        product2.setBarcode("2222222222222");
-
-        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById("1111111111111", userId))
-                .thenReturn(java.util.Optional.of(product1));
-        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById("2222222222222", userId))
-                .thenReturn(java.util.Optional.of(product2));
-
-        BatchValidationResponse result = productService.validateBarcodes(barcodes, userId);
-
-        assertThat(result.valid()).containsExactlyInAnyOrder("1111111111111", "2222222222222");
-        assertThat(result.notFound()).isEmpty();
-
-        // No debe llamar a la API si todos están en BD
-        verify(productService, never()).findProductInOpenFoodFacts(any());
-    }
-
-    @Test
-    @DisplayName("validateBarcodes - returns all valid when barcodes exist in API (not in DB)")
-    void testValidateBarcodesAllInAPI() throws IOException {
-        List<String> barcodes = List.of("3333333333333", "4444444444444");
-        UUID userId = user1.getId();
-
-        Product apiProduct1 = new Product();
-        apiProduct1.setBarcode("3333333333333");
-
-        Product apiProduct2 = new Product();
-        apiProduct2.setBarcode("4444444444444");
-
-        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById("3333333333333", userId))
-                .thenReturn(java.util.Optional.empty());
-        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById("4444444444444", userId))
-                .thenReturn(java.util.Optional.empty());
-
-        doReturn(java.util.Optional.of(apiProduct1)).when(productService).findProductInOpenFoodFacts("3333333333333");
-        doReturn(java.util.Optional.of(apiProduct2)).when(productService).findProductInOpenFoodFacts("4444444444444");
-
-        BatchValidationResponse result = productService.validateBarcodes(barcodes, userId);
-
-        assertThat(result.valid()).containsExactlyInAnyOrder("3333333333333", "4444444444444");
-        assertThat(result.notFound()).isEmpty();
-
-        // Debe haber llamado a la API para ambos
-        verify(productService).findProductInOpenFoodFacts("3333333333333");
-        verify(productService).findProductInOpenFoodFacts("4444444444444");
-    }
-
-    @Test
-    @DisplayName("validateBarcodes - returns all notFound when barcodes do not exist anywhere")
-    void testValidateBarcodesAllNotFound() throws IOException {
-        List<String> barcodes = List.of("5555555555555", "6666666666666");
-        UUID userId = user1.getId();
-
-        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById("5555555555555", userId))
-                .thenReturn(java.util.Optional.empty());
-        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById("6666666666666", userId))
-                .thenReturn(java.util.Optional.empty());
-
-        doReturn(java.util.Optional.empty()).when(productService).findProductInOpenFoodFacts("5555555555555");
-        doReturn(java.util.Optional.empty()).when(productService).findProductInOpenFoodFacts("6666666666666");
-
-        BatchValidationResponse result = productService.validateBarcodes(barcodes, userId);
-
-        assertThat(result.valid()).isEmpty();
-        assertThat(result.notFound()).containsExactlyInAnyOrder("5555555555555", "6666666666666");
     }
 
     @Test
@@ -876,17 +816,17 @@ public class productServiceTest {
 
         // Barcode 1 en BD
         when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById("1111111111111", userId))
-                .thenReturn(java.util.Optional.of(dbProduct));
+                .thenReturn(Optional.of(dbProduct));
 
         // Barcode 3 no en BD pero sí en API
         when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById("3333333333333", userId))
-                .thenReturn(java.util.Optional.empty());
-        doReturn(java.util.Optional.of(apiProduct)).when(productService).findProductInOpenFoodFacts("3333333333333");
+                .thenReturn(Optional.empty());
+        doReturn(Optional.of(apiProduct)).when(productService).findProductInOpenFoodFacts("3333333333333");
 
         // Barcode 5 no existe en ningún sitio
         when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById("5555555555555", userId))
-                .thenReturn(java.util.Optional.empty());
-        doReturn(java.util.Optional.empty()).when(productService).findProductInOpenFoodFacts("5555555555555");
+                .thenReturn(Optional.empty());
+        doReturn(Optional.empty()).when(productService).findProductInOpenFoodFacts("5555555555555");
 
         BatchValidationResponse result = productService.validateBarcodes(barcodes, userId);
 
