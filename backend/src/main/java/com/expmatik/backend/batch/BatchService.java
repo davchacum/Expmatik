@@ -49,6 +49,9 @@ public class BatchService {
         if (!invoice.getUser().getId().equals(userId)) {
             throw new UnauthorizedActionException("You don't have permission to edit this invoice.");
         }
+        if(invoice.getStatus() != InvoiceStatus.PENDING) {
+            throw new ConflictException("Cannot add batch to an invoice that is not pending.");
+        }
         Optional<Product> productOptional = productService.findByBarcodeOptional(userId, batch.productBarcode());
         Product product;
         if (productOptional.isEmpty()) {
@@ -75,6 +78,12 @@ public class BatchService {
         
         Batch existingBatch = batchRepository.findById(batchId)
                 .orElseThrow(() -> new ResourceNotFoundException("Batch not found with id: " + batchId));
+        if (!existingBatch.getInvoice().getUser().getId().equals(userId)) {
+            throw new UnauthorizedActionException("You don't have permission to edit this invoice.");
+        }
+        if(existingBatch.getInvoice().getStatus() != InvoiceStatus.PENDING) {
+            throw new ConflictException("Cannot edit batch from an invoice that is not pending.");
+        }
         
         Optional<Product> productOptional = productService.findByBarcodeOptional(userId, batch.productBarcode());
         Product product;

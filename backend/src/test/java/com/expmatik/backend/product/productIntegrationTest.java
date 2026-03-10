@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.imageio.ImageIO;
@@ -64,7 +65,7 @@ public class ProductIntegrationTest {
             return files
                     .filter(Files::isRegularFile)
                     .map(path -> path.getFileName().toString())
-                    .collect(java.util.stream.Collectors.toSet());
+                    .collect(Collectors.toSet());
         }
     }
     

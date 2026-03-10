@@ -127,9 +127,9 @@ public class ProductService {
         URL url = URI.create(apiUrl).toURL();
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
-        connection.setRequestProperty("User-Agent", "Expmatik - Universidad de Sevilla - TFG - (davchacum@alum.us.es)");
-        connection.setConnectTimeout(5000);
-        connection.setReadTimeout(5000);
+        connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+        connection.setConnectTimeout(10000);
+        connection.setReadTimeout(10000);
         return mapper.readTree(connection.getInputStream());
     }
 

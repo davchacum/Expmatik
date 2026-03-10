@@ -251,6 +251,19 @@ public class BatchServiceTest {
             .hasMessageContaining("You don't have permission to edit this invoice.");
     }
 
+    @Test
+    @DisplayName("Create batch with invoice that is not pending should throw ConflictException")
+    void testCreateBatch_InvoiceNotPending_ShouldThrowConflictException() {
+
+        BatchCreate batchCreate = new BatchCreate(batch3);
+
+        when(invoiceRepository.findById(invoice2.getId())).thenReturn(Optional.of(invoice2));
+
+        assertThatThrownBy(() -> batchService.createBatch(user2.getId(), batchCreate, invoice2.getId()))
+            .isInstanceOf(ConflictException.class)
+            .hasMessageContaining("Cannot add batch to an invoice that is not pending.");
+    }
+
     // == updateBatch tests ==
 
     @Test
@@ -324,6 +337,30 @@ public class BatchServiceTest {
         assertThatThrownBy(() -> batchService.updateBatch(user1.getId(), batch1.getId(), batchCreate))
             .isInstanceOf(ConflictException.class)
             .hasMessageContaining("Expiration date should not be provided for non-perishable products.");
+    }
+
+    @Test
+    @DisplayName("Update batch with invoice that is not pending should throw ConflictException")
+    void testUpdateBatch_InvoiceNotPending_ShouldThrowConflictException() {
+        BatchCreate batchCreate = new BatchCreate(batch3);
+
+        when(batchRepository.findById(batch3.getId())).thenReturn(Optional.of(batch3));
+
+        assertThatThrownBy(() -> batchService.updateBatch(user2.getId(), batch3.getId(), batchCreate))
+            .isInstanceOf(ConflictException.class)
+            .hasMessageContaining("Cannot edit batch from an invoice that is not pending.");
+    }
+
+    @Test
+    @DisplayName("Update batch with invoice belonging to another user should throw UnauthorizedActionException")
+    void testUpdateBatch_InvoiceBelongsToAnotherUser_ShouldThrowUnauthorizedActionException() {
+        BatchCreate batchCreate = new BatchCreate(batch3);
+
+        when(batchRepository.findById(batch3.getId())).thenReturn(Optional.of(batch3));
+
+        assertThatThrownBy(() -> batchService.updateBatch(user1.getId(), batch3.getId(), batchCreate))
+            .isInstanceOf(UnauthorizedActionException.class)
+            .hasMessageContaining("You don't have permission to edit this invoice.");
     }
 
     // == deleteBatch tests ==
