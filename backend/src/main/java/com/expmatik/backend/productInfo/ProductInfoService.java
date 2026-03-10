@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.expmatik.backend.exceptions.ConflictException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
+import com.expmatik.backend.exceptions.UnauthorizedActionException;
 import com.expmatik.backend.product.Product;
 import com.expmatik.backend.product.ProductService;
 import com.expmatik.backend.productInfo.DTOs.ProductInfoUpdate;
@@ -41,18 +42,12 @@ public class ProductInfoService {
                 .orElseThrow(() -> new ResourceNotFoundException("ProductInfo not found with id: " + id));
     }
 
-    @Transactional(readOnly = true)
-    public ProductInfo findByProductIdAndUserId(UUID productId, UUID userId) {
-        return productInfoRepository.findByProductIdAndUserId(productId, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("ProductInfo not found for product id: " + productId + " and user id: " + userId));
-    }
-
     @Transactional
     public ProductInfo getOrCreateProductInfo(UUID productId, User user, BigDecimal unitPrice) {
 
         Product product = productService.findById(productId);
         if(product.getIsCustom() && !product.getCreatedBy().getId().equals(user.getId())) {
-            throw new ResourceNotFoundException("You are not authorized to view this product info.");
+            throw new UnauthorizedActionException("You are not authorized to view this product info.");
         }
         Optional<ProductInfo> optionalProductInfo = productInfoRepository.findByProductIdAndUserId(productId, user.getId());
         if(optionalProductInfo.isPresent()) {
@@ -74,7 +69,7 @@ public class ProductInfoService {
         productInfo.setSaleUnitPrice(unitPrice.multiply(vatRate.add(BigDecimal.ONE)).setScale(2, RoundingMode.CEILING));
         productInfo.setProduct(product);
         productInfo.setUser(user);
-        return productInfoRepository.save(productInfo);
+        return save(productInfo);
     }
 
     @Transactional
@@ -82,19 +77,19 @@ public class ProductInfoService {
 
         ProductInfo existingInfo = findById(productInfoId);
         if(!existingInfo.getUser().getId().equals(user.getId())) {
-            throw new ResourceNotFoundException("You are not authorized to update this product info.");
+            throw new UnauthorizedActionException("You are not authorized to update this product info.");
         }
         existingInfo.setStockQuantity(updatedInfo.stockQuantity());
         existingInfo.setSaleUnitPrice(updatedInfo.saleUnitPrice());
         existingInfo.setVatRate(updatedInfo.vatRate());
-        return productInfoRepository.save(existingInfo);
+        return save(existingInfo);
     }
 
     @Transactional
     public ProductInfo addStockQuantity(UUID productInfoId, User user, Integer newStockQuantity, BigDecimal lastPurchaseUnitPrice) {
         ProductInfo existingInfo = findById(productInfoId);
         if(!existingInfo.getUser().getId().equals(user.getId())) {
-            throw new ResourceNotFoundException("You are not authorized to update this product info.");
+            throw new UnauthorizedActionException("You are not authorized to update this product info.");
         }
         if(newStockQuantity == null || newStockQuantity < 0) {
             throw new ConflictException("New stock quantity must be non-negative.");
@@ -103,7 +98,7 @@ public class ProductInfoService {
         if(lastPurchaseUnitPrice != null) {
             existingInfo.setLastPurchaseUnitPrice(lastPurchaseUnitPrice);
         }
-        return productInfoRepository.save(existingInfo);
+        return save(existingInfo);
     }
 
     @Transactional(readOnly = true)
