@@ -87,8 +87,6 @@ public class FileStorageService {
 
         checkIfFileSizeExceedsLimit(file);
 
-        checkIfFileNameIsInvalid(file);
-
         checkIfFileTypeIsAllowed(file);
 
         checkIfFileContentIsValidImage(file);
@@ -111,13 +109,6 @@ public class FileStorageService {
     private void checkIfFileSizeExceedsLimit(MultipartFile file) {
         if (file.getSize() > CUSTOM_MAX_FILE_SIZE) {
             throw new FileSizeExceededException("File size exceeds 2MB limit");
-        }
-    }
-
-    private void checkIfFileNameIsInvalid(MultipartFile file) {
-        String filename = file.getOriginalFilename();
-        if (filename == null) {
-            throw new BadRequestException("Filename is null");
         }
     }
 

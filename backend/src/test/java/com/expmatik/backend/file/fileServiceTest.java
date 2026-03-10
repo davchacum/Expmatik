@@ -136,7 +136,6 @@ public class fileServiceTest {
             .hasMessageContaining("not a valid image");
     }
 
-
     // ==================== deleteProductImage Tests ====================
 
     @Test

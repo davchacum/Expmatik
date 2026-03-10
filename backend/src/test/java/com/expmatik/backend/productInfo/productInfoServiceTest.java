@@ -18,7 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.expmatik.backend.exceptions.ConflictException;
-import com.expmatik.backend.exceptions.ResourceNotFoundException;
+import com.expmatik.backend.exceptions.UnauthorizedActionException;
 import com.expmatik.backend.product.Product;
 import com.expmatik.backend.product.ProductService;
 import com.expmatik.backend.productInfo.DTOs.ProductInfoUpdate;
@@ -109,7 +109,7 @@ public class productInfoServiceTest {
         when(productService.findById(productId)).thenReturn(productCustom);
 
         assertThatThrownBy(() -> productInfoService.getOrCreateProductInfo(productId, user2, unitPrice))
-                .isInstanceOf(ResourceNotFoundException.class)
+                .isInstanceOf(UnauthorizedActionException.class)
                 .hasMessageContaining("You are not authorized to view this product info.");
     }
 
@@ -198,7 +198,7 @@ public class productInfoServiceTest {
         productInfo.setUser(user1);
         when(productInfoRepository.findById(productInfoId)).thenReturn(Optional.of(productInfo));
         assertThatThrownBy(() -> productInfoService.updateProductInfo(productInfoId, user2, updatedInfo))
-                .isInstanceOf(ResourceNotFoundException.class)
+                .isInstanceOf(UnauthorizedActionException.class)
                 .hasMessageContaining("You are not authorized to update this product info.");
     }
 
@@ -238,7 +238,7 @@ public class productInfoServiceTest {
         productInfo.setUser(user1);
         when(productInfoRepository.findById(productInfoId)).thenReturn(Optional.of(productInfo));
         assertThatThrownBy(() -> productInfoService.addStockQuantity(productInfoId, user2, newStockQuantity, lastPurchaseUnitPrice))
-                .isInstanceOf(ResourceNotFoundException.class)
+                .isInstanceOf(UnauthorizedActionException.class)
                 .hasMessageContaining("You are not authorized to update this product info.");
     }
 

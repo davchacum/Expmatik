@@ -152,16 +152,6 @@ public class ProductService {
         }
 
     }
-    
-    @Transactional
-    public String storeCustomProductImage(MultipartFile image) {
-        return fileStorageService.saveCustomProductImage(image);
-    }
-
-    @Transactional
-    public void deleteProductImage(String imageUrl) {
-        fileStorageService.deleteProductImage(imageUrl);
-    }
 
     @Transactional
     public Product updateProductImage(Product product, MultipartFile file, String imageUrl) {
@@ -195,7 +185,7 @@ public class ProductService {
             product.setImageUrl(imageUrl);
         }
         
-        return productRepository.save(product);
+        return save(product);
     }
 
     @Transactional(readOnly = true)

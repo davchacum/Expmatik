@@ -29,8 +29,6 @@ import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
@@ -41,9 +39,6 @@ public class productIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @BeforeEach
     void snapshotUploadsImages() throws IOException {
@@ -266,7 +261,7 @@ public class productIntegrationTest {
     @Test
     @WithUserDetails("admin@expmatik.com")
     void testSearchProducts_ByBarcode() throws Exception {
-        String searchTerm = "1234567890123";
+        String searchTerm = "20000001";
         mockMvc.perform(get("/api/products").param("barcode", searchTerm))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
@@ -383,7 +378,7 @@ public class productIntegrationTest {
         String name = "Producto Personalizado de Test";
         String brand = "Marca de Test";
         String description = "Descripción del producto personalizado de test";
-        String barcode = "1234567890123";
+        String barcode = "20000001";
         Boolean isPerishable = false;
 
         BufferedImage image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
@@ -423,8 +418,23 @@ public class productIntegrationTest {
 
     @Test
     @WithUserDetails("admin@expmatik.com")
+    void testCreateNonCustomProduct_UnknownBrand() throws Exception {
+        String barcode = "5000112556780";
+
+        mockMvc.perform(post("/api/products/non-custom")
+                .param("barcode", barcode))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.barcode").value(barcode))
+                .andExpect(jsonPath("$.brand").value("Unknown"))
+                .andExpect(jsonPath("$.isCustom").value(false))
+                .andExpect(jsonPath("$.imageUrl").exists());
+    }
+
+    @Test
+    @WithUserDetails("admin@expmatik.com")
     void testCreateNonCustomProduct_DuplicateBarcode() throws Exception {
-        String barcode = "1234567890123";
+        String barcode = "20000001";
 
         mockMvc.perform(post("/api/products/non-custom")
                 .param("barcode", barcode))
@@ -435,7 +445,7 @@ public class productIntegrationTest {
     @Test
     @WithUserDetails("admin@expmatik.com")
     void testCreateNonCustomProduct_BarcodeDoesNotExistInExternalCatalog() throws Exception {
-        String barcode = "20000001";
+        String barcode = "20000010";
 
         mockMvc.perform(post("/api/products/non-custom")
                 .param("barcode", barcode))
@@ -481,7 +491,7 @@ public class productIntegrationTest {
     @Test
     @WithUserDetails("admin@expmatik.com")
     void testGetProductFromOpenFoodFacts_NotFound() throws Exception {
-        String barcode = "20000001";
+        String barcode = "20000010";
 
         mockMvc.perform(get("/api/products/openfoodfacts/" + barcode))
                 .andExpect(status().isNotFound());
