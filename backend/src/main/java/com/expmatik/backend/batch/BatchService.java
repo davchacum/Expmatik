@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 
 import com.expmatik.backend.batch.DTOs.BatchCreate;
 import com.expmatik.backend.exceptions.ConflictException;
+import com.expmatik.backend.exceptions.ResourceNotFoundException;
+import com.expmatik.backend.exceptions.UnauthorizedActionException;
 import com.expmatik.backend.invoice.Invoice;
 import com.expmatik.backend.invoice.InvoiceRepository;
 import com.expmatik.backend.invoice.InvoiceStatus;
@@ -43,9 +45,9 @@ public class BatchService {
     @Transactional
     public Batch createBatch(UUID userId, BatchCreate batch, UUID invoiceId) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
-                .orElseThrow(() -> new ConflictException("Invoice not found with id: " + invoiceId));
+                .orElseThrow(() -> new ResourceNotFoundException("Invoice not found with id: " + invoiceId));
         if (!invoice.getUser().getId().equals(userId)) {
-            throw new ConflictException("You don't have permission to edit this invoice.");
+            throw new UnauthorizedActionException("You don't have permission to edit this invoice.");
         }
         Optional<Product> productOptional = productService.findByBarcodeOptional(userId, batch.productBarcode());
         Product product;
@@ -72,7 +74,7 @@ public class BatchService {
     public Batch updateBatch(UUID userId, UUID batchId, BatchCreate batch) {
         
         Batch existingBatch = batchRepository.findById(batchId)
-                .orElseThrow(() -> new ConflictException("Batch not found with id: " + batchId));
+                .orElseThrow(() -> new ResourceNotFoundException("Batch not found with id: " + batchId));
         
         Optional<Product> productOptional = productService.findByBarcodeOptional(userId, batch.productBarcode());
         Product product;
@@ -81,11 +83,11 @@ public class BatchService {
             product = productService.createProductOpenFoodFacts(batch.productBarcode(), userId);
         }else {
             product = productOptional.get();
-            if(product.getIsPerishable() == true && batch.expirationDate() == null) {
+        }
+        if(product.getIsPerishable() == true && batch.expirationDate() == null) {
                 throw new ConflictException("Expiration date is required for perishable products.");
-            } else if(product.getIsPerishable() == false && batch.expirationDate() != null) {
+        } else if(product.getIsPerishable() == false && batch.expirationDate() != null) {
                 throw new ConflictException("Expiration date should not be provided for non-perishable products.");
-            }
         }
         existingBatch.setExpirationDate(batch.expirationDate());
         existingBatch.setUnitPrice(batch.unitPrice());
@@ -97,9 +99,9 @@ public class BatchService {
     @Transactional
     public void deleteBatch(UUID userId, UUID batchId) {
         Batch existingBatch = batchRepository.findById(batchId)
-                .orElseThrow(() -> new ConflictException("Batch not found with id: " + batchId));
+                .orElseThrow(() -> new ResourceNotFoundException("Batch not found with id: " + batchId));
         if (!existingBatch.getInvoice().getUser().getId().equals(userId)) {
-            throw new ConflictException("You don't have permission to edit this invoice.");
+            throw new UnauthorizedActionException("You don't have permission to edit this invoice.");
         }
         if(existingBatch.getInvoice().getStatus() != InvoiceStatus.PENDING) {
             throw new ConflictException("Cannot delete batch from an invoice that is not pending.");
@@ -111,6 +113,7 @@ public class BatchService {
         invoiceRepository.save(existingBatch.getInvoice());
     }
 
+    @Transactional
     public void addStockQuantity(Batch batch, Integer quantity, User user) {
         ProductInfo productInfo =productInfoService.getOrCreateProductInfo(batch.getProduct().getId(), user,batch.getUnitPrice());
         productInfoService.addStockQuantity(productInfo.getId(), user, quantity, batch.getUnitPrice());

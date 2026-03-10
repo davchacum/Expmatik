@@ -43,7 +43,7 @@ import com.expmatik.backend.productInfo.ProductInfo;
 import com.expmatik.backend.user.User;
 
 @ExtendWith(MockitoExtension.class)
-public class invoiceServiceTest {
+public class InvoiceServiceTest {
 
     @Mock
     private InvoiceRepository invoiceRepository;
@@ -167,7 +167,7 @@ public class invoiceServiceTest {
 
         @Test
         @DisplayName("createInvoicesFromCSV should throw BadRequestException when barcode is not numeric")
-        public void testCreateInvoicesFromCSV_InvalidBarcode_NotNumeric() {
+        void testCreateInvoicesFromCSV_InvalidBarcode_NotNumeric() {
             User user = user1;
             MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                 ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
@@ -180,7 +180,7 @@ public class invoiceServiceTest {
 
         @Test
         @DisplayName("createInvoicesFromCSV should throw BadRequestException when barcode length is not 8 or 13")
-        public void testCreateInvoicesFromCSV_InvalidBarcode_Length() {
+        void testCreateInvoicesFromCSV_InvalidBarcode_Length() {
             User user = user1;
             MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                 ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
@@ -193,7 +193,7 @@ public class invoiceServiceTest {
 
         @Test
         @DisplayName("createInvoicesFromCSV should throw BadRequestException when quantity is not a valid integer")
-        public void testCreateInvoicesFromCSV_InvalidQuantity_NotInteger() {
+        void testCreateInvoicesFromCSV_InvalidQuantity_NotInteger() {
             User user = user1;
             MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                 ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
@@ -206,7 +206,7 @@ public class invoiceServiceTest {
 
         @Test
         @DisplayName("createInvoicesFromCSV should throw BadRequestException when quantity is less than or equal to 0")
-        public void testCreateInvoicesFromCSV_InvalidQuantity_Negative() {
+        void testCreateInvoicesFromCSV_InvalidQuantity_Negative() {
             User user = user1;
             MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                 ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
@@ -219,7 +219,7 @@ public class invoiceServiceTest {
 
         @Test
         @DisplayName("createInvoicesFromCSV should throw BadRequestException when unitPrice is not a valid decimal")
-        public void testCreateInvoicesFromCSV_InvalidUnitPrice_NotDecimal() {
+        void testCreateInvoicesFromCSV_InvalidUnitPrice_NotDecimal() {
             User user = user1;
             MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                 ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
@@ -232,7 +232,7 @@ public class invoiceServiceTest {
 
         @Test
         @DisplayName("createInvoicesFromCSV should throw BadRequestException when unitPrice is less than or equal to 0")
-        public void testCreateInvoicesFromCSV_InvalidUnitPrice_Negative() {
+        void testCreateInvoicesFromCSV_InvalidUnitPrice_Negative() {
             User user = user1;
             MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                 ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
@@ -245,7 +245,7 @@ public class invoiceServiceTest {
 
         @Test
         @DisplayName("createInvoicesFromCSV should throw BadRequestException when unitPrice has more than 10 integer digits")
-        public void testCreateInvoicesFromCSV_InvalidUnitPrice_TooManyIntegerDigits() {
+        void testCreateInvoicesFromCSV_InvalidUnitPrice_TooManyIntegerDigits() {
             User user = user1;
             MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                 ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
@@ -258,7 +258,7 @@ public class invoiceServiceTest {
 
         @Test
         @DisplayName("createInvoicesFromCSV should throw BadRequestException when unitPrice has more than 2 decimal places")
-        public void testCreateInvoicesFromCSV_InvalidUnitPrice_TooManyDecimals() {
+        void testCreateInvoicesFromCSV_InvalidUnitPrice_TooManyDecimals() {
             User user = user1;
             MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                 ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
@@ -271,7 +271,7 @@ public class invoiceServiceTest {
 
         @Test
         @DisplayName("createInvoicesFromCSV should throw BadRequestException when invoiceDate is invalid")
-        public void testCreateInvoicesFromCSV_InvalidInvoiceDate() {
+        void testCreateInvoicesFromCSV_InvalidInvoiceDate() {
             User user = user1;
             MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                 ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
@@ -284,7 +284,7 @@ public class invoiceServiceTest {
 
         @Test
         @DisplayName("createInvoicesFromCSV should throw BadRequestException when expirationDate is invalid")
-        public void testCreateInvoicesFromCSV_InvalidExpirationDate() {
+        void testCreateInvoicesFromCSV_InvalidExpirationDate() {
             User user = user1;
             MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                 ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
@@ -297,7 +297,7 @@ public class invoiceServiceTest {
 
         @Test
         @DisplayName("createInvoicesFromCSV should skip blank rows and not throw error")
-        public void testCreateInvoicesFromCSV_BlankRow() {
+        void testCreateInvoicesFromCSV_BlankRow() {
             User user = user1;
             UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000099");
             MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
@@ -334,7 +334,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("createInvoice should create a new invoice with valid data")
-    public void testCreateInvoice_ValidData() {
+    void testCreateInvoice_ValidData() {
         User user = user1;
         BatchCreate batchCreate1 = new BatchCreate(batch1);
         UUID createdInvoiceId = UUID.fromString("00000000-0000-0000-0000-000000000099");
@@ -383,7 +383,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("createInvoice should throw ConflictException if invoice number already exists")
-    public void testCreateInvoice_DuplicateInvoiceNumber() {
+    void testCreateInvoice_DuplicateInvoiceNumber() {
         User user = user1;
         InvoiceRequest request = new InvoiceRequest(
             "INV-001",
@@ -404,7 +404,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("findInvoiceById should return invoice if it exists and belongs to user")
-    public void testFindInvoiceById_ValidId() {
+    void testFindInvoiceById_ValidId() {
         UUID invoiceId = invoice1.getId();
         UUID userId = user1.getId();
 
@@ -418,7 +418,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("findInvoiceById should throw ResourceNotFoundException if invoice does not exist")
-    public void testFindInvoiceById_NotFound() {
+    void testFindInvoiceById_NotFound() {
         UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000099");
         UUID userId = user1.getId();
 
@@ -431,7 +431,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("findInvoiceById should throw UnauthorizedActionException if invoice belongs to another user")
-    public void testFindInvoiceById_Unauthorized() {
+    void testFindInvoiceById_Unauthorized() {
         UUID invoiceId = invoice1.getId();
         UUID userId = user2.getId();
 
@@ -446,7 +446,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("findInvoiceByInvoiceNumber should return invoice if it exists and belongs to user")
-    public void testFindInvoiceByInvoiceNumber_ValidNumber() {
+    void testFindInvoiceByInvoiceNumber_ValidNumber() {
         String invoiceNumber = invoice1.getInvoiceNumber();
         UUID userId = user1.getId();
 
@@ -460,7 +460,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("findInvoiceByInvoiceNumber should throw ResourceNotFoundException if invoice does not exist")
-    public void testFindInvoiceByInvoiceNumber_NotFound() {
+    void testFindInvoiceByInvoiceNumber_NotFound() {
         String invoiceNumber = "INV-009";
         UUID userId = user1.getId();
 
@@ -473,7 +473,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("findInvoiceByInvoiceNumber should throw UnauthorizedActionException if invoice belongs to another user")
-    public void testFindInvoiceByInvoiceNumber_Unauthorized() {
+    void testFindInvoiceByInvoiceNumber_Unauthorized() {
         String invoiceNumber = invoice1.getInvoiceNumber();
         UUID userId = user2.getId();
 
@@ -488,7 +488,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("updateInvoiceStatus should update status if invoice exists and belongs to user")
-    public void testUpdateInvoiceStatus_Valid() {
+    void testUpdateInvoiceStatus_Valid() {
         UUID invoiceId = invoice1.getId();
         InvoiceStatus newStatus = InvoiceStatus.CANCELED;
         UUID userId = user1.getId();
@@ -507,7 +507,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("updateInvoiceStatus should update status if invoice exists and belongs to user")
-    public void testUpdateInvoiceStatus_ValidStatusReceived() {
+    void testUpdateInvoiceStatus_ValidStatusReceived() {
         UUID invoiceId = invoice1.getId();
         InvoiceStatus newStatus = InvoiceStatus.RECEIVED;
         UUID userId = user1.getId();
@@ -526,7 +526,7 @@ public class invoiceServiceTest {
     }
     @Test
     @DisplayName("updateInvoiceStatus should throw ResourceNotFoundException if invoice does not exist")
-    public void testUpdateInvoiceStatus_NotFound() {
+    void testUpdateInvoiceStatus_NotFound() {
         UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000099");
         InvoiceStatus newStatus = InvoiceStatus.CANCELED;
         UUID userId = user1.getId();
@@ -541,7 +541,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("updateInvoiceStatus should throw UnauthorizedActionException if invoice belongs to another user")
-    public void testUpdateInvoiceStatus_Unauthorized() {
+    void testUpdateInvoiceStatus_Unauthorized() {
         UUID invoiceId = invoice1.getId();
         InvoiceStatus newStatus = InvoiceStatus.CANCELED;
         UUID userId = user2.getId();
@@ -555,7 +555,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("updateInvoiceStatus should throw ConflictException if trying to change status of a received invoice")
-    public void testUpdateInvoiceStatus_ConflictReceived() {
+    void testUpdateInvoiceStatus_ConflictReceived() {
         UUID invoiceId = invoice2.getId();
         InvoiceStatus newStatus = InvoiceStatus.CANCELED;
         UUID userId = user2.getId();
@@ -569,7 +569,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("updateInvoiceStatus should throw ConflictException if trying to change status of a canceled invoice")
-    public void testUpdateInvoiceStatus_ConflictCanceled() {
+    void testUpdateInvoiceStatus_ConflictCanceled() {
         UUID invoiceId = invoice1.getId();
         InvoiceStatus newStatus = InvoiceStatus.RECEIVED;
         invoice1.setStatus(InvoiceStatus.CANCELED);
@@ -586,7 +586,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("markInvoiceAsReceived should update stock quantity and set status to RECEIVED")
-    public void testMarkInvoiceAsReceived() {
+    void testMarkInvoiceAsReceived() {
         Invoice invoice = invoice1;
         invoice.setStatus(InvoiceStatus.PENDING);
 
@@ -605,7 +605,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("deleteInvoice should delete invoice if it exists and belongs to user")
-    public void testDeleteInvoice_Valid() {
+    void testDeleteInvoice_Valid() {
         String invoiceNumber = invoice1.getInvoiceNumber();
         UUID userId = user1.getId();
 
@@ -619,7 +619,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("deleteInvoice should throw ResourceNotFoundException if invoice does not exist")
-    public void testDeleteInvoice_NotFound() {
+    void testDeleteInvoice_NotFound() {
         String invoiceNumber = "INV-009";
         UUID userId = user1.getId();
 
@@ -632,7 +632,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("deleteInvoice should throw UnauthorizedActionException if invoice belongs to another user")
-    public void testDeleteInvoice_Unauthorized() {
+    void testDeleteInvoice_Unauthorized() {
         String invoiceNumber = invoice1.getInvoiceNumber();
         UUID userId = user2.getId();
 
@@ -645,7 +645,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("deleteInvoice should throw UnauthorizedActionException if invoice is not pending")
-    public void testDeleteInvoice_NotPending() {
+    void testDeleteInvoice_NotPending() {
         String invoiceNumber = invoice1.getInvoiceNumber();
         UUID userId = user1.getId();
         invoice1.setStatus(InvoiceStatus.RECEIVED);
@@ -661,7 +661,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("updateInvoice should update invoice if it exists and belongs to user")
-    public void testUpdateInvoice_Valid() {
+    void testUpdateInvoice_Valid() {
         UUID invoiceId = invoice1.getId();
         UUID userId = user1.getId();
         InvoiceRequestUpdate request = new InvoiceRequestUpdate(
@@ -691,7 +691,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("updateInvoice should throw ResourceNotFoundException if invoice does not exist")
-    public void testUpdateInvoice_NotFound() {
+    void testUpdateInvoice_NotFound() {
         UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000099");
         UUID userId = user1.getId();
         InvoiceRequestUpdate request = new InvoiceRequestUpdate(
@@ -710,7 +710,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("updateInvoice should throw UnauthorizedActionException if invoice belongs to another user")
-    public void testUpdateInvoice_Unauthorized() {
+    void testUpdateInvoice_Unauthorized() {
         UUID invoiceId = invoice1.getId();
         UUID userId = user2.getId();
         InvoiceRequestUpdate request = new InvoiceRequestUpdate(
@@ -729,7 +729,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("updateInvoice should throw ConflictException if trying to update a received invoice")
-    public void testUpdateInvoice_ConflictReceived() {
+    void testUpdateInvoice_ConflictReceived() {
         UUID invoiceId = invoice2.getId();
         UUID userId = user2.getId();
         InvoiceRequestUpdate request = new InvoiceRequestUpdate(
@@ -748,7 +748,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("updateInvoice should throw ConflictException if trying to update a canceled invoice")
-    public void testUpdateInvoice_ConflictCanceled() {
+    void testUpdateInvoice_ConflictCanceled() {
         UUID invoiceId = invoice1.getId();
         UUID userId = user1.getId();
         InvoiceRequestUpdate request = new InvoiceRequestUpdate(
@@ -768,7 +768,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("updateInvoice should throw ConflictException if trying to update invoice number to an existing one")
-    public void testUpdateInvoice_ConflictDuplicateNumber() {
+    void testUpdateInvoice_ConflictDuplicateNumber() {
         UUID invoiceId = invoice1.getId();
         UUID userId = user1.getId();
         InvoiceRequestUpdate request = new InvoiceRequestUpdate(
@@ -790,7 +790,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("createInvoicesFromCSV should create multiple invoices from valid CSV")
-    public void testCreateInvoicesFromCSV_Valid() {
+    void testCreateInvoicesFromCSV_Valid() {
         User user = user1;
         UUID firstInvoiceId = UUID.fromString("00000000-0000-0000-0000-000000000099");
         UUID secondInvoiceId = UUID.fromString("00000000-0000-0000-0000-000000000102");
@@ -850,7 +850,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("createInvoicesFromCSV should throw BadRequestException if no file is provided or file is empty")
-    public void testCreateInvoicesFromCSV_NoFile() {
+    void testCreateInvoicesFromCSV_NoFile() {
         User user = user1;
         MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv", new byte[0]);
 
@@ -861,7 +861,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("createInvoicesFromCSV should throw BadRequestException if file is null")
-    public void testCreateInvoicesFromCSV_NullFile() {
+    void testCreateInvoicesFromCSV_NullFile() {
         User user = user1;
         MultipartFile csvContent = null;
 
@@ -872,7 +872,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("createInvoicesFromCSV should throw BadRequestException if file is not a CSV")
-    public void testCreateInvoicesFromCSV_InvalidFileType() {
+    void testCreateInvoicesFromCSV_InvalidFileType() {
         User user = user1;
         MultipartFile csvContent = new MockMultipartFile("file", "invoices.txt", "text/plain",
             ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
@@ -885,7 +885,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("createInvoicesFromCSV should throw BadRequestException if CSV contains no valid invoice records")
-    public void testCreateInvoicesFromCSV_NoValidRecords() {
+    void testCreateInvoicesFromCSV_NoValidRecords() {
         User user = user1;
         MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
             ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate").getBytes());
@@ -897,7 +897,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("createInvoicesFromCSV should throw BadRequestException if a row has an incorrect number of columns")
-    public void testCreateInvoicesFromCSV_IncorrectColumns() {
+    void testCreateInvoicesFromCSV_IncorrectColumns() {
         User user = user1;
         MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
             ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
@@ -910,7 +910,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("createInvoicesFromCSV should throw BadRequestException for inconsistent supplierName, status and invoiceDate")
-    public void testCreateInvoicesFromCSV_InconsistentData() {
+    void testCreateInvoicesFromCSV_InconsistentData() {
         User user = user1;
 
         MultipartFile supplierNameCsv = new MockMultipartFile("file", "invoices.csv", "text/csv",
@@ -943,7 +943,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("createInvoicesFromCSV should throw BadRequestException when status is empty")
-    public void testCreateInvoicesFromCSV_EmptyStatus() {
+    void testCreateInvoicesFromCSV_EmptyStatus() {
         User user = user1;
         MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
             ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
@@ -956,7 +956,7 @@ public class invoiceServiceTest {
 
     @Test
     @DisplayName("createInvoicesFromCSV should throw BadRequestException when status is invalid")
-    public void testCreateInvoicesFromCSV_InvalidStatus() {
+    void testCreateInvoicesFromCSV_InvalidStatus() {
         User user = user1;
         MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
             ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
@@ -966,16 +966,4 @@ public class invoiceServiceTest {
             .isInstanceOf(BadRequestException.class)
             .hasMessage("Line 2: invalid status -> SENT. Allowed values: PENDING, RECEIVED, CANCELED.");
     }
-
-
-
-
-
-
-    
-
-
-
-
-
 }

@@ -32,7 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-public class productIntegrationTest {
+public class ProductIntegrationTest {
 
     private static final Path UPLOAD_IMAGES_DIR = Path.of("uploads", "images");
     private Set<String> filesBeforeTest = new HashSet<>();

@@ -40,7 +40,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
-public class productServiceTest {
+public class ProductServiceTest {
 
     @Mock
     private ProductRepository productRepository;

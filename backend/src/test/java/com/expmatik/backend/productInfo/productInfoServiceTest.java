@@ -25,7 +25,7 @@ import com.expmatik.backend.productInfo.DTOs.ProductInfoUpdate;
 import com.expmatik.backend.user.User;
 
 @ExtendWith(MockitoExtension.class)
-public class productInfoServiceTest {
+public class ProductInfoServiceTest {
 
     @Mock
     ProductInfoRepository productInfoRepository;
@@ -86,7 +86,7 @@ public class productInfoServiceTest {
     // ==================== getOrCreateProductInfo Tests ====================
 
     @Test
-    public void testGetOrCreateProductInfo_CustomProduct_OwnedByUser() {
+    void testGetOrCreateProductInfo_CustomProduct_OwnedByUser() {
         UUID productId = productCustom.getId();
         UUID userId = user1.getId();
         BigDecimal unitPrice = new BigDecimal("5.00");
@@ -102,7 +102,7 @@ public class productInfoServiceTest {
     }
 
     @Test
-    public void testGetOrCreateProductInfo_CustomProduct_NotOwnedByUser() {
+    void testGetOrCreateProductInfo_CustomProduct_NotOwnedByUser() {
         UUID productId = productCustom.getId();
         BigDecimal unitPrice = new BigDecimal("5.00");
 
@@ -114,7 +114,7 @@ public class productInfoServiceTest {
     }
 
     @Test
-    public void testGetOrCreateProductInfo_CustomProduct_NotExistingProductInfo() {
+    void testGetOrCreateProductInfo_CustomProduct_NotExistingProductInfo() {
         UUID productId = productCustom.getId();
         UUID userId = user1.getId();
         BigDecimal unitPrice = new BigDecimal("5.00");
@@ -133,7 +133,7 @@ public class productInfoServiceTest {
     }
 
     @Test
-    public void testGetOrCreateProductInfo_NonCustomProduct() {
+    void testGetOrCreateProductInfo_NonCustomProduct() {
         UUID productId = productNoCustom.getId();
         UUID userId = user1.getId();
         BigDecimal unitPrice = new BigDecimal("2.50");
@@ -155,7 +155,7 @@ public class productInfoServiceTest {
     }
 
     @Test
-    public void testGetOrCreateProductInfo_NonCustomProduct_UnitPriceNull() {
+    void testGetOrCreateProductInfo_NonCustomProduct_UnitPriceNull() {
         UUID productId = productNoCustom.getId();
         UUID userId = user1.getId();
 
@@ -178,7 +178,7 @@ public class productInfoServiceTest {
     // ==================== updateProductInfo Tests ====================
 
     @Test
-    public void testUpdateProductInfo_Success() {
+    void testUpdateProductInfo_Success() {
         UUID productInfoId = productInfo.getId();
         ProductInfoUpdate updatedInfo = new ProductInfoUpdate(20, new BigDecimal("6.99"), new BigDecimal("0.10"));
         productInfo.setUser(user1);
@@ -192,7 +192,7 @@ public class productInfoServiceTest {
     }
 
     @Test
-    public void testUpdateProductInfo_Unauthorized() {
+    void testUpdateProductInfo_Unauthorized() {
         UUID productInfoId = productInfo.getId();
         ProductInfoUpdate updatedInfo = new ProductInfoUpdate(20, new BigDecimal("6.99"), new BigDecimal("0.10"));
         productInfo.setUser(user1);
@@ -205,7 +205,7 @@ public class productInfoServiceTest {
     // ==================== addStockQuantity Tests ====================
 
     @Test
-    public void testAddStockQuantity_Success() {
+    void testAddStockQuantity_Success() {
         UUID productInfoId = productInfo.getId();
         Integer newStockQuantity = 5;
         BigDecimal lastPurchaseUnitPrice = new BigDecimal("4.99");
@@ -218,7 +218,7 @@ public class productInfoServiceTest {
     }
 
     @Test
-    public void testAddStockQuantity_SuccessNullLastPurchaseUnitPrice() {
+    void testAddStockQuantity_SuccessNullLastPurchaseUnitPrice() {
         UUID productInfoId = productInfo.getId();
         Integer newStockQuantity = 5;
         BigDecimal lastPurchaseUnitPrice = null;
@@ -231,7 +231,7 @@ public class productInfoServiceTest {
     }
 
     @Test
-    public void testAddStockQuantity_Unauthorized() {
+    void testAddStockQuantity_Unauthorized() {
         UUID productInfoId = productInfo.getId();
         Integer newStockQuantity = 5;
         BigDecimal lastPurchaseUnitPrice = new BigDecimal("4.99");
@@ -243,7 +243,7 @@ public class productInfoServiceTest {
     }
 
     @Test
-    public void testAddStockQuantity_negativeQuantity() {
+    void testAddStockQuantity_negativeQuantity() {
         UUID productInfoId = productInfo.getId();
         Integer newStockQuantity = -5;
         BigDecimal lastPurchaseUnitPrice = new BigDecimal("4.99");
@@ -255,7 +255,7 @@ public class productInfoServiceTest {
     }
 
      @Test
-    public void testAddStockQuantity_nullQuantity() {
+    void testAddStockQuantity_nullQuantity() {
         UUID productInfoId = productInfo.getId();
         Integer newStockQuantity = null;
         BigDecimal lastPurchaseUnitPrice = new BigDecimal("4.99");
