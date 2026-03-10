@@ -20,19 +20,12 @@ import com.expmatik.backend.invoice.DTOs.InvoiceRequest;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 
-// invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate
-// FAC-2026-001,Coca-Cola,PENDING,2026-03-10,5000112556780,24,0.85,2026-09-30
-// FAC-2026-001,Coca-Cola,PENDING,2026-03-10,5000112556780,10,1.20,2026-09-30
-// FAC-2026-002,Pepsi,PENDING,2026-03-11,8410494300050,12,0.95,2026-08-01
-
 @Component
 public class InvoiceCSVLector {
 
     private static final int EXPECTED_COLUMNS = 8;
 
     public List<InvoiceRequest> readCSV(File file) {
-
-        validateFile(file);
 
         Map<String, InvoiceRequest> invoices = new LinkedHashMap<>();
 
@@ -52,13 +45,12 @@ public class InvoiceCSVLector {
                 ParsedRow parsed = parseRow(row, line);
                 accumulateInvoice(invoices, parsed, line);
             }
-
         } catch (IOException | CsvValidationException e) {
-            throw new BadRequestException("No se pudo leer el CSV: " + e.getMessage());
+            throw new BadRequestException("Error reading CSV: " + e.getMessage());
         }
 
         if (invoices.isEmpty()) {
-            throw new BadRequestException("El CSV no contiene registros de factura validos.");
+            throw new BadRequestException("The CSV does not contain valid invoice records.");
         }
 
         return invoices.values().stream().toList();
@@ -111,22 +103,11 @@ public class InvoiceCSVLector {
         }
     }
 
-    private void validateFile(File file) {
-
-        if (file == null) {
-            throw new BadRequestException("No se ha proporcionado archivo.");
-        }
-
-        if (!file.exists() || !file.isFile() || !file.getName().toLowerCase(Locale.ROOT).endsWith(".csv")) {
-            throw new BadRequestException("El archivo no existe o no es un CSV valido.");
-        }
-    }
-
     private void validateColumnCount(String[] row, int line) {
 
         if (row.length != EXPECTED_COLUMNS) {
             throw new BadRequestException(
-                    "Linea " + line + ": se esperaban " + EXPECTED_COLUMNS + " columnas y se recibieron " + row.length + ".");
+                    "Line " + line + ": expected " + EXPECTED_COLUMNS + " columns but found " + row.length + ".");
         }
     }
 
@@ -139,17 +120,17 @@ public class InvoiceCSVLector {
 
         if (!invoice.supplierName().equals(supplierName)) {
             throw new BadRequestException(
-                    "Linea " + line + ": supplierName inconsistente para la factura " + invoice.invoiceNumber() + ".");
+                    "Line " + line + ": inconsistent supplierName for invoice " + invoice.invoiceNumber() + ".");
         }
 
         if (invoice.status() != status) {
             throw new BadRequestException(
-                    "Linea " + line + ": status inconsistente para la factura " + invoice.invoiceNumber() + ".");
+                    "Line " + line + ": inconsistent status for invoice " + invoice.invoiceNumber() + ".");
         }
 
         if (!invoice.invoiceDate().equals(invoiceDate)) {
             throw new BadRequestException(
-                    "Linea " + line + ": invoiceDate inconsistente para la factura " + invoice.invoiceNumber() + ".");
+                    "Line " + line + ": inconsistent invoiceDate for invoice " + invoice.invoiceNumber() + ".");
         }
     }
 
@@ -159,7 +140,7 @@ public class InvoiceCSVLector {
 
         if (normalized.isEmpty()) {
             throw new BadRequestException(
-                    "Linea " + line + ": campo obligatorio vacio -> " + fieldName + ".");
+                    "Line " + line + ": required field is empty -> " + fieldName + ".");
         }
 
         return normalized;
@@ -173,8 +154,8 @@ public class InvoiceCSVLector {
             return InvoiceStatus.valueOf(normalized);
         } catch (IllegalArgumentException ex) {
             throw new BadRequestException(
-                    "Linea " + line + ": status invalido -> " + normalized +
-                            ". Valores permitidos: PENDING, RECEIVED, CANCELED.");
+                    "Line " + line + ": invalid status -> " + normalized +
+                            ". Allowed values: PENDING, RECEIVED, CANCELED.");
         }
     }
 
@@ -184,7 +165,7 @@ public class InvoiceCSVLector {
 
         if (!barcode.matches("\\d+") || (barcode.length() != 8 && barcode.length() != 13)) {
             throw new BadRequestException(
-                    "Linea " + line + ": productBarcode invalido. Debe ser numerico y tener 8 o 13 digitos.");
+                    "Line " + line + ": invalid productBarcode. It must be numeric and contain 8 or 13 digits.");
         }
 
         return barcode;
@@ -200,7 +181,7 @@ public class InvoiceCSVLector {
 
             if (number <= 0) {
                 throw new BadRequestException(
-                        "Linea " + line + ": " + fieldName + " debe ser mayor que 0.");
+                        "Line " + line + ": " + fieldName + " must be greater than 0.");
             }
 
             return number;
@@ -208,7 +189,7 @@ public class InvoiceCSVLector {
         } catch (NumberFormatException ex) {
 
             throw new BadRequestException(
-                    "Linea " + line + ": " + fieldName + " no es un entero valido.");
+                    "Line " + line + ": " + fieldName + " is not a valid integer.");
         }
     }
 
@@ -224,12 +205,12 @@ public class InvoiceCSVLector {
 
             if (number.signum() <= 0) {
                 throw new BadRequestException(
-                        "Linea " + line + ": " + fieldName + " debe ser mayor que 0.");
+                        "Line " + line + ": " + fieldName + " must be greater than 0.");
             }
 
             if (integerDigits > 10 || fractionDigits > 2) {
                 throw new BadRequestException(
-                        "Linea " + line + ": " + fieldName + " debe tener maximo 10 digitos enteros y 2 decimales.");
+                        "Line " + line + ": " + fieldName + " must have at most 10 integer digits and 2 decimal places.");
             }
 
             return number;
@@ -237,7 +218,7 @@ public class InvoiceCSVLector {
         } catch (NumberFormatException ex) {
 
             throw new BadRequestException(
-                    "Linea " + line + ": " + fieldName + " no es un decimal valido.");
+                    "Line " + line + ": " + fieldName + " is not a valid decimal.");
         }
     }
 
@@ -258,7 +239,7 @@ public class InvoiceCSVLector {
             return LocalDate.parse(value);
         } catch (DateTimeParseException ex) {
             throw new BadRequestException(
-                    "Linea " + line + ": " + fieldName + " invalida. Formato esperado: yyyy-MM-dd.");
+                    "Line " + line + ": invalid " + fieldName + ". Expected format: yyyy-MM-dd.");
         }
     }
 

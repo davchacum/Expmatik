@@ -22,7 +22,6 @@ import com.expmatik.backend.exceptions.UnauthorizedActionException;
 import com.expmatik.backend.invoice.DTOs.InvoiceRequest;
 import com.expmatik.backend.invoice.DTOs.InvoiceRequestUpdate;
 import com.expmatik.backend.user.User;
-import com.expmatik.backend.user.UserService;
 
 
 @Service
@@ -32,20 +31,22 @@ public class InvoiceService {
     private final SupplierService supplierService;
     private final BatchService batchService;
     private final InvoiceCSVLector invoiceCSVLector;
-    private final UserService userService;
 
     @Autowired
     public InvoiceService(
             InvoiceRepository invoiceRepository,
             SupplierService supplierService,
             BatchService batchService,
-            InvoiceCSVLector invoiceCSVLector,
-            UserService userService) {
+            InvoiceCSVLector invoiceCSVLector) {
         this.invoiceRepository = invoiceRepository;
         this.supplierService = supplierService;
         this.batchService = batchService;
         this.invoiceCSVLector = invoiceCSVLector;
-        this.userService = userService;
+    }
+
+    @Transactional
+    public Invoice save(Invoice invoice) {
+        return invoiceRepository.save(invoice);
     }
 
     @Transactional
@@ -63,14 +64,14 @@ public class InvoiceService {
         newInvoice.setUser(user);
         newInvoice.setInvoiceDate(invoice.invoiceDate());
         newInvoice.setBatch(new ArrayList<>());
-        newInvoice = invoiceRepository.save(newInvoice);
+        newInvoice = save(newInvoice);
 
         List<Batch> batches = newInvoice.getBatch();
         for(var batch : invoice.batches()) {
             Batch createdBatch = batchService.createBatch(user.getId(), batch, newInvoice.getId());
             batches.add(createdBatch);
         }
-        return invoiceRepository.save(newInvoice);
+        return save(newInvoice);
     }
 
     @Transactional(readOnly = true)
@@ -108,7 +109,7 @@ public class InvoiceService {
             return invoice;
         }
         invoice.setStatus(status);
-        return invoiceRepository.save(invoice);
+        return save(invoice);
     }
 
     @Transactional
@@ -117,7 +118,7 @@ public class InvoiceService {
             batchService.addStockQuantity(batch, batch.getQuantity(), invoice.getUser());
         }
         invoice.setStatus(InvoiceStatus.RECEIVED);
-        return invoiceRepository.save(invoice);
+        return save(invoice);
     }
 
     @Transactional(readOnly = true)
@@ -135,9 +136,6 @@ public class InvoiceService {
     @Transactional
     public void deleteInvoice(String invoiceNumber, UUID userId) {
         Invoice invoice = findInvoiceByInvoiceNumber(invoiceNumber, userId);
-        if (!invoice.getUser().getId().equals(userId)) {
-            throw new UnauthorizedActionException("Unauthorized access to invoice");
-        }
         if(invoice.getStatus() != InvoiceStatus.PENDING) {
             throw new ConflictException("Only pending invoices can be deleted");
         }
@@ -153,29 +151,28 @@ public class InvoiceService {
         if(existingInvoice.getStatus() != InvoiceStatus.PENDING) {
             throw new ConflictException("Only pending invoices can be updated");
         }
-        existingInvoice.setInvoiceNumber(invoiceRequest.invoiceNumber());
-
         if(!existingInvoice.getInvoiceNumber().equals(invoiceRequest.invoiceNumber())) {
             if(invoiceRepository.findByInvoiceNumber(invoiceRequest.invoiceNumber()).isPresent()) {
                 throw new ConflictException("Invoice number already exists");
             }
         }
+        existingInvoice.setInvoiceNumber(invoiceRequest.invoiceNumber());
 
         existingInvoice.setInvoiceDate(invoiceRequest.invoiceDate());
         Supplier supplier = supplierService.findOrRegister(invoiceRequest.supplierName());
         existingInvoice.setStatus(invoiceRequest.status());
         existingInvoice.setSupplier(supplier);
         existingInvoice.setInvoiceDate(LocalDate.now());
-        return invoiceRepository.save(existingInvoice);
+        return save(existingInvoice);
     }
     @Transactional
-    public List<Invoice> createInvoicesFromCSV(MultipartFile csvContent, UUID id) {
+    public List<Invoice> createInvoicesFromCSV(User user,MultipartFile csvContent) {
         if (csvContent == null || csvContent.isEmpty()) {
-            throw new BadRequestException("Debe adjuntar un archivo CSV.");
+            throw new BadRequestException("No file uploaded or file is empty.");
         }
         String originalFilename = csvContent.getOriginalFilename();
         if (originalFilename == null || !originalFilename.toLowerCase(Locale.ROOT).endsWith(".csv")) {
-            throw new BadRequestException("El archivo debe tener extension .csv.");
+            throw new BadRequestException("The file must have a .csv extension.");
         }
 
         File tempCsv;
@@ -183,10 +180,9 @@ public class InvoiceService {
             tempCsv = File.createTempFile("invoice-import-", ".csv");
             csvContent.transferTo(tempCsv);
         } catch (IOException ex) {
-            throw new BadRequestException("No se pudo procesar el archivo CSV: " + ex.getMessage());
+            throw new BadRequestException("Could not process the CSV file: " + ex.getMessage());
         }
 
-        User user = userService.findById(id);
         List<Invoice> createdInvoices = new ArrayList<>();
         try {
             List<InvoiceRequest> requests = invoiceCSVLector.readCSV(tempCsv);
