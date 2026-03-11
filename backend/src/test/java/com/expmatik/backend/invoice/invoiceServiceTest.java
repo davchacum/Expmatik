@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -339,14 +340,14 @@ public class InvoiceServiceTest {
         BatchCreate batchCreate1 = new BatchCreate(batch1);
         UUID createdInvoiceId = UUID.fromString("00000000-0000-0000-0000-000000000099");
         InvoiceRequest request = new InvoiceRequest(
-            "INV-003",
+            "INV-001",
             "Supplier A",
             InvoiceStatus.PENDING,
             Arrays.asList(batchCreate1),
             LocalDate.of(2026, 3, 1)
         );
 
-        when(invoiceRepository.findByInvoiceNumber("INV-003")).thenReturn(Optional.empty());
+        when(invoiceRepository.findByInvoiceNumber("INV-001")).thenReturn(Optional.empty());
         when(supplierService.findOrRegister("Supplier A")).thenReturn(supplier1);
         when(invoiceRepository.save(any(Invoice.class))).thenAnswer(invocation -> {
             Invoice savedInvoice = invocation.getArgument(0);
@@ -369,16 +370,88 @@ public class InvoiceServiceTest {
             Invoice createdInvoice = invoiceService.createInvoice(user, request);
 
             assertNotNull(createdInvoice);
-            assertEquals("INV-003", createdInvoice.getInvoiceNumber());
-            assertEquals(supplier1, createdInvoice.getSupplier());
+            assertEquals(request.invoiceDate(), createdInvoice.getInvoiceDate());
+            assertEquals(request.status(), createdInvoice.getStatus());
+            assertEquals(request.invoiceNumber(), createdInvoice.getInvoiceNumber());
+            assertEquals(request.supplierName(), createdInvoice.getSupplier().getName());
             assertEquals(user, createdInvoice.getUser());
             assertEquals(1, createdInvoice.getBatch().size());
             assertEquals(batchCreate1.quantity(), createdInvoice.getBatch().get(0).getQuantity());
 
             verify(supplierService).findOrRegister("Supplier A");
-            verify(invoiceRepository).findByInvoiceNumber("INV-003");
+            verify(invoiceRepository).findByInvoiceNumber("INV-001");
             verify(batchService).createBatch(eq(user.getId()), eq(batchCreate1), eq(createdInvoiceId));
             verify(invoiceRepository, times(2)).save(any(Invoice.class));
+    }
+    @Test
+    @DisplayName("createInvoice should create a new invoice with status RECEIVED and mark it as received")
+    void testCreateInvoice_ValidDataReceivedStatus() {
+
+        User user = user1;
+        BatchCreate batchCreate1 = new BatchCreate(batch1);
+        UUID createdInvoiceId = UUID.fromString("00000000-0000-0000-0000-000000000099");
+        InvoiceRequest request = new InvoiceRequest(
+            "INV-004",
+            "Supplier A",
+            InvoiceStatus.RECEIVED,
+            Arrays.asList(batchCreate1),
+            LocalDate.of(2026, 3, 1)
+        );
+
+        when(invoiceRepository.findByInvoiceNumber("INV-004")).thenReturn(Optional.empty());
+        when(supplierService.findOrRegister("Supplier A")).thenReturn(supplier1);
+        when(invoiceRepository.save(any(Invoice.class))).thenAnswer(invocation -> {
+            Invoice savedInvoice = invocation.getArgument(0);
+            if (savedInvoice.getId() == null) {
+                savedInvoice.setId(createdInvoiceId);
+            }
+            return savedInvoice;
+        });
+        when(batchService.createBatch(any(UUID.class), any(BatchCreate.class), any(UUID.class)))
+            .thenAnswer(invocation -> {
+                BatchCreate batchCreate = invocation.getArgument(1);
+                Batch batch = new Batch();
+                batch.setId(UUID.randomUUID());
+                batch.setProduct(batch1.getProduct());
+                batch.setQuantity(batchCreate.quantity());
+                batch.setUnitPrice(batchCreate.unitPrice());
+                return batch;
+            });
+
+            Invoice createdInvoice = invoiceService.createInvoice(user, request);
+
+            assertNotNull(createdInvoice);
+            assertEquals(request.invoiceDate(), createdInvoice.getInvoiceDate());
+            assertEquals(request.status(), createdInvoice.getStatus());
+            assertEquals(request.invoiceNumber(), createdInvoice.getInvoiceNumber());
+            assertEquals(request.supplierName(), createdInvoice.getSupplier().getName());
+            assertEquals(user, createdInvoice.getUser());
+            assertEquals(1, createdInvoice.getBatch().size());
+            assertEquals(batchCreate1.quantity(), createdInvoice.getBatch().get(0).getQuantity());
+            assertEquals(InvoiceStatus.RECEIVED, createdInvoice.getStatus());
+
+            verify(supplierService).findOrRegister("Supplier A");
+            verify(invoiceRepository).findByInvoiceNumber("INV-004");
+            verify(batchService).createBatch(eq(user.getId()), eq(batchCreate1), eq(createdInvoiceId));
+            verify(invoiceRepository, times(3)).save(any(Invoice.class));
+    
+    }
+
+    @Test
+    @DisplayName("createInvoice should throw BadRequestException if batches list is empty")
+    void testCreateInvoice_EmptyBatches() {
+        User user = user1;
+        InvoiceRequest request = new InvoiceRequest(
+            "INV-004",
+            "Supplier A",
+            InvoiceStatus.PENDING,
+            new ArrayList<>(),
+            LocalDate.of(2026, 3, 1)
+        );
+
+        assertThatThrownBy(() -> invoiceService.createInvoice(user, request))
+            .isInstanceOf(BadRequestException.class)
+            .hasMessage("Invoice must have at least one batch");
     }
 
     @Test
@@ -564,7 +637,7 @@ public class InvoiceServiceTest {
 
         assertThatThrownBy(() -> invoiceService.updateInvoiceStatus(invoiceId, newStatus, userId))
             .isInstanceOf(ConflictException.class)
-            .hasMessage("Cannot change status of an invoice that has already been received");
+            .hasMessage("Only pending invoices can be updated");
     }
 
     @Test
@@ -579,9 +652,8 @@ public class InvoiceServiceTest {
 
         assertThatThrownBy(() -> invoiceService.updateInvoiceStatus(invoiceId, newStatus, userId))
             .isInstanceOf(ConflictException.class)
-            .hasMessage("Cannot change status of a canceled invoice");
+            .hasMessage("Only pending invoices can be updated");
     }
-
     // == markInvoiceAsReceived tests ==
 
     @Test
@@ -606,26 +678,26 @@ public class InvoiceServiceTest {
     @Test
     @DisplayName("deleteInvoice should delete invoice if it exists and belongs to user")
     void testDeleteInvoice_Valid() {
-        String invoiceNumber = invoice1.getInvoiceNumber();
+        UUID invoiceId = invoice1.getId();
         UUID userId = user1.getId();
 
-        when(invoiceRepository.findByInvoiceNumber(invoiceNumber)).thenReturn(Optional.of(invoice1));
+        when(invoiceRepository.findById(invoiceId)).thenReturn(Optional.of(invoice1));
 
-        invoiceService.deleteInvoice(invoiceNumber, userId);
+        invoiceService.deleteInvoice(invoiceId, userId);
 
-        verify(invoiceRepository).findByInvoiceNumber(invoiceNumber);
+        verify(invoiceRepository).findById(invoiceId);
         verify(invoiceRepository).delete(invoice1);
     }
 
     @Test
     @DisplayName("deleteInvoice should throw ResourceNotFoundException if invoice does not exist")
     void testDeleteInvoice_NotFound() {
-        String invoiceNumber = "INV-009";
+        UUID invoiceId = invoice1.getId();
         UUID userId = user1.getId();
 
-        when(invoiceRepository.findByInvoiceNumber(invoiceNumber)).thenReturn(Optional.empty());
+        when(invoiceRepository.findById(invoiceId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> invoiceService.deleteInvoice(invoiceNumber, userId))
+        assertThatThrownBy(() -> invoiceService.deleteInvoice(invoiceId, userId))
             .isInstanceOf(ResourceNotFoundException.class)
             .hasMessage("Invoice not found");
     }
@@ -633,12 +705,12 @@ public class InvoiceServiceTest {
     @Test
     @DisplayName("deleteInvoice should throw UnauthorizedActionException if invoice belongs to another user")
     void testDeleteInvoice_Unauthorized() {
-        String invoiceNumber = invoice1.getInvoiceNumber();
+        UUID invoiceId = invoice1.getId();
         UUID userId = user2.getId();
 
-        when(invoiceRepository.findByInvoiceNumber(invoiceNumber)).thenReturn(Optional.of(invoice1));
+        when(invoiceRepository.findById(invoiceId)).thenReturn(Optional.of(invoice1));
 
-        assertThatThrownBy(() -> invoiceService.deleteInvoice(invoiceNumber, userId))
+        assertThatThrownBy(() -> invoiceService.deleteInvoice(invoiceId, userId))
             .isInstanceOf(UnauthorizedActionException.class)
             .hasMessage("Unauthorized access to invoice");
     }
@@ -646,13 +718,13 @@ public class InvoiceServiceTest {
     @Test
     @DisplayName("deleteInvoice should throw UnauthorizedActionException if invoice is not pending")
     void testDeleteInvoice_NotPending() {
-        String invoiceNumber = invoice1.getInvoiceNumber();
+        UUID invoiceId = invoice1.getId();
         UUID userId = user1.getId();
         invoice1.setStatus(InvoiceStatus.RECEIVED);
 
-        when(invoiceRepository.findByInvoiceNumber(invoiceNumber)).thenReturn(Optional.of(invoice1));
+        when(invoiceRepository.findById(invoiceId)).thenReturn(Optional.of(invoice1));
 
-        assertThatThrownBy(() -> invoiceService.deleteInvoice(invoiceNumber, userId))
+        assertThatThrownBy(() -> invoiceService.deleteInvoice(invoiceId, userId))
             .isInstanceOf(ConflictException.class)
             .hasMessage("Only pending invoices can be deleted");
     }
@@ -678,8 +750,10 @@ public class InvoiceServiceTest {
         Invoice updatedInvoice = invoiceService.updateInvoice(invoiceId, request, userId);
 
         assertNotNull(updatedInvoice);
-        assertEquals("INV-001-UPDATED", updatedInvoice.getInvoiceNumber());
-        assertEquals(supplier1, updatedInvoice.getSupplier());
+        assertEquals(request.invoiceDate(), updatedInvoice.getInvoiceDate());
+        assertEquals(request.status(), updatedInvoice.getStatus());
+        assertEquals(request.invoiceNumber(), updatedInvoice.getInvoiceNumber());
+        assertEquals(request.supplierName(), updatedInvoice.getSupplier().getName());
         assertEquals(user1, updatedInvoice.getUser());
         assertEquals(2, updatedInvoice.getBatch().size());
         assertEquals(batch1.getQuantity(), updatedInvoice.getBatch().get(0).getQuantity());
@@ -687,6 +761,41 @@ public class InvoiceServiceTest {
 
         verify(invoiceRepository).findById(invoiceId);
         verify(supplierService).findOrRegister("Supplier A");
+
+        
+    }
+
+    @Test
+    @DisplayName("updateInvoice should update invoice with a new invoice number if it does not conflict with existing invoices")
+    void testUpdateInvoice_ValidAndNewInvoiceNumber() {
+
+        UUID invoiceId = invoice1.getId();
+        UUID userId = user1.getId();
+        InvoiceRequestUpdate request = new InvoiceRequestUpdate(
+            "INV-001-UPDATED",
+            "Supplier A",
+            InvoiceStatus.PENDING,
+            LocalDate.of(2026, 3, 1)
+        );
+
+        when(invoiceRepository.findById(invoiceId)).thenReturn(Optional.of(invoice1));
+        when(supplierService.findOrRegister("Supplier A")).thenReturn(supplier1);
+        when(invoiceRepository.findByInvoiceNumber("INV-001-UPDATED")).thenReturn(Optional.empty());
+        when(invoiceRepository.save(any(Invoice.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Invoice updatedInvoice = invoiceService.updateInvoice(invoiceId, request, userId);
+
+        assertNotNull(updatedInvoice);
+        assertEquals(request.invoiceDate(), updatedInvoice.getInvoiceDate());
+        assertEquals(request.status(), updatedInvoice.getStatus());
+        assertEquals(request.invoiceNumber(), updatedInvoice.getInvoiceNumber());
+        assertEquals(request.supplierName(), updatedInvoice.getSupplier().getName());
+
+        verify(invoiceRepository).findById(invoiceId);
+        verify(supplierService).findOrRegister("Supplier A");
+        verify(invoiceRepository).findByInvoiceNumber("INV-001-UPDATED");
+
+        
     }
 
     @Test
@@ -966,4 +1075,5 @@ public class InvoiceServiceTest {
             .isInstanceOf(BadRequestException.class)
             .hasMessage("Line 2: invalid status -> SENT. Allowed values: PENDING, RECEIVED, CANCELED.");
     }
+    
 }

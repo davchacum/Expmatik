@@ -59,17 +59,25 @@ public class InvoiceService {
         
         Invoice newInvoice = new Invoice();
         newInvoice.setInvoiceNumber(invoice.invoiceNumber());
-        newInvoice.setStatus(invoice.status());
+        newInvoice.setStatus(InvoiceStatus.PENDING);
         newInvoice.setSupplier(supplier);
         newInvoice.setUser(user);
         newInvoice.setInvoiceDate(invoice.invoiceDate());
         newInvoice.setBatch(new ArrayList<>());
         newInvoice = save(newInvoice);
 
+        if(invoice.batches().isEmpty()) {
+            throw new BadRequestException("Invoice must have at least one batch");
+        }
         List<Batch> batches = newInvoice.getBatch();
         for(var batch : invoice.batches()) {
             Batch createdBatch = batchService.createBatch(user.getId(), batch, newInvoice.getId());
             batches.add(createdBatch);
+        }
+        if(invoice.status() == InvoiceStatus.RECEIVED) {
+            newInvoice = markInvoiceAsReceived(newInvoice);
+        }else{
+            newInvoice.setStatus(invoice.status());
         }
         return save(newInvoice);
     }
@@ -98,11 +106,8 @@ public class InvoiceService {
         if (!invoice.getUser().getId().equals(userId)) {
             throw new UnauthorizedActionException("Unauthorized access to invoice");
         }
-        if(invoice.getStatus() == InvoiceStatus.RECEIVED) {
-            throw new ConflictException("Cannot change status of an invoice that has already been received");
-        }
-        if(invoice.getStatus() == InvoiceStatus.CANCELED) {
-            throw new ConflictException("Cannot change status of a canceled invoice");
+        if(invoice.getStatus() != InvoiceStatus.PENDING) {
+            throw new ConflictException("Only pending invoices can be updated");
         }
         if(status == InvoiceStatus.RECEIVED){
             invoice=markInvoiceAsReceived(invoice);
@@ -122,11 +127,6 @@ public class InvoiceService {
     }
 
     @Transactional(readOnly = true)
-    public List<Invoice> getAllInvoices(UUID userId) {
-        return invoiceRepository.findByUserId(userId);
-    }
-
-    @Transactional(readOnly = true)
     public List<Invoice> searchInvoices(UUID userId, InvoiceStatus status, LocalDate startDate, LocalDate endDate, 
                                         String invoiceNumber, String supplierName, BigDecimal minPrice, BigDecimal maxPrice) {
         String statusStr = status != null ? status.name() : null;
@@ -134,8 +134,8 @@ public class InvoiceService {
     }
 
     @Transactional
-    public void deleteInvoice(String invoiceNumber, UUID userId) {
-        Invoice invoice = findInvoiceByInvoiceNumber(invoiceNumber, userId);
+    public void deleteInvoice(UUID invoiceId, UUID userId) {
+        Invoice invoice = findInvoiceById(invoiceId, userId);
         if(invoice.getStatus() != InvoiceStatus.PENDING) {
             throw new ConflictException("Only pending invoices can be deleted");
         }
@@ -151,18 +151,22 @@ public class InvoiceService {
         if(existingInvoice.getStatus() != InvoiceStatus.PENDING) {
             throw new ConflictException("Only pending invoices can be updated");
         }
-        if(!existingInvoice.getInvoiceNumber().equals(invoiceRequest.invoiceNumber())) {
-            if(invoiceRepository.findByInvoiceNumber(invoiceRequest.invoiceNumber()).isPresent()) {
-                throw new ConflictException("Invoice number already exists");
-            }
+        if(!existingInvoice.getInvoiceNumber().equals(invoiceRequest.invoiceNumber()) 
+            && invoiceRepository.findByInvoiceNumber(invoiceRequest.invoiceNumber()).isPresent()) {
+            throw new ConflictException("Invoice number already exists");
         }
+        
         existingInvoice.setInvoiceNumber(invoiceRequest.invoiceNumber());
 
         existingInvoice.setInvoiceDate(invoiceRequest.invoiceDate());
         Supplier supplier = supplierService.findOrRegister(invoiceRequest.supplierName());
-        existingInvoice.setStatus(invoiceRequest.status());
+        if(invoiceRequest.status() == InvoiceStatus.RECEIVED) {
+            existingInvoice = markInvoiceAsReceived(existingInvoice);
+        }else{
+            existingInvoice.setStatus(invoiceRequest.status());
+        }
         existingInvoice.setSupplier(supplier);
-        existingInvoice.setInvoiceDate(LocalDate.now());
+        existingInvoice.setInvoiceDate(invoiceRequest.invoiceDate());
         return save(existingInvoice);
     }
     @Transactional

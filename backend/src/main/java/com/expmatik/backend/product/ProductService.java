@@ -38,13 +38,6 @@ public class ProductService {
         this.productRepository = productRepository;
         this.fileStorageService = fileStorageService;
     }
-
-    @Transactional(readOnly = true)
-    public Product findByBarcode(UUID userId,String barcode) {
-        return productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with barcode: " + barcode));
-    }
-
     @Transactional(readOnly = true)
     public Optional<Product> findByBarcodeOptional(UUID userId, String barcode) {
         return productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId);

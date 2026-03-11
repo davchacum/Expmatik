@@ -33,6 +33,8 @@ public class BatchIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    // == Pruebas para POST /api/batches == //
+
     @Test
     @WithUserDetails("admin@expmatik.com")
     void testCreateBatch() throws Exception {

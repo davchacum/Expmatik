@@ -16,8 +16,6 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
 
     Optional<Invoice> findByInvoiceNumber(String invoiceNumber);
 
-    List<Invoice> findByUserId(UUID userId);
-
     List<Invoice> findByUserIdAndStatus(UUID userId, InvoiceStatus status);
 
     @Query(value = "SELECT DISTINCT i.* FROM invoice i " +

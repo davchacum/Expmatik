@@ -25,11 +25,9 @@ public record InvoiceResponse(
             invoice.getInvoiceNumber(),
             invoice.getStatus(),
             invoice.getSupplier().getName(),
-            invoice.getBatch() != null 
-                ? invoice.getBatch().stream()
+            invoice.getBatch().stream()
                     .map(BatchResponse::fromBatch)
-                    .collect(Collectors.toList())
-                : List.of(),
+                    .collect(Collectors.toList()),
             invoice.getTotalAmount()
         );
     }

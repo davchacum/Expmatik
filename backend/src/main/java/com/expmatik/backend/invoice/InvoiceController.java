@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,6 +14,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -53,17 +55,10 @@ public class InvoiceController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public ResponseEntity<?> getInvoiceById(UUID id) {
+    public ResponseEntity<?> getInvoiceById(@PathVariable UUID id) {
         User user = userService.getUserProfile();
         Invoice invoice = invoiceService.findInvoiceById(id, user.getId());
         return ResponseEntity.ok(InvoiceResponse.fromInvoice(invoice));
-    }
-
-    @GetMapping
-    @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public ResponseEntity<?> getAllInvoices() {
-        User user = userService.getUserProfile();
-        return ResponseEntity.ok(InvoiceResponse.fromInvoiceList(invoiceService.getAllInvoices(user.getId())));
     }
 
     @GetMapping("/search")
@@ -84,7 +79,7 @@ public class InvoiceController {
 
     @GetMapping("/number/{invoiceNumber}")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public ResponseEntity<?> getInvoiceByInvoiceNumber(String invoiceNumber) {
+    public ResponseEntity<?> getInvoiceByInvoiceNumber(@PathVariable String invoiceNumber) {
         User user = userService.getUserProfile();
         Invoice invoice = invoiceService.findInvoiceByInvoiceNumber(invoiceNumber, user.getId());
         return ResponseEntity.ok(InvoiceResponse.fromInvoice(invoice));
@@ -104,8 +99,7 @@ public class InvoiceController {
         BatchValidationResponse validation = productService.validateBarcodes(barcodes, user.getId());
 
         if (!validation.notFound().isEmpty()) {
-            return ResponseEntity.badRequest().body(validation);
-        }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("The following barcodes were not found: " + String.join(", ", validation.notFound()));        }
 
         Invoice invoice = invoiceService.createInvoice(user, invoiceRequest);
         return ResponseEntity.ok(InvoiceResponse.fromInvoice(invoice));
@@ -113,23 +107,23 @@ public class InvoiceController {
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public ResponseEntity<?> updateInvoiceStatus(UUID id, InvoiceStatus status) {
+    public ResponseEntity<?> updateInvoiceStatus(@PathVariable UUID id, @RequestParam InvoiceStatus status) {
         User user = userService.getUserProfile();
         Invoice updatedInvoice = invoiceService.updateInvoiceStatus(id, status, user.getId());
         return ResponseEntity.ok(InvoiceResponse.fromInvoice(updatedInvoice));
     }
 
-    @DeleteMapping("/{invoiceNumber}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public ResponseEntity<?> deleteInvoice(String invoiceNumber) {
+    public ResponseEntity<?> deleteInvoice(@PathVariable UUID id) {
         User user = userService.getUserProfile();
-        invoiceService.deleteInvoice(invoiceNumber, user.getId());
-        return ResponseEntity.ok().build();
+        invoiceService.deleteInvoice(id, user.getId());
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public ResponseEntity<?> updateInvoice(UUID id, @RequestBody @Valid InvoiceRequestUpdate invoiceRequest) {
+    public ResponseEntity<?> updateInvoice(@PathVariable UUID id, @RequestBody @Valid InvoiceRequestUpdate invoiceRequest) {
         User user = userService.getUserProfile();
         Invoice updatedInvoice = invoiceService.updateInvoice(id, invoiceRequest, user.getId());
         return ResponseEntity.ok(InvoiceResponse.fromInvoice(updatedInvoice));

@@ -8,6 +8,7 @@ import com.expmatik.backend.productInfo.ProductInfo;
 
 public record ProductInfoResponse(
 
+    UUID productInfoId,
     UUID productId,
     String productName,
     Integer stockQuantity,
@@ -23,6 +24,7 @@ public record ProductInfoResponse(
 
     public static ProductInfoResponse fromProductInfo(ProductInfo productInfo) {
         return new ProductInfoResponse(
+            productInfo.getId(),
             productInfo.getProduct().getId(),
             productInfo.getProduct().getName(),
             productInfo.getStockQuantity(),
