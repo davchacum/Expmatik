@@ -1,12 +1,10 @@
 package com.expmatik.backend.user;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,11 +15,9 @@ import com.expmatik.backend.jwt.UserDetailsImpl;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
@@ -30,41 +26,8 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public List<User> findAll() {
-        return userRepository.findAll();
-    }
-
-    @Transactional(readOnly = true)
-    public User findById(UUID id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-    }
-
-    @Transactional(readOnly = true)
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
-    }
-
-    @Transactional
-    public User update(UUID id, User user) {
-        User existingUser = findById(id);
-
-        existingUser.setEmail(user.getEmail());
-        existingUser.setRole(user.getRole());
-
-        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
-            existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
-        }
-
-        return userRepository.save(existingUser);
-    }
-
-    @Transactional
-    public void deleteById(UUID id) {
-        if (!userRepository.existsById(id)) {
-            throw new ResourceNotFoundException("User not found");
-        }
-        userRepository.deleteById(id);
     }
 
     public User getUserProfile() {
@@ -77,7 +40,7 @@ public class UserService {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth == null) {
-            throw new ResourceNotFoundException("Auth not found");
+            throw new AuthenticationCredentialsNotFoundException("User not authenticated") {};
         }
 
         Object principal = auth.getPrincipal();
@@ -86,7 +49,7 @@ public class UserService {
             return userDetails.getUsername();
         }
 
-        throw new ResourceNotFoundException("User not authenticated");
+        throw new AuthenticationCredentialsNotFoundException("User not authenticated") {};
     }
 
 }
