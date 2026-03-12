@@ -39,6 +39,7 @@ public class ProductInfoServiceTest {
     private Product productCustom;
     private Product productNoCustom;
     private ProductInfo productInfo;
+    private ProductInfo productInfo2;
     private User user1;
     private User user2;
 
@@ -81,6 +82,27 @@ public class ProductInfoServiceTest {
         productInfo.setVatRate(new BigDecimal("0.10"));
         productInfo.setSaleUnitPrice(new BigDecimal("5.99"));
         productInfo.setLastPurchaseUnitPrice(new BigDecimal("4.99"));
+
+        productInfo2 = new ProductInfo();
+        productInfo2.setId(UUID.fromString("00000000-0000-0000-0000-000000000002"));
+        productInfo2.setStockQuantity(10);
+        productInfo2.setVatRate(new BigDecimal("0.10"));
+        productInfo2.setSaleUnitPrice(new BigDecimal("5.99"));
+        productInfo2.setLastPurchaseUnitPrice(null);
+    }
+
+    //Verificar Entidad ProductInfo getTotalStockValue, getLastPurchaseUnitPriceWithVat, getUnitProfit y getTotalProfit
+    @Test
+    void testProductInfoCalculations() {
+        assertThat(productInfo.getTotalStockValue()).isEqualByComparingTo(new BigDecimal("59.9"));
+        assertThat(productInfo.getLastPurchaseUnitPriceWithVat()).isEqualByComparingTo(new BigDecimal("5.489"));
+        assertThat(productInfo.getUnitProfit()).isEqualByComparingTo(new BigDecimal("0.501"));
+        assertThat(productInfo.getTotalProfit()).isEqualByComparingTo(new BigDecimal("5.01"));
+
+        assertThat(productInfo2.getTotalStockValue()).isEqualByComparingTo(new BigDecimal("59.9"));
+        assertThat(productInfo2.getLastPurchaseUnitPriceWithVat()).isNull();
+        assertThat(productInfo2.getUnitProfit()).isNull();
+        assertThat(productInfo2.getTotalProfit()).isNull();
     }
 
     // ==================== getOrCreateProductInfo Tests ====================

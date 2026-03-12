@@ -67,24 +67,23 @@ public class ProductInfo extends BaseEntity {
 
     @Transient
     public BigDecimal getTotalStockValue() {
-        if (saleUnitPrice == null || vatRate == null || stockQuantity == null) return BigDecimal.ZERO;
         return saleUnitPrice.multiply(BigDecimal.valueOf(stockQuantity));
     }
 
     @Transient
     public BigDecimal getLastPurchaseUnitPriceWithVat() {
-        if (lastPurchaseUnitPrice == null || vatRate == null) return BigDecimal.ZERO;
+        if (lastPurchaseUnitPrice == null) return null;
         return lastPurchaseUnitPrice.multiply(BigDecimal.ONE.add(vatRate));
     }
     @Transient
     public BigDecimal getUnitProfit() {
-        if (saleUnitPrice == null || lastPurchaseUnitPrice == null) return BigDecimal.ZERO;
+        if (lastPurchaseUnitPrice == null) return null;
         return saleUnitPrice.subtract(getLastPurchaseUnitPriceWithVat());
     }
 
     @Transient
     public BigDecimal getTotalProfit() {
-        if (getUnitProfit() == null || stockQuantity == null) return BigDecimal.ZERO;
+        if (getUnitProfit() == null) return null;
         return getUnitProfit().multiply(BigDecimal.valueOf(stockQuantity));
     }
 }
