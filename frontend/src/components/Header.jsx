@@ -1,70 +1,80 @@
+import { useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../home/home.css";
+import "./header.css";
 
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const titleRef = useRef(null);
 
   const isAuth = !!localStorage.getItem("accessToken");
-
   const isAuthPage = ["/login", "/register"].includes(location.pathname);
+
+  const getTitleText = (path) => {
+    if (path === "/home") return "Panel Principal";
+    if (path === "/profile") return "Mi Perfil";
+    return "Mi Aplicacion";
+  };
+
+  useEffect(() => {
+    if (!isAuthPage) {
+      const currentTitle = getTitleText(location.pathname);
+
+      document.title = currentTitle;
+
+      if (titleRef.current) {
+        titleRef.current.focus();
+      }
+    }
+  }, [location.pathname, isAuthPage]);
 
   if (isAuthPage) return null;
 
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/logout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deviceId: "web" }),
-        credentials: "include",
-      });
-    } catch (e) {
-      console.error("Error durante el logout:", e);
-    }
-    localStorage.clear();
-    navigate("/login", { replace: true });
-  };
-  
-  const getTitle = () => {
-    if (location.pathname === "/home") return "Panel Principal";
-    return "Mi Aplicación";
-  };
-
-  const showBack = location.pathname !== "/home";
-
-  const showHome = location.pathname !== "/home";
-
   return (
     <div className="header-wrapper">
-      <header className="home-header">
-        <div className="header-left">
-          {showBack && (
-            <button
-              className="header-btn"
-              title="Volver"
-              onClick={() => navigate(-1)}
-            >
-              ←
-            </button>
+      <header className="home-header" role="banner">
+        <nav className="header-left" aria-label="Navegacion secundaria">
+          {location.pathname !== "/home" && (
+            <>
+              <button
+                className="header-btn"
+                aria-label="Volver a la pagina anterior"
+                onClick={() => navigate(-1)}
+              >
+                Volver
+              </button>
+              <button
+                className="header-btn"
+                aria-label="Ir al panel principal"
+                onClick={() => navigate("/home")}
+              >
+                Inicio
+              </button>
+            </>
           )}
-          {showHome && (
-            <button
-              className="header-btn"
-              title="Ir al Home"
-              onClick={() => navigate("/home")}
-            >
-              🏠
-            </button>
-          )}
-        </div>
+        </nav>
+
         <div className="header-center">
-          <span className="header-title">{getTitle()}</span>
+          <h1
+            ref={titleRef}
+            className="header-title"
+            aria-live="polite"
+            tabIndex="-1"
+            style={{ outline: "none" }}
+          >
+            {getTitleText(location.pathname)}
+          </h1>
         </div>
-        <div className="header-right">
-          {isAuth && (
-            <button className="logout-btn" onClick={handleLogout}>
-              Cerrar sesión
+
+        <div className="header-right" aria-label="Opciones de usuario">
+          {isAuth && location.pathname !== "/profile" && (
+            <button
+              className="header-btn"
+              aria-label="Ver mi perfil de usuario"
+              onClick={() => navigate("/profile")}
+            >
+              Ver Perfil
             </button>
           )}
         </div>

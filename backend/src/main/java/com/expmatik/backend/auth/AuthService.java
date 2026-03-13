@@ -166,6 +166,10 @@ public class AuthService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public User getCurrentUser() {
+        return userService.getUserProfile();
+    }
 }
 
 

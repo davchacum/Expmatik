@@ -447,6 +447,52 @@ public class AuthIntegrationTest {
                 .andExpect(jsonPath("$.message").value("Token valid"));
     }
 
+    // == Test de /api/auth/profile ==
+    @Test
+    void getProfile_shouldReturnUserProfileForAuthenticatedUser() throws Exception {
 
+        // Registrar usuario y obtener access token
+        AuthRequest register = new AuthRequest(
+                "profile@email.com",
+                "password",
+                "device1",
+                Role.ADMINISTRATOR,
+                "Alice",
+                "Smith"
+        );
+
+        MvcResult registerResult = mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(register)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String responseBody = registerResult.getResponse().getContentAsString();
+        String accessToken = objectMapper.readTree(responseBody).get("token").asText();
+
+        // Obtener el perfil del usuario autenticado
+        mockMvc.perform(get("/api/auth/profile")
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("profile@email.com"))
+                .andExpect(jsonPath("$.firstName").value("Alice"))
+                .andExpect(jsonPath("$.lastName").value("Smith"))
+                .andExpect(jsonPath("$.role").value("ADMINISTRATOR"));
+        }
+        
+
+    @Test
+    void getProfile_shouldReturnUnauthorizedWhenNoToken() throws Exception {
+        mockMvc.perform(get("/api/auth/profile"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getProfile_shouldReturnUnauthorizedWithInvalidToken() throws Exception {
+        String fakeToken = "this.is.not.valid";
+        mockMvc.perform(get("/api/auth/profile")
+                        .header("Authorization", "Bearer " + fakeToken))
+                .andExpect(status().isUnauthorized());
+    }
 
 }

@@ -16,6 +16,8 @@ import com.expmatik.backend.auth.DTOs.AuthResponse;
 import com.expmatik.backend.auth.DTOs.AuthResult;
 import com.expmatik.backend.auth.DTOs.RefreshTokenRequest;
 import com.expmatik.backend.auth.DTOs.ValidateTokenResponse;
+import com.expmatik.backend.user.User;
+import com.expmatik.backend.user.DTOs.UserProfile;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -128,6 +130,14 @@ public class AuthController {
         }
 
         return ResponseEntity.ok(new ValidateTokenResponse(true, "Token valid"));
+    }
+    @GetMapping("/profile")
+    @Operation(summary = "Obtener perfil", description = "Obtiene el perfil del usuario autenticado")
+    @SecurityRequirement(name = "bearer-jwt")
+    public ResponseEntity<?> getProfile() {
+        User user = authService.getCurrentUser();
+
+        return ResponseEntity.ok(UserProfile.fromUser(user));
     }
 
 }
