@@ -35,8 +35,8 @@ public class User extends BaseEntity{
     private String password;
 
     @NotBlank
-    @Size(max = 100)
-    @Column(name = "first_name", nullable = false, length = 100)
+    @Size(max = 40)
+    @Column(name = "first_name", nullable = false, length = 40)
     private String firstName;
 
     @NotBlank

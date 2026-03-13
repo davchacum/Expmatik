@@ -1,13 +1,14 @@
+import { BrowserRouter as Router } from "react-router-dom";
+import AppRouter from "./AppRouter";
+import Header from "./components/Header";
 
-function App() {
-
+const App = () => {
   return (
-    <>
-      <div>
-        <h1>Expmatik</h1>
-      </div>
-    </>
-  )
-}
+    <Router>
+      <Header />
+      <AppRouter />
+    </Router>
+  );
+};
 
-export default App
+export default App;

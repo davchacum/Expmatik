@@ -12,6 +12,6 @@ public record AuthRequest(
     @NotBlank @Size(min = 6) String password,
     @NotBlank String deviceId,
     @NotNull Role role,
-    @NotBlank String firstName,
-    @NotBlank String lastName) {
+    @NotBlank @Size(max = 40) String firstName,
+    @NotBlank @Size(max = 100) String lastName) {
 }
