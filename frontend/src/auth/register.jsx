@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "./login.css";
 
@@ -39,6 +39,8 @@ const EyeIcon = ({ visible }) =>
 
 const Register = ({ onRegister }) => {
   const navigate = useNavigate();
+  const titleRef = useRef(null); // Referencia para el foco inicial
+
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -51,6 +53,12 @@ const Register = ({ onRegister }) => {
   const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [error, setError] = useState("");
+  
+  useEffect(() => {
+    if (titleRef.current) {
+      titleRef.current.focus();
+    }
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -116,7 +124,13 @@ const Register = ({ onRegister }) => {
         onSubmit={handleSubmit}
         aria-labelledby="register-heading"
       >
-        <h1 id="register-heading" className="login-title">
+        <h1
+          id="register-heading"
+          ref={titleRef}
+          className="login-title"
+          tabIndex="-1"
+          style={{ outline: "none" }}
+        >
           Crear cuenta
         </h1>
 

@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "./login.css";
 
-// Definido fuera para mantener coherencia con Register y mejorar rendimiento
 const EyeIcon = ({ visible }) =>
   visible ? (
     <svg
@@ -42,7 +41,14 @@ const Login = ({ onLogin }) => {
   const [form, setForm] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const titleRef = useRef(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (titleRef.current) {
+      titleRef.current.focus();
+    }
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -81,9 +87,7 @@ const Login = ({ onLogin }) => {
       if (token) {
         localStorage.setItem("accessToken", token);
         localStorage.setItem("user", JSON.stringify(data));
-        if (onLogin) {
-          onLogin(data);
-        }
+        if (onLogin) onLogin(data);
         navigate("/home");
       } else {
         setError("Error: El servidor no devolvio un token valido.");
@@ -95,13 +99,19 @@ const Login = ({ onLogin }) => {
   };
 
   return (
-    <main className="login-bg-center" role="main">
+    <main className="login-bg-center" id="main-content" role="main">
       <form
         className="login-form"
         onSubmit={handleSubmit}
         aria-labelledby="login-heading"
       >
-        <h1 id="login-heading" className="login-title">
+        <h1
+          id="login-heading"
+          ref={titleRef}
+          className="login-title"
+          tabIndex="-1"
+          style={{ outline: "none" }}
+        >
           Iniciar sesion
         </h1>
 

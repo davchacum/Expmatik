@@ -69,33 +69,51 @@ const Profile = () => {
   if (!user && !loading) return null;
 
   return (
-    <div className="home-container">
-      <div className="profile-card">
-        <h2 className="profile-card-title">Informacion de la Cuenta</h2>
+    <main className="home-container" id="main-content" role="main">
+      <div
+        className="profile-card"
+        role="region"
+        aria-labelledby="profile-info-title"
+      >
+        <h2 id="profile-info-title" className="profile-card-title">
+          Informacion de la Cuenta
+        </h2>
 
         {error && (
-          <div className="login-error" style={{ marginBottom: "20px" }}>
+          <div
+            className="login-error"
+            role="alert"
+            aria-live="assertive"
+            style={{ marginBottom: "20px" }}
+          >
             {error}
           </div>
         )}
 
-        <div className="profile-details" style={{ opacity: loading ? 0.6 : 1 }}>
+        {/* aria-busy avisa al lector que el contenido está cargando */}
+        <div
+          className="profile-details"
+          aria-busy={loading}
+          style={{ opacity: loading ? 0.6 : 1 }}
+        >
           <div className="profile-info-group">
-            <label>Nombre completo</label>
-            <p>
+            <label htmlFor="user-name">Nombre completo</label>
+            <p id="user-name">
               {user?.firstName} {user?.lastName}
             </p>
           </div>
 
           <div className="profile-info-group">
-            <label>Correo electronico</label>
-            <p>{user?.email}</p>
+            <label htmlFor="user-email">Correo electronico</label>
+            <p id="user-email">{user?.email}</p>
           </div>
 
           <div className="profile-info-group">
             <label>Rol asignado</label>
             <span
               className={`profile-role-badge ${user?.role === "MAINTAINER" ? "role-maintainer" : "role-admin"}`}
+              role="status"
+              aria-label={`Rol actual: ${user?.role}`}
             >
               {user?.role}
             </span>
@@ -103,12 +121,16 @@ const Profile = () => {
         </div>
 
         <div className="profile-actions">
-          <button className="logout-danger-btn" onClick={handleLogout}>
+          <button
+            className="logout-danger-btn"
+            onClick={handleLogout}
+            aria-label="Cerrar sesion y salir de la cuenta"
+          >
             Cerrar sesion
           </button>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 
