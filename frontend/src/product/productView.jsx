@@ -88,9 +88,68 @@ const Products = () => {
     setSearch({ ...filters });
   };
 
+  const handleAddOFF = async (e) => {
+    e.preventDefault();
+
+    if (!offBarcode || (offBarcode.length !== 8 && offBarcode.length !== 13)) {
+      setMessage({
+        text: "El código de barras debe tener 8 o 13 dígitos",
+        type: "error",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/products/non-custom?barcode=${offBarcode}`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      if (response.ok) {
+        setMessage({ text: "Producto importado con éxito", type: "success" });
+        setOffBarcode("");
+        fetchProducts();
+      } else if (response.status === 400) {
+        setMessage({
+          text: "Formato de código de barras inválido (8 o 13 dígitos)",
+          type: "error",
+        });
+      } else if (response.status === 404) {
+        setMessage({ text: "No encontrado en Open Food Facts", type: "error" });
+      } else {
+        setMessage({ text: "Error en el servidor", type: "error" });
+      }
+    } catch (err) {
+      setMessage({ text: "Error de conexión", type: "error" });
+      console.error(err);
+    }
+  };
+
   return (
     <main className="home-container" role="main">
       <div className="profile-card products-wide">
+        <div className="product-top-actions">
+          <div className="profile-info-group">
+            <label htmlFor="barcode-import">
+              Importar desde Open Food Facts
+            </label>
+            <form onSubmit={handleAddOFF} className="inline-form">
+              <input
+                id="barcode-import"
+                className="dark-input"
+                placeholder="Código de barras..."
+                value={offBarcode}
+                onChange={(e) => setOffBarcode(e.target.value)}
+              />
+              <button type="submit" className="action-btn-blue">
+                Importar
+              </button>
+            </form>
+          </div>
+        </div>
         {message.text && (
           <div
             className={
