@@ -149,7 +149,18 @@ const Products = () => {
               </button>
             </form>
           </div>
+
+          <div className="profile-info-group">
+            <label>Gestión Manual</label>
+            <button
+              className="action-btn-orange"
+              onClick={() => navigate("/products/create-custom")}
+            >
+              Añadir Nuevo Producto Personalizado
+            </button>
+          </div>
         </div>
+        
         {message.text && (
           <div
             className={
