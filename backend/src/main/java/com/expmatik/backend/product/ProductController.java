@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -92,11 +95,11 @@ public class ProductController {
     public ResponseEntity<?> searchAllProducts(
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "brand", required = false) String brand,
-            @RequestParam(value = "barcode", required = false) @ValidBarcode String barcode
-    ) {
+            @RequestParam(value = "barcode", required = false) @ValidBarcode String barcode,
+            @ParameterObject Pageable pageable    ) {
         User currentUser = userService.getUserProfile();
-        List<Product> products = productService.searchAllProducts(currentUser.getId(), name, brand, barcode);
-        List<ProductResponse> productResponseDTOs = ProductResponse.fromProductList(products);
+        Page<Product> products = productService.searchAllProducts(currentUser.getId(), name, brand, barcode, pageable);
+        Page<ProductResponse> productResponseDTOs = ProductResponse.fromProductPage(products);
         return ResponseEntity.ok(productResponseDTOs);
     }
 

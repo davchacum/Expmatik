@@ -10,6 +10,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -192,43 +194,12 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public List<Product> searchAllProducts(UUID userId, String name, String brand, String barcode) {
-        List<Product> results = new java.util.ArrayList<>();
-        
-        // Si se proporciona código de barras, búsqueda exacta (catálogo solo)
-        if (barcode != null && !barcode.isBlank()) {
-            var product = productRepository.findByBarcodeAndIsCustomFalse(barcode);
-            if (product.isPresent()) {
-                results.add(product.get());
-            }
-            return results;
-        }
-        
-        // Si se proporcionan nombre y marca
-        if (name != null && !name.isBlank() && brand != null && !brand.isBlank()) {
-            results.addAll(productRepository.findByNameContainingIgnoreCaseAndBrandContainingIgnoreCaseAndIsCustomFalse(name, brand));
-            results.addAll(productRepository.findByIsCustomTrueAndNameContainingIgnoreCaseAndBrandContainingIgnoreCaseAndCreatedById(name, brand, userId));
-            return results;
-        }
-        
-        // Si solo se proporciona nombre
-        if (name != null && !name.isBlank()) {
-            results.addAll(productRepository.findByNameContainingIgnoreCaseAndIsCustomFalse(name));
-            results.addAll(productRepository.findByIsCustomTrueAndNameContainingIgnoreCaseAndCreatedById(name, userId));
-            return results;
-        }
-        
-        // Si solo se proporciona marca
-        if (brand != null && !brand.isBlank()) {
-            results.addAll(productRepository.findByBrandContainingIgnoreCaseAndIsCustomFalse(brand));
-            results.addAll(productRepository.findByIsCustomTrueAndBrandContainingIgnoreCaseAndCreatedById(brand, userId));
-            return results;
-        }
-        
-        // Si no hay filtros, devuelve catálogo + todos mis productos personalizados
-        results.addAll(productRepository.findByIsCustomFalse());
-        results.addAll(productRepository.findByIsCustomTrueAndCreatedById(userId));
-        return results;
+    public Page<Product> searchAllProducts(UUID userId, String name, String brand, String barcode, Pageable pageable) {
+        String nameParam = (name != null && !name.isBlank()) ? name : null;
+        String brandParam = (brand != null && !brand.isBlank()) ? brand : null;
+        String barcodeParam = (barcode != null && !barcode.isBlank()) ? barcode : null;
+
+        return productRepository.searchAdvanced(userId, nameParam, brandParam, barcodeParam, pageable);
     }
 
     @Transactional

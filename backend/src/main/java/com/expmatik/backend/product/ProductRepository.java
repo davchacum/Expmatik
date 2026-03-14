@@ -4,8 +4,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 
@@ -22,20 +25,18 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
 
     List<Product> findByIsCustomFalse();
 
-    List<Product> findByNameContainingIgnoreCaseAndIsCustomFalse(String name);
-
     Optional<Product> findByBarcodeAndIsCustomFalse(String barcode);
-
-    Optional<Product> findByNameAndIsCustomFalse(String name);
-
-    List<Product> findByBrandContainingIgnoreCaseAndIsCustomFalse(String brand);
-
-    List<Product> findByNameContainingIgnoreCaseAndBrandContainingIgnoreCaseAndIsCustomFalse(String name, String brand);
-
-    List<Product> findByIsCustomTrueAndNameContainingIgnoreCaseAndCreatedById(String name, UUID userId);
-
-    List<Product> findByIsCustomTrueAndBrandContainingIgnoreCaseAndCreatedById(String brand, UUID userId);
-
-    List<Product> findByIsCustomTrueAndNameContainingIgnoreCaseAndBrandContainingIgnoreCaseAndCreatedById(String name, String brand, UUID userId);
     
+    @Query("SELECT p FROM Product p WHERE " +
+        "(p.isCustom = false OR (p.isCustom = true AND p.createdBy.id = :userId)) " +
+        "AND (:name IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', CAST(:name AS string), '%'))) " +
+        "AND (:brand IS NULL OR LOWER(p.brand) LIKE LOWER(CONCAT('%', CAST(:brand AS string), '%'))) " +
+        "AND (:barcode IS NULL OR p.barcode = :barcode)")
+    Page<Product> searchAdvanced(
+        @Param("userId") UUID userId, 
+        @Param("name") String name, 
+        @Param("brand") String brand, 
+        @Param("barcode") String barcode, 
+        Pageable pageable
+    );
 }

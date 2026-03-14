@@ -21,6 +21,7 @@ import javax.imageio.ImageIO;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -185,8 +186,8 @@ public class ProductIntegrationTest {
         String searchTerm = "Leche";
         mockMvc.perform(get("/api/products").param("name", searchTerm))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].name").value("Leche Entera"));
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].name").value("Leche Entera"));
     }
 
     @Test
@@ -195,8 +196,8 @@ public class ProductIntegrationTest {
         String searchTerm = "Bimbo";
         mockMvc.perform(get("/api/products").param("brand", searchTerm))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].brand").value("Bimbo"));
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].brand").value("Bimbo"));
     }
 
     @Test
@@ -208,9 +209,9 @@ public class ProductIntegrationTest {
                 .param("name", nameSearchTerm)
                 .param("brand", brandSearchTerm))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].name").value("Yogur Natural"))
-                .andExpect(jsonPath("$[0].brand").value("Danone"));
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].name").value("Yogur Natural"))
+                .andExpect(jsonPath("$.content[0].brand").value("Danone"));
     }
 
     @Test
@@ -219,7 +220,8 @@ public class ProductIntegrationTest {
         String searchTerm = "NonExistentProduct";
         mockMvc.perform(get("/api/products").param("name", searchTerm))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.content.length()").value(0))
+                .andExpect(jsonPath("$.totalElements").value(0));
     }
 
     @Test
@@ -227,7 +229,7 @@ public class ProductIntegrationTest {
     void testSearchProducts_EmptySearchTerm() throws Exception {
         mockMvc.perform(get("/api/products").param("name", ""))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(4));
+                .andExpect(jsonPath("$.content.length()").value(4));
     }
 
     @Test
@@ -236,7 +238,7 @@ public class ProductIntegrationTest {
         String searchTerm = "Leche Entera!";
         mockMvc.perform(get("/api/products").param("name", searchTerm))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.content.length()").value(0));
     }
 
     @Test
@@ -245,8 +247,8 @@ public class ProductIntegrationTest {
         String searchTerm = "leche entera";
         mockMvc.perform(get("/api/products").param("name", searchTerm))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].name").value("Leche Entera"));
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].name").value("Leche Entera"));
     }
 
     @Test
@@ -255,8 +257,8 @@ public class ProductIntegrationTest {
         String searchTerm = "Leche";
         mockMvc.perform(get("/api/products").param("name", searchTerm))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].name").value("Leche Entera"));
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].name").value("Leche Entera"));
     }
 
     @Test
@@ -265,8 +267,21 @@ public class ProductIntegrationTest {
         String searchTerm = "20000001";
         mockMvc.perform(get("/api/products").param("barcode", searchTerm))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].name").value("Leche Entera"));
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].name").value("Leche Entera"));
+    }
+
+    @Test
+    @WithUserDetails("admin@expmatik.com")
+    @DisplayName("Test pagination parameters")
+    void testSearchProducts_Pagination() throws Exception {
+        mockMvc.perform(get("/api/products")
+                .param("page", "0")
+                .param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.size").value(2))
+                .andExpect(jsonPath("$.number").value(0));
     }
 
     // == Pruebas para POST /api/products/custom ==
