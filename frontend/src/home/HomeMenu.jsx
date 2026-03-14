@@ -1,30 +1,87 @@
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import "./home.css";
 
 const HomeMenu = () => {
-  const items = [
-    "Elemento 1",
-    "Elemento 2",
-    "Elemento 3",
-    "Elemento 4",
-    "Elemento 5",
-    "Elemento 6",
-    "Elemento 7",
-    "Elemento 8",
-    "Elemento 9",
+  const navigate = useNavigate();
+
+  const [user] = useState(() => {
+    const storedUser = localStorage.getItem("user");
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
+
+  const allItems = [
+    {
+      title: "Catálogo de Productos",
+      desc: "Buscador global y creación de productos.",
+      path: "/products",
+      roles: ["ADMINISTRATOR"],
+    },
+    {
+      title: "Inventario",
+      desc: "Control de stock y productos.",
+      path: "/inventory",
+      roles: ["ADMINISTRATOR", "MAINTAINER"],
+    },
+    {
+      title: "Analíticas",
+      desc: "Análisis de datos y rendimiento.",
+      path: "/analytics",
+      roles: ["ADMINISTRATOR"],
+    },
+    {
+      title: "Facturas",
+      desc: "Carga y gestión de facturas.",
+      path: "/invoices",
+      roles: ["ADMINISTRATOR"],
+    },
+    {
+      title: "Máquinas",
+      desc: "Administración de máquinas.",
+      path: "/machines",
+      roles: ["ADMINISTRATOR", "MAINTAINER"],
+    },
+    {
+      title: "Ventas",
+      desc: "Informes y estadísticas de ventas.",
+      path: "/sales",
+      roles: ["ADMINISTRATOR"],
+    },
+    {
+      title: "Tareas de mantenimiento",
+      desc: "Ver registro de mantenimientos.",
+      path: "/maintenance",
+      roles: ["ADMINISTRATOR", "MAINTAINER"],
+    },
+    {
+      title: "Notificaciones",
+      desc: "Alertas y mensajes del sistema.",
+      path: "/notifications",
+      roles: ["ADMINISTRATOR", "MAINTAINER"],
+    },
   ];
 
+  const menuItems = allItems.filter((item) => item.roles.includes(user?.role));
+
   return (
-    <div className="home-container">
-      <div className="home-wrapper">
+    <main className="home-container">
+      <div className="dashboard-wrapper">
         <div className="menu-grid">
-          {items.map((item, idx) => (
-            <div key={idx} className="menu-item">
-              {item}
-            </div>
+          {menuItems.map((item, idx) => (
+            <button
+              key={idx}
+              className="menu-card-btn"
+              onClick={() => navigate(item.path)}
+            >
+              <h3 className="card-title">{item.title}</h3>
+              <p className="card-desc">{item.desc}</p>
+            </button>
           ))}
+          <div className="menu-card-empty"></div>
+          <div className="menu-card-empty"></div>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

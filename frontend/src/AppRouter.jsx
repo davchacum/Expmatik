@@ -3,6 +3,8 @@ import Login from "./auth/login";
 import Register from "./auth/register";
 import Profile from "./auth/profile";
 import PrivateRoute from "./PrivateRoute";
+import Products from "./product/productView";
+import CreateCustomProduct from "./product/createCustomProduct";
 import HomeMenu from "./home/HomeMenu";
 
 const AppRouter = () => {
@@ -10,6 +12,7 @@ const AppRouter = () => {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+
       <Route
         path="/profile"
         element={
@@ -26,9 +29,27 @@ const AppRouter = () => {
           </PrivateRoute>
         }
       />
+
+      <Route
+        path="/products"
+        element={
+          <PrivateRoute allowedRoles={["ADMINISTRATOR"]}>
+            <Products />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/products/create-custom"
+        element={
+          <PrivateRoute allowedRoles={["ADMINISTRATOR"]}>
+            <CreateCustomProduct />
+          </PrivateRoute>
+        }
+      />
       <Route path="/" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 };
 
 export default AppRouter;
+

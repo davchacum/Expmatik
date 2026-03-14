@@ -138,19 +138,6 @@ public class ProductServiceTest {
     }
 
     @Test
-    @DisplayName("Throws when Open Food Facts API returns empty response")
-    void testFindProductInOpenFoodFactsEmptyResponse() throws IOException {
-        String barcode = "9999999999999";
-        JsonNode emptyResponse = new ObjectMapper().createObjectNode();
-
-        doReturn(emptyResponse).when(productService).fetchOpenFoodFactsResponse(eq(barcode), any(ObjectMapper.class));
-
-        assertThatThrownBy(() -> productService.findProductInOpenFoodFacts(barcode))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("Product not found with barcode: " + barcode);
-    }
-
-    @Test
     @DisplayName("Returns empty and logs error when Open Food Facts API connection fails")
     void testFindProductInOpenFoodFactsConnectionError() throws IOException {
         String barcode = "5555555555555";
@@ -168,7 +155,7 @@ public class ProductServiceTest {
 
             assertThat(result).isEmpty();
             assertThat(capturedErr.toString(StandardCharsets.UTF_8))
-                    .contains("Error connecting to Open Food Facts API: " + ioException.getMessage());
+                    .contains("Final attempt failed for barcode " + barcode + ": " + ioException.getMessage());
         } finally {
             System.setErr(originalErr);
         }

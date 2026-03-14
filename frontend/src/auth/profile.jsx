@@ -90,7 +90,6 @@ const Profile = () => {
           </div>
         )}
 
-        {/* aria-busy avisa al lector que el contenido está cargando */}
         <div
           className="profile-details"
           aria-busy={loading}

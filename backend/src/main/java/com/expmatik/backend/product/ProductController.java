@@ -95,7 +95,7 @@ public class ProductController {
     public ResponseEntity<?> searchAllProducts(
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "brand", required = false) String brand,
-            @RequestParam(value = "barcode", required = false) @ValidBarcode String barcode,
+            @RequestParam(value = "barcode", required = false) String barcode,
             @ParameterObject Pageable pageable    ) {
         User currentUser = userService.getUserProfile();
         Page<Product> products = productService.searchAllProducts(currentUser.getId(), name, brand, barcode, pageable);

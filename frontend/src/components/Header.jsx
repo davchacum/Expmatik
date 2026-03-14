@@ -12,9 +12,22 @@ const Header = () => {
   const isAuthPage = ["/login", "/register"].includes(location.pathname);
 
   const getTitleText = (path) => {
-    if (path === "/home") return "Panel Principal";
+    if (path === "/home") {
+      const user = JSON.parse(localStorage.getItem("user"));
+      return user?.role === "MAINTAINER"
+        ? "Dashboard Reponedor"
+        : "Dashboard Administrador";
+    }
     if (path === "/profile") return "Mi Perfil";
-    return "Mi Aplicacion";
+    if (path === "/products") return "Catálogo de Productos";
+    if (path === "/products/create-custom") return "Crear Producto Personalizado";
+    if (path === "/inventory") return "Inventario";
+    if (path === "/analytics") return "Analíticas";
+    if (path === "/invoices") return "Facturas";
+    if (path === "/machines") return "Máquinas";
+    if (path === "/sales") return "Ventas";
+    if (path === "/maintenance") return "Tareas de Mantenimiento";
+    return "Expmatik";
   };
 
   useEffect(() => {

@@ -1,3 +1,11 @@
+DELETE FROM batch;
+DELETE FROM invoice;
+DELETE FROM supplier;
+DELETE FROM product_info;
+DELETE FROM product;
+DELETE FROM refresh_tokens;
+DELETE FROM app_user;
+
 -- admin123          repo123
 INSERT INTO app_user (id, email, password, first_name, last_name, role) VALUES ('00000000-0000-0000-0000-000000000001', 'admin@expmatik.com', '$2a$10$XUck0ZZl9lU8iRQpWexSy.izAOIXNW7XowjPL2Q4DUlNeljX/2tGu', 'Admin', 'Admin', 'ADMINISTRATOR');
 INSERT INTO app_user (id, email, password, first_name, last_name, role) VALUES ('00000000-0000-0000-0000-000000000003', 'admin2@expmatik.com', '$2a$10$XUck0ZZl9lU8iRQpWexSy.izAOIXNW7XowjPL2Q4DUlNeljX/2tGu', 'Admin', 'Admin', 'ADMINISTRATOR');

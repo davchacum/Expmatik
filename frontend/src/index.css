@@ -28,6 +28,7 @@ body {
   width: 100%;
   min-height: 100vh;
   display: block;
+  padding-top: 80px; /* Altura del header fijo */
 }
 
 * {

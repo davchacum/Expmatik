@@ -1,6 +1,7 @@
 package com.expmatik.backend.product;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
@@ -29,7 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class ProductService {
 
     private static final String OpenFoodFactsApiUrl = "https://world.openfoodfacts.org/api/v3/product/";
-    private static final long MIN_WAIT_INTERVAL = 700; 
+    private static final long MIN_WAIT_INTERVAL = 1000; 
     private long lastCallTimestamp = 0;
 
     private final ProductRepository productRepository;
@@ -74,58 +75,89 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public Optional<Product> findProductInOpenFoodFacts(String barcode) {
-        controlRateLimit(); // Controlar el rate limit antes de hacer la llamada
-        
         ObjectMapper mapper = new ObjectMapper();
-        try {
-            JsonNode response = fetchOpenFoodFactsResponse(barcode, mapper);
-            String status = response.path("status").asText();
-            int empty = response.path("product").path("empty").asInt(0);
-            
-            // Si el producto no fue encontrado, devolver Optional vacío
-            if ("failure".equals(status) || 
-                "product_not_found".equals(response.path("result").path("id").asText()) ||
-                empty == 1) {
-                return Optional.empty();
+        int maxAttempts = 1;
+        int delay = 800;
+
+        for (int i = 0; i < maxAttempts; i++) {
+            controlRateLimit();
+            try {
+                JsonNode response = fetchOpenFoodFactsResponse(barcode, mapper);
+                
+                String status = response.path("status").asText();
+                JsonNode productNode = response.path("product");
+                int empty = productNode.path("empty").asInt(0);
+
+                if ("success".equals(status) || "1".equals(status)) {
+                    if (empty == 0 && !productNode.isMissingNode()) {
+                        return Optional.of(mapJsonToProduct(response, barcode));
+                    }
+                }
+
+                if (i == maxAttempts - 1) return Optional.empty();
+                
+                Thread.sleep(delay);
+
+            } catch (IOException | InterruptedException e) {
+                if (i == maxAttempts - 1) {
+                    System.err.println("Final attempt failed for barcode " + barcode + ": " + e.getMessage());
+                    return Optional.empty();
+                }
             }
-            if (response.isEmpty()) {
-                throw new ResourceNotFoundException("Product not found with barcode: " + barcode);
-            }
-        
-            String name = response.path("product").path("product_name_es").asText();
-            String brand = response.path("product").path("brands").asText();
-            String description = response.path("product").path("generic_name_es").asText();
-            String quantity = response.path("product").path("quantity").asText();
-            name = name + " " + quantity;
-            String imageUrl = response.path("product").path("image_url").asText();
-            
-            Product product = new Product();
-            product.setName(name.trim());
-            product.setBrand(brand.equals("") ? "Unknown" : brand.trim());
-            product.setDescription(description);
-            product.setImageUrl(imageUrl);
-            product.setIsPerishable(true);
-            product.setBarcode(barcode);
-            product.setIsCustom(false);
-            product.setCreatedBy(null);
-            product.setImageUrl(imageUrl);
-            return Optional.of(product);
-        } catch (IOException e) {
-            // Si hay error de conexión, devolver Optional vacío
-            System.err.println("Error connecting to Open Food Facts API: " + e.getMessage());
-            return Optional.empty();
         }
+        return Optional.empty();
+    }
+
+    private Product mapJsonToProduct(JsonNode response, String barcode) {
+        JsonNode pNode = response.path("product");
+        
+        String name = pNode.path("product_name_es").asText();
+        if (name.isEmpty()) name = pNode.path("product_name").asText("Unknown Product");
+        
+        String brand = pNode.path("brands").asText();
+        if (brand == null || brand.trim().isEmpty()) brand = "Unknown";
+        
+        String description = pNode.path("generic_name_es").asText(pNode.path("generic_name").asText(""));
+        String quantity = pNode.path("quantity").asText("");
+        String imageUrl = pNode.path("image_url").asText();
+        
+        Product product = new Product();
+        product.setName((name + " " + quantity).trim());
+        product.setBrand(brand.trim());
+        product.setDescription(description);
+        product.setImageUrl(imageUrl);
+        product.setIsPerishable(true);
+        product.setBarcode(barcode);
+        product.setIsCustom(false);
+        product.setCreatedBy(null);
+        return product;
     }
 
     protected JsonNode fetchOpenFoodFactsResponse(String barcode, ObjectMapper mapper) throws IOException {
         String apiUrl = OpenFoodFactsApiUrl + barcode;
         URL url = URI.create(apiUrl).toURL();
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        
         connection.setRequestMethod("GET");
-        connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
-        connection.setConnectTimeout(10000);
-        connection.setReadTimeout(10000);
-        return mapper.readTree(connection.getInputStream());
+        connection.setRequestProperty("User-Agent", "PostmanRuntime/7.39.1");
+        connection.setRequestProperty("Accept", "*/*");
+        connection.setRequestProperty("Cache-Control", "no-cache");
+        connection.setRequestProperty("Connection", "keep-alive");
+        connection.setRequestProperty("Accept-Encoding", "gzip, deflate, br");
+
+        int responseCode = connection.getResponseCode();
+
+        if (responseCode >= 200 && responseCode < 300) {
+            return mapper.readTree(connection.getInputStream());
+        } else {
+            // OFF devuelve JSON de error (con status: failure) por el ErrorStream
+            InputStream errorStream = connection.getErrorStream();
+            if (errorStream != null) {
+                return mapper.readTree(errorStream);
+            }
+            // Si no hay stream de error, devolvemos un nodo de fallo genérico
+            return mapper.createObjectNode().put("status", "failure");
+        }
     }
 
     public void checkUniqueBarcode(String barcode) {

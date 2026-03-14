@@ -1,18 +1,16 @@
-/* Contenedor principal - Fondo Negro/Gris profundo */
 .login-bg-center {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #0f172a; /* Azul grisáceo muy oscuro (muy pro) */
+  background: #0f172a;
   padding: 20px;
 }
 
-/* Tarjeta del formulario */
 .login-form {
   max-width: 380px;
   width: 100%;
-  background: #1e293b; /* Gris azulado oscuro */
+  background: #1e293b;
   padding: 40px 32px;
   border-radius: 20px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
@@ -49,10 +47,9 @@
 .login-field label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #94a3b8; /* Gris suave */
+  color: #94a3b8;
 }
 
-/* Inputs mejorados para lectura */
 .login-input {
   width: 100%;
   padding: 12px 16px;
@@ -60,14 +57,14 @@
   border-radius: 10px;
   font-size: 1rem;
   color: #ffffff;
-  background: #0f172a; /* Fondo más oscuro que la tarjeta */
+  background: #0f172a;
   transition: all 0.2s ease;
   outline: none;
   box-sizing: border-box;
 }
 
 .login-input:focus {
-  border-color: #38bdf8; /* Azul cyan brillante */
+  border-color: #38bdf8;
   background: #0f172a;
   box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.1);
 }
@@ -76,12 +73,11 @@
   color: #475569;
 }
 
-/* Botón Principal */
 .login-btn {
   width: 100%;
   padding: 12px 0;
   background: #38bdf8;
-  color: #0f172a; /* Texto oscuro sobre botón claro */
+  color: #0f172a;
   font-weight: 700;
   border: none;
   border-radius: 10px;
@@ -96,7 +92,6 @@
   transform: translateY(-1px);
 }
 
-/* Footer del Login */
 .login-footer {
   margin-top: 10px;
   text-align: center;
@@ -125,26 +120,21 @@
 }
 
 select.login-input {
-  /* 1. Eliminamos el estilo nativo y feo del navegador */
   appearance: none;
-  -webkit-appearance: none; /* Para Chrome/Safari antiguos */
-  -moz-appearance: none;    /* Para Firefox antiguo */
+  -webkit-appearance: none;
+  -moz-appearance: none;
 
-  /* 2. Añadimos espacio a la derecha para poner nuestra propia flecha */
   padding-right: 42px;
 
-  /* 3. Aseguramos que el cursor sea un puntero para indicar click */
   cursor: pointer;
 
-  /* 4. Dibujamos una flecha sutil directamente con CSS (SVG) */
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 14px center;
   background-size: 16px;
 }
 
-/* Arreglo extra para las opciones internas si siguen brillando */
 select.login-input option {
-  background-color: #0f172a; /* Mismo fondo oscuro de tus inputs */
-  color: #ffffff;           /* Texto blanco */
+  background-color: #0f172a;
+  color: #ffffff;
 }
