@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../global-list.css";
 
@@ -41,6 +41,9 @@ const Products = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("accessToken");
 
+  // Referencia para el foco del modal
+  const modalTitleRef = useRef(null);
+
   const [products, setProducts] = useState([]);
   const [filters, setFilters] = useState({ name: "", brand: "", barcode: "" });
   const [search, setSearch] = useState({ name: "", brand: "", barcode: "" });
@@ -51,6 +54,13 @@ const Products = () => {
   const [loading, setLoading] = useState(false);
   const [offBarcode, setOffBarcode] = useState("");
   const [message, setMessage] = useState({ text: "", type: "" });
+
+  // FOCO DINÁMICO: Solo al abrir la descripción
+  useEffect(() => {
+    if (selectedProduct && modalTitleRef.current) {
+      modalTitleRef.current.focus();
+    }
+  }, [selectedProduct]);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -117,34 +127,32 @@ const Products = () => {
           text: "Formato de código de barras inválido (8 o 13 dígitos)",
           type: "error",
         });
-      } else if (response.status === 404) {
-        setMessage({ text: "No encontrado en Open Food Facts", type: "error" });
-      } else if (response.status === 409) {
-        setMessage({ text: "Producto ya existe en el sistema", type: "error" });
-      } else {
-        setMessage({ text: "Error en el servidor", type: "error" });
       }
     } catch (err) {
-      setMessage({ text: "Error de conexión", type: "error" });
-      console.error(err);
+      setMessage({
+        text: "Error de conexión",
+        type: "error",
+        err: err.toString(),
+      });
     }
   };
 
   return (
     <main className="home-container" role="main">
       <div className="list-container">
-        <div className="list-header-actions">
-          <div className="action-group">
-            <span className="section-label">
+        <div className="list-header-actions" style={{ alignItems: "end" }}>
+          <div className="input-group">
+            <label htmlFor="off-barcode" className="section-label">
               Importar desde Open Food Facts
-            </span>
+            </label>
             <form onSubmit={handleAddOFF} className="inline-form">
               <input
-                id="barcode-import"
+                id="off-barcode"
                 className="dark-input"
                 placeholder="Código de barras..."
                 value={offBarcode}
                 onChange={(e) => setOffBarcode(e.target.value)}
+                aria-required="true"
               />
               <button type="submit" className="btn-primary">
                 Importar
@@ -152,14 +160,15 @@ const Products = () => {
             </form>
           </div>
 
-          <div className="action-group">
+          <div className="input-group">
             <span className="section-label">Gestión Manual</span>
             <button
               className="btn-secondary"
               onClick={() => navigate("/products/create-custom")}
               style={{ width: "100%" }}
+              aria-label="Ir a crear nuevo producto personalizado"
             >
-              Añadir Nuevo Producto Personalizado
+              Nuevo Producto Personalizado
             </button>
           </div>
         </div>
@@ -170,42 +179,76 @@ const Products = () => {
               message.type === "error" ? "login-error" : "success-message"
             }
             role="alert"
+            aria-live="assertive"
           >
             {message.text}
           </div>
         )}
 
-        <div className="divider-dark" />
-        <div className="search-section">
-          <span className="section-label">Filtrar productos</span>
-          <div className="search-row">
-            <input
-              className="dark-input"
-              placeholder="Nombre..."
-              value={filters.name}
-              onChange={(e) => setFilters({ ...filters, name: e.target.value })}
-            />
-            <input
-              className="dark-input"
-              placeholder="Marca..."
-              value={filters.brand}
-              onChange={(e) =>
-                setFilters({ ...filters, brand: e.target.value })
-              }
-            />
-            <input
-              className="dark-input"
-              placeholder="Código de barras..."
-              value={filters.barcode}
-              onChange={(e) =>
-                setFilters({ ...filters, barcode: e.target.value })
-              }
-            />
+        <div className="divider-dark" aria-hidden="true" />
+
+        <section className="search-section" aria-labelledby="filter-heading">
+          <span id="filter-heading" className="section-label">
+            Filtrar productos
+          </span>
+          <div
+            className="search-row"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+              gap: "15px",
+              alignItems: "end",
+            }}
+          >
+            <div className="input-group">
+              <label htmlFor="filter-name" className="input-label">
+                Nombre
+              </label>
+              <input
+                id="filter-name"
+                className="dark-input"
+                placeholder="Buscar nombre..."
+                value={filters.name}
+                onChange={(e) =>
+                  setFilters({ ...filters, name: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="filter-brand" className="input-label">
+                Marca
+              </label>
+              <input
+                id="filter-brand"
+                className="dark-input"
+                placeholder="Buscar marca..."
+                value={filters.brand}
+                onChange={(e) =>
+                  setFilters({ ...filters, brand: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="filter-barcode" className="input-label">
+                Código de Barras
+              </label>
+              <input
+                id="filter-barcode"
+                className="dark-input"
+                placeholder="Referencia..."
+                value={filters.barcode}
+                onChange={(e) =>
+                  setFilters({ ...filters, barcode: e.target.value })
+                }
+              />
+            </div>
             <button className="btn-primary" onClick={handleApplySearch}>
               Buscar
             </button>
           </div>
-        </div>
+        </section>
 
         <div className="table-responsive">
           <table className="dark-table">
@@ -218,7 +261,9 @@ const Products = () => {
                 <th scope="col" style={{ textAlign: "center" }}>
                   Perecedero
                 </th>
-                <th scope="col">Info</th>
+                <th scope="col" style={{ textAlign: "center" }}>
+                  Info
+                </th>
               </tr>
             </thead>
             <tbody style={{ opacity: loading ? 0.5 : 1 }}>
@@ -243,7 +288,7 @@ const Products = () => {
                       {p.isPerishable ? "Sí" : "No"}
                     </span>
                   </td>
-                  <td>
+                  <td style={{ textAlign: "center" }}>
                     {p.description && (
                       <button
                         type="button"
@@ -260,47 +305,57 @@ const Products = () => {
             </tbody>
           </table>
         </div>
-        <div className="list-footer">
+
+        <nav className="list-footer" aria-label="Paginación de productos">
           <button
             className="page-btn"
             disabled={page === 0}
             onClick={() => setPage((p) => p - 1)}
+            aria-label="Página anterior"
           >
             Anterior
           </button>
-          <span className="page-info">
+          <span className="page-info" aria-live="polite">
             Página <strong>{page + 1}</strong> de <strong>{totalPages}</strong>
           </span>
           <button
             className="page-btn"
             disabled={page >= totalPages - 1}
             onClick={() => setPage((p) => p + 1)}
+            aria-label="Página siguiente"
           >
             Siguiente
           </button>
-        </div>
+        </nav>
       </div>
 
       {selectedProduct && (
-        <div className="modal-overlay" onClick={() => setSelectedProduct(null)}>
+        <div
+          className="modal-overlay"
+          onClick={() => setSelectedProduct(null)}
+          role="dialog"
+          aria-modal="true"
+        >
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
             <h2
-              className="section-label"
-              style={{ fontSize: "1.1rem", marginBottom: "15px" }}
+              ref={modalTitleRef}
+              className="section-title"
+              style={{ fontSize: "1.2rem" }}
+              tabIndex="-1"
             >
-              Descripción del Producto
+              Detalles del Producto
             </h2>
-            <div className="divider-dark" style={{ margin: "15px 0" }} />
+            <div className="divider-dark" aria-hidden="true" />
 
-            <div style={{ marginBottom: "15px" }}>
-              <span className="section-label">Nombre y Marca</span>
-              <p style={{ marginTop: "5px" }}>
-                {selectedProduct.name} - {selectedProduct.brand}
+            <div className="input-group" style={{ marginBottom: "15px" }}>
+              <span className="section-label">Producto y Marca</span>
+              <p style={{ color: "var(--text-main)" }}>
+                {selectedProduct.name} — {selectedProduct.brand}
               </p>
             </div>
 
-            <div style={{ marginBottom: "20px" }}>
-              <span className="section-label">Detalles</span>
+            <div className="input-group">
+              <span className="section-label">Descripción Completa</span>
               <p className="description-popup-text">
                 {selectedProduct.description}
               </p>
@@ -308,11 +363,12 @@ const Products = () => {
 
             <div
               className="list-footer"
-              style={{ justifyContent: "flex-end", marginTop: "0" }}
+              style={{ justifyContent: "flex-end", marginTop: "20px" }}
             >
               <button
                 className="btn-primary"
                 onClick={() => setSelectedProduct(null)}
+                aria-label="Cerrar detalles"
               >
                 Cerrar
               </button>
