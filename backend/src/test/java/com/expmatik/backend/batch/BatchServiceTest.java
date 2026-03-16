@@ -221,7 +221,7 @@ public class BatchServiceTest {
 
         assertThatThrownBy(() -> batchService.createBatch(user1.getId(), batchCreate, invoice1.getId()))
             .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("Expiration date is required for perishable products.");
+            .hasMessageContaining("Expiration date for product " + batch2.getProduct().getBarcode() + " is required for perishable products.");
     }
 
     @Test
@@ -235,7 +235,7 @@ public class BatchServiceTest {
 
         assertThatThrownBy(() -> batchService.createBatch(user1.getId(), batchCreate, invoice1.getId()))
             .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("Expiration date should not be provided for non-perishable products.");
+            .hasMessageContaining("Expiration date for product " + batch1.getProduct().getBarcode() + " should not be provided for non-perishable products.");
     }
 
     @Test
@@ -323,7 +323,7 @@ public class BatchServiceTest {
 
         assertThatThrownBy(() -> batchService.updateBatch(user1.getId(), batch2.getId(), batchCreate))
             .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("Expiration date is required for perishable products.");
+            .hasMessageContaining("Expiration date for product " + batch2.getProduct().getBarcode() + " is required for perishable products.");
     }
 
     @Test
@@ -336,7 +336,7 @@ public class BatchServiceTest {
 
         assertThatThrownBy(() -> batchService.updateBatch(user1.getId(), batch1.getId(), batchCreate))
             .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("Expiration date should not be provided for non-perishable products.");
+            .hasMessageContaining("Expiration date for product " + batch1.getProduct().getBarcode() + " should not be provided for non-perishable products.");
     }
 
     @Test

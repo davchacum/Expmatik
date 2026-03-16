@@ -148,4 +148,12 @@ public class ProductController {
         ProductResponse productResponseDTO = ProductResponse.fromProduct(product.get());
         return ResponseEntity.ok(productResponseDTO);
     }
+
+    @GetMapping("/validate-barcode/{barcode}")
+    @Operation(summary = "Validar existencia de producto por código de barras", description = "Verifica si un producto existe en la base de datos utilizando su código de barras. Devuelve un indicador de existencia.")
+    public ResponseEntity<?> validateProduct(@PathVariable @ValidBarcode String barcode) {
+        User currentUser = userService.getUserProfile();
+        Boolean exists = productService.existsByBarcode(barcode, currentUser.getId());
+        return ResponseEntity.ok(exists);
+    }
 }

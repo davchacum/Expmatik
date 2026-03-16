@@ -513,4 +513,37 @@ public class ProductIntegrationTest {
                 .andExpect(status().isNotFound());
     }
 
+    // == Pruebas para GET /api/products/validate-barcode/{barcode} ==
+    
+    @Test
+    @WithUserDetails("admin@expmatik.com")
+    void testValidateProduct_ExistingInCatalog() throws Exception {
+        String barcode = "20000001";
+
+        mockMvc.perform(get("/api/products/validate-barcode/" + barcode))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(true));
+    }
+
+    @Test
+    @WithUserDetails("admin@expmatik.com")
+    void testValidateProduct_ExistingInExternalCatalog() throws Exception {
+        String barcode = "4716982022201";
+
+        mockMvc.perform(get("/api/products/validate-barcode/" + barcode))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(true));
+    }
+
+    @Test
+    @WithUserDetails("admin@expmatik.com")
+    void testValidateProduct_NotExistingInAnyCatalog() throws Exception {
+        String barcode = "20000010";
+
+        mockMvc.perform(get("/api/products/validate-barcode/" + barcode))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(false));
+    }
+
+
 }

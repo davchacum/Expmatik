@@ -1,4 +1,4 @@
-import { useState,useEffect} from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../global-form.css";
 import "../global-list.css";
@@ -15,7 +15,7 @@ const CreateInvoice = () => {
   });
 
   const [batches, setBatches] = useState([]);
-  const [editingIndex, setEditingIndex] = useState(null); // Índice del lote en edición
+  const [editingIndex, setEditingIndex] = useState(null);
   const [currentBatch, setCurrentBatch] = useState({
     productBarcode: "",
     quantity: "",
@@ -33,7 +33,25 @@ const CreateInvoice = () => {
     }
   }, [token, navigate]);
 
-  const addBatch = () => {
+  const validateBarcode = async (barcode) => {
+    try {
+      const response = await fetch(
+        `/api/products/validate-barcode/${barcode}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      if (!response.ok) return false;
+      const exists = await response.json();
+      return exists;
+    } catch (err) {
+      console.error("Error validando barcode:", err);
+      return false;
+    }
+  };
+
+  const addBatch = async () => {
+    setError("");
     if (
       !currentBatch.productBarcode ||
       !currentBatch.quantity ||
@@ -42,6 +60,18 @@ const CreateInvoice = () => {
       setError("El código de barras, cantidad y precio son obligatorios.");
       return;
     }
+
+    setLoading(true);
+    const exists = await validateBarcode(currentBatch.productBarcode);
+    setLoading(false);
+
+    if (!exists) {
+      setError(
+        `El producto con código ${currentBatch.productBarcode} no existe en tu catálogo, considere crear un nuevo producto personalizado.`,
+      );
+      return;
+    }
+
     setBatches([...batches, currentBatch]);
     setCurrentBatch({
       productBarcode: "",
@@ -49,7 +79,24 @@ const CreateInvoice = () => {
       unitPrice: "",
       expirationDate: "",
     });
+  };
+
+  const confirmEdit = async (index) => {
     setError("");
+    const batchToValidate = batches[index];
+
+    setLoading(true);
+    const exists = await validateBarcode(batchToValidate.productBarcode);
+    setLoading(false);
+
+    if (!exists) {
+      setError(
+        `El producto con código ${batchToValidate.productBarcode} no existe en tu catálogo, considere crear un nuevo producto personalizado.`,
+      );
+      return;
+    }
+
+    setEditingIndex(null);
   };
 
   const removeBatch = (index) => {
@@ -57,7 +104,6 @@ const CreateInvoice = () => {
     if (editingIndex === index) setEditingIndex(null);
   };
 
-  // Manejar cambios en un lote que ya está en la tabla
   const handleEditBatchChange = (index, field, value) => {
     const updatedBatches = [...batches];
     updatedBatches[index] = { ...updatedBatches[index], [field]: value };
@@ -230,8 +276,9 @@ const CreateInvoice = () => {
               type="button"
               className="action-btn-blue"
               onClick={addBatch}
+              disabled={loading}
             >
-              +
+              {loading ? "Validando..." : "Añadir Lote"}
             </button>
           </div>
 
@@ -309,14 +356,35 @@ const CreateInvoice = () => {
                             }
                           />
                         </td>
+
                         <td style={{ textAlign: "center" }}>
-                          <button
-                            type="button"
-                            className="action-btn-blue"
-                            onClick={() => setEditingIndex(null)}
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: "8px",
+                              justifyContent: "center",
+                            }}
                           >
-                            Confirmar
-                          </button>
+                            <button
+                              type="button"
+                              className="action-btn-red"
+                              onClick={() => {
+                                setEditingIndex(null);
+                                setError("");
+                              }}
+                              style={{ height: "44px", padding: "0 15px" }}
+                            >
+                              Cancelar
+                            </button>
+                            <button
+                              type="button"
+                              className="action-btn-blue"
+                              onClick={() => confirmEdit(i)}
+                              disabled={loading}
+                            >
+                              {loading ? "..." : "Confirmar"}
+                            </button>
+                          </div>
                         </td>
                       </>
                     ) : (
@@ -338,17 +406,17 @@ const CreateInvoice = () => {
                           >
                             <button
                               type="button"
-                              className="action-btn-blue"
-                              onClick={() => setEditingIndex(i)}
-                            >
-                              Editar
-                            </button>
-                            <button
-                              type="button"
                               className="action-btn-red"
                               onClick={() => removeBatch(i)}
                             >
                               Borrar
+                            </button>
+                            <button
+                              type="button"
+                              className="action-btn-blue"
+                              onClick={() => setEditingIndex(i)}
+                            >
+                              Editar
                             </button>
                           </div>
                         </td>

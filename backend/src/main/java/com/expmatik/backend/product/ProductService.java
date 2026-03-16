@@ -160,12 +160,26 @@ public class ProductService {
         }
     }
 
+    @Transactional(readOnly = true)
     public void checkUniqueBarcode(String barcode, UUID userId) {
         if (productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId).isPresent()) {
             throw new ConflictException("A product with this barcode already exists.");
         }
     }
 
+    @Transactional(readOnly = true)
+    public Boolean existsByBarcode(String barcode,UUID userId) {
+        
+        if(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId).isPresent()) {
+            return true;
+        }else if (findProductInOpenFoodFacts(barcode).isPresent()) {
+            return true;
+        }else {
+            return false;
+        } 
+    }
+
+    @Transactional(readOnly = true)
     public void checkUniqueBarcodeCustom(String barcode, UUID userId) {        
         
         if (productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId).isPresent()) {

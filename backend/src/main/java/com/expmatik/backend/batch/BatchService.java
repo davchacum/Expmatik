@@ -60,9 +60,9 @@ public class BatchService {
             product = productOptional.get();
         }
         if(product.getIsPerishable() == true && batch.expirationDate() == null) {
-            throw new ConflictException("Expiration date is required for perishable products.");
+            throw new ConflictException("Expiration date for product " + product.getBarcode() + " is required for perishable products.");
         } else if(product.getIsPerishable() == false && batch.expirationDate() != null) {
-            throw new ConflictException("Expiration date should not be provided for non-perishable products.");
+            throw new ConflictException("Expiration date for product " + product.getBarcode() + " should not be provided for non-perishable products.");
         }
         Batch newBatch = new Batch();
         newBatch.setExpirationDate(batch.expirationDate());
@@ -94,9 +94,9 @@ public class BatchService {
             product = productOptional.get();
         }
         if(product.getIsPerishable() == true && batch.expirationDate() == null) {
-                throw new ConflictException("Expiration date is required for perishable products.");
+                throw new ConflictException("Expiration date for product " + product.getBarcode() + " is required for perishable products.");
         } else if(product.getIsPerishable() == false && batch.expirationDate() != null) {
-                throw new ConflictException("Expiration date should not be provided for non-perishable products.");
+                throw new ConflictException("Expiration date for product " + product.getBarcode() + " should not be provided for non-perishable products.");
         }
         existingBatch.setExpirationDate(batch.expirationDate());
         existingBatch.setUnitPrice(batch.unitPrice());

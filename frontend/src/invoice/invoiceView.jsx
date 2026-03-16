@@ -136,6 +136,43 @@ const Invoices = () => {
     }
   }, [page, search, token, hasSearched]);
 
+  const handleStatusChange = async (invoiceId, newStatus) => {
+    if (newStatus === "PENDING") return; // No hacemos nada si vuelve a elegir pending
+
+    if (
+      !window.confirm(
+        `¿Seguro que quieres cambiar el estado a ${newStatus}? Esta acción podría ser definitiva.`,
+      )
+    )
+      return;
+
+    try {
+      const response = await fetch(
+        `/api/invoices/${invoiceId}/status?status=${newStatus}`,
+        {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      if (response.ok) {
+        setMessage({
+          text: "Estado actualizado correctamente",
+          type: "success",
+        });
+        fetchInvoices();
+      } else {
+        const errData = await response.json().catch(() => ({}));
+        setMessage({
+          text: errData.message || "Error al actualizar estado",
+          type: "error",
+        });
+      }
+    } catch (err) {
+      setMessage({ text: "Error de red: " + err.message, type: "error" });
+    }
+  };
+
   useEffect(() => {
     fetchInvoices();
   }, [fetchInvoices]);
@@ -310,6 +347,7 @@ const Invoices = () => {
                 <th>Estado</th>
                 <th style={{ textAlign: "right" }}>Total sin IVA</th>
                 <th style={{ textAlign: "center" }}>Detalles</th>
+                <th style={{ textAlign: "center" }}>Acciones</th>
               </tr>
             </thead>
             <tbody style={{ opacity: loading ? 0.5 : 1 }}>
@@ -321,25 +359,53 @@ const Invoices = () => {
                   </td>
                   <td>{inv.supplierName}</td>
                   <td>
-                    <span
-                      className={`badge ${
-                        inv.status === "PENDING"
-                          ? "badge-yellow"
-                          : inv.status === "RECEIVED"
+                    {inv.status === "PENDING" ? (
+                      <select
+                        className="badge badge-yellow"
+                        value={inv.status}
+                        onChange={(e) =>
+                          handleStatusChange(inv.id, e.target.value)
+                        }
+                      >
+                        <option
+                          className="badge badge-yellow"
+                          value="PENDING"
+                          style={{ background: "var(--bg-dark)" }}
+                        >
+                          PENDIENTE
+                        </option>
+                        <option
+                          className="badge badge-green"
+                          value="RECEIVED"
+                          style={{ background: "var(--bg-dark)" }}
+                        >
+                          RECIBIDO
+                        </option>
+                        <option
+                          className="badge badge-red"
+                          value="CANCELED"
+                          style={{ background: "var(--bg-dark)" }}
+                        >
+                          CANCELADO
+                        </option>
+                      </select>
+                    ) : (
+                      <span
+                        className={`badge ${
+                          inv.status === "RECEIVED"
                             ? "badge-green"
                             : inv.status === "CANCELED"
                               ? "badge-red"
                               : "badge-blue"
-                      }`}
-                    >
-                      {inv.status === "PENDING"
-                        ? "pendiente"
-                        : inv.status === "RECEIVED"
+                        }`}
+                      >
+                        {inv.status === "RECEIVED"
                           ? "recibido"
                           : inv.status === "CANCELED"
                             ? "cancelado"
-                            : inv.status}
-                    </span>
+                            : inv.status.toLowerCase()}
+                      </span>
+                    )}
                   </td>
                   <td style={{ textAlign: "right" }}>
                     {inv.totalAmount.toFixed(2)}€
@@ -351,6 +417,16 @@ const Invoices = () => {
                     >
                       <EyeIcon visible={false} />
                     </button>
+                  </td>
+                  <td style={{ textAlign: "center" }}>
+                    {inv.status === "PENDING" && (
+                      <button
+                        className="action-btn-blue"
+                        onClick={() => navigate(`/invoices/${inv.id}/edit`)}
+                      >
+                        Editar
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

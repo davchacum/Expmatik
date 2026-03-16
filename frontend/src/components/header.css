@@ -3,16 +3,15 @@
   top: 0;
   z-index: 1000;
   width: 100%;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* Sombra sutil para dar profundidad */
+  background: #1e293b;
 }
 
 .home-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  min-height: 64px;
-  padding: 16px 20px 20px 20px;
-  margin-bottom: 40px;
+  min-height: 56px;
+  padding: 16px 20px 12px 20px;
   border-bottom: 1px solid #334155;
 }
 
@@ -42,7 +41,8 @@
   color: #f8fafc;
 }
 
-.header-btn, .profile-link-btn {
+.header-btn,
+.profile-link-btn {
   background: #1e293b;
   color: #f8fafc;
   border: 1px solid #334155;
@@ -57,7 +57,8 @@
   justify-content: center;
 }
 
-.header-btn:hover, .profile-link-btn:hover {
+.header-btn:hover,
+.profile-link-btn:hover {
   background: #243147;
   border-color: #38bdf8;
   color: #38bdf8;
@@ -65,11 +66,12 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-.header-btn:active, .profile-link-btn:active {
+.header-btn:active,
+.profile-link-btn:active {
   transform: translateY(0);
 }
 
-.header-btn:focus-visible, 
+.header-btn:focus-visible,
 .profile-link-btn:focus-visible,
 .login-input:focus-visible {
   outline: 3px solid #38bdf8;

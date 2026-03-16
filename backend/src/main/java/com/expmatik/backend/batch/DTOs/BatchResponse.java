@@ -14,7 +14,7 @@ public record BatchResponse(
     BigDecimal totalPrice,
     UUID productId,
     String productName,
-    String barcode,
+    String productBarcode,
     String brand,
     UUID invoiceId
 ) {
