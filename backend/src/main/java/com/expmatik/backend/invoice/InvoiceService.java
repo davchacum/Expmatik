@@ -9,6 +9,8 @@ import java.util.Locale;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -127,10 +129,28 @@ public class InvoiceService {
     }
 
     @Transactional(readOnly = true)
-    public List<Invoice> searchInvoices(UUID userId, InvoiceStatus status, LocalDate startDate, LocalDate endDate, 
-                                        String invoiceNumber, String supplierName, BigDecimal minPrice, BigDecimal maxPrice) {
+    public Page<Invoice> searchInvoices(UUID userId, InvoiceStatus status, LocalDate startDate, LocalDate endDate, 
+                                        String invoiceNumber, String supplierName, BigDecimal minPrice, BigDecimal maxPrice,Pageable pageable) {
         String statusStr = status != null ? status.name() : null;
-        return invoiceRepository.searchInvoices(userId, statusStr, startDate, endDate, invoiceNumber, supplierName, minPrice, maxPrice);
+        validateInvoiceSearchInputs(startDate, endDate, minPrice, maxPrice);                                    
+        return invoiceRepository.searchInvoices(userId, statusStr, startDate, endDate, invoiceNumber, supplierName, minPrice, maxPrice, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    void validateInvoiceSearchInputs(LocalDate startDate, LocalDate endDate, BigDecimal minPrice, BigDecimal maxPrice){
+        if(minPrice != null && minPrice.compareTo(BigDecimal.ZERO) < 0) {
+            throw new BadRequestException("Min price cannot be negative");
+        }
+        if(maxPrice != null && maxPrice.compareTo(BigDecimal.ZERO) < 0) {
+            throw new BadRequestException("Max price cannot be negative");
+        }
+        
+        if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
+            throw new BadRequestException("Start date cannot be after end date");
+        }
+        if (minPrice != null && maxPrice != null && minPrice.compareTo(maxPrice) > 0) {
+            throw new BadRequestException("Min price cannot be greater than max price");
+        }
     }
 
     @Transactional

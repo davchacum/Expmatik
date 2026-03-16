@@ -5,6 +5,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -65,16 +67,17 @@ public class InvoiceController {
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     @Operation(summary = "Buscar facturas con filtros opcionales", 
                description = "Todos los parámetros son opcionales. Puedes filtrar por estado, rango de fechas, rango de precios (precio total de la factura), número de factura o proveedor")
-    public ResponseEntity<List<InvoiceResponse>> searchInvoices(
+    public ResponseEntity<?> searchInvoices(
             @RequestParam(required = false) InvoiceStatus status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) String invoiceNumber,
             @RequestParam(required = false) String supplierName,
             @RequestParam(required = false) BigDecimal minPrice,
-            @RequestParam(required = false) BigDecimal maxPrice) {
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @ParameterObject Pageable pageable) {
         User user = userService.getUserProfile();
-        return ResponseEntity.ok(InvoiceResponse.fromInvoiceList(invoiceService.searchInvoices(user.getId(), status, startDate, endDate, invoiceNumber, supplierName, minPrice, maxPrice)));
+        return ResponseEntity.ok(InvoiceResponse.fromInvoicePage(invoiceService.searchInvoices(user.getId(), status, startDate, endDate, invoiceNumber, supplierName, minPrice, maxPrice, pageable)));
     }
 
     @GetMapping("/number/{invoiceNumber}")

@@ -1075,5 +1075,40 @@ public class InvoiceServiceTest {
             .isInstanceOf(BadRequestException.class)
             .hasMessage("Line 2: invalid status -> SENT. Allowed values: PENDING, RECEIVED, CANCELED.");
     }
+
+    // == validateInvoiceSearchInputs tests ==
+
+    @Test
+    @DisplayName("validateInvoiceSearchInputs should throw BadRequestException if minPrice is negative")
+    void testValidateInvoiceSearchInputs_NegativeMinPrice() {
+        assertThatThrownBy(() -> invoiceService.validateInvoiceSearchInputs(null, null, BigDecimal.valueOf(-1.0), null))
+            .isInstanceOf(BadRequestException.class)
+            .hasMessage("Min price cannot be negative");
+    }
+
+    @Test
+    @DisplayName("validateInvoiceSearchInputs should throw BadRequestException if maxPrice is negative")
+    void testValidateInvoiceSearchInputs_NegativeMaxPrice() {
+        assertThatThrownBy(() -> invoiceService.validateInvoiceSearchInputs(null, null, null, BigDecimal.valueOf(-1.0)))
+            .isInstanceOf(BadRequestException.class)
+            .hasMessage("Max price cannot be negative");
+    }
+
+    @Test
+    @DisplayName("validateInvoiceSearchInputs should throw BadRequestException if minPrice is greater than maxPrice")
+    void testValidateInvoiceSearchInputs_MinPriceGreaterThanMaxPrice() {
+        assertThatThrownBy(() -> invoiceService.validateInvoiceSearchInputs(null, null, BigDecimal.valueOf(10.0), BigDecimal.valueOf(5.0)))
+            .isInstanceOf(BadRequestException.class)
+            .hasMessage("Min price cannot be greater than max price");
+    }
+
+    @Test
+    @DisplayName("validateInvoiceSearchInputs should throw BadRequestException if startDate is after endDate")
+    void testValidateInvoiceSearchInputs_StartDateAfterEndDate() {
+        assertThatThrownBy(() -> invoiceService.validateInvoiceSearchInputs(LocalDate.of(2026, 3, 10), LocalDate.of(2026, 3, 1), null, null))
+            .isInstanceOf(BadRequestException.class)
+            .hasMessage("Start date cannot be after end date");
+    }
+
     
 }

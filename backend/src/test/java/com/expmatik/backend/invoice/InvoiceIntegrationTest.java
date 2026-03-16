@@ -95,7 +95,8 @@ public class InvoiceIntegrationTest {
 
         mockMvc.perform(get("/api/invoices/search"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.totalElements").value(2));
 
     }
 
@@ -105,7 +106,8 @@ public class InvoiceIntegrationTest {
 
         mockMvc.perform(get("/api/invoices/search"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.content.length()").value(0))
+                .andExpect(jsonPath("$.totalElements").value(0));
 
     }
 
@@ -116,8 +118,9 @@ public class InvoiceIntegrationTest {
         mockMvc.perform(get("/api/invoices/search")
                 .param("status", "PENDING"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].invoiceNumber").value("INV-001"));
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].invoiceNumber").value("INV-001"));
 
     }
 
@@ -128,7 +131,8 @@ public class InvoiceIntegrationTest {
         mockMvc.perform(get("/api/invoices/search")
                 .param("startDate", "2024-01-01"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.totalElements").value(2));
 
     }
 
@@ -139,8 +143,9 @@ public class InvoiceIntegrationTest {
         mockMvc.perform(get("/api/invoices/search")
                 .param("startDate", "2024-01-10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].invoiceNumber").value("INV-002"));
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].invoiceNumber").value("INV-002"));
 
     }
 
@@ -151,8 +156,9 @@ public class InvoiceIntegrationTest {
         mockMvc.perform(get("/api/invoices/search")
                 .param("endDate", "2024-01-15"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].invoiceNumber").value("INV-001"));
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].invoiceNumber").value("INV-001"));
 
     }
 
@@ -163,7 +169,8 @@ public class InvoiceIntegrationTest {
         mockMvc.perform(get("/api/invoices/search")
                 .param("endDate", "2024-02-02"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.totalElements").value(2));
 
     }
 
@@ -175,7 +182,8 @@ public class InvoiceIntegrationTest {
                 .param("startDate", "2024-01-01")
                 .param("endDate", "2024-02-02"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.totalElements").value(2));
 
     }
 
@@ -187,8 +195,9 @@ public class InvoiceIntegrationTest {
                 .param("startDate", "2024-01-10")
                 .param("endDate", "2024-02-02"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].invoiceNumber").value("INV-002"));
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].invoiceNumber").value("INV-002"));
 
     }
 
@@ -199,7 +208,8 @@ public class InvoiceIntegrationTest {
         mockMvc.perform(get("/api/invoices/search")
                 .param("supplier", "Supplier 1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.totalElements").value(2));
 
     }
 
@@ -210,8 +220,9 @@ public class InvoiceIntegrationTest {
         mockMvc.perform(get("/api/invoices/search")
                 .param("minPrice", "79.5"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[1].totalAmount").value(79.5));
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.content[1].totalAmount").value(79.5));
 
     }
 
@@ -222,8 +233,9 @@ public class InvoiceIntegrationTest {
         mockMvc.perform(get("/api/invoices/search")
                 .param("minPrice", "100"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].totalAmount").value(350.0));
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].totalAmount").value(350.0));
 
     }
 
@@ -234,8 +246,9 @@ public class InvoiceIntegrationTest {
         mockMvc.perform(get("/api/invoices/search")
                 .param("maxPrice", "100"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].totalAmount").value(79.5));
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].totalAmount").value(79.5));
 
     }
 
@@ -246,8 +259,9 @@ public class InvoiceIntegrationTest {
         mockMvc.perform(get("/api/invoices/search")
                 .param("maxPrice", "350"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].totalAmount").value(350.0));
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.content[0].totalAmount").value(350.0));
 
     }
 
@@ -260,8 +274,9 @@ public class InvoiceIntegrationTest {
                 .param("minPrice", "100")
                 .param("maxPrice", "350"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].invoiceNumber").value("INV-001"));
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].invoiceNumber").value("INV-001"));
     }
 
     @Test
@@ -272,7 +287,8 @@ public class InvoiceIntegrationTest {
                 .param("minPrice", "79.5")
                 .param("maxPrice", "350"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.totalElements").value(2));
     }
 
     @Test
@@ -282,8 +298,9 @@ public class InvoiceIntegrationTest {
         mockMvc.perform(get("/api/invoices/search")
                 .param("invoiceNumber", "INV-001"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].invoiceNumber").value("INV-001"));
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].invoiceNumber").value("INV-001"));
     }
 
     @Test
@@ -293,7 +310,8 @@ public class InvoiceIntegrationTest {
         mockMvc.perform(get("/api/invoices/search")
                 .param("invoiceNumber", "INV"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.totalElements").value(2));
     }
 
     @Test
@@ -303,7 +321,8 @@ public class InvoiceIntegrationTest {
         mockMvc.perform(get("/api/invoices/search")
                 .param("invoiceNumber", "NADA"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.content.length()").value(0))
+                .andExpect(jsonPath("$.totalElements").value(0));
     }
 
     // == Pruebas para GET /api/invoices/number/{invoiceNumber} == //

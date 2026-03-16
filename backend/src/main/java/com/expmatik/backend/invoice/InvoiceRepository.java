@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -31,7 +33,7 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
            "HAVING (:minPrice IS NULL OR COALESCE(SUM(b.unit_price * b.quantity), 0) >= :minPrice) " +
            "AND (:maxPrice IS NULL OR COALESCE(SUM(b.unit_price * b.quantity), 0) <= :maxPrice)", 
            nativeQuery = true)
-    List<Invoice> searchInvoices(
+    Page<Invoice> searchInvoices(
         @Param("userId") UUID userId,
         @Param("status") String status,
         @Param("startDate") LocalDate startDate,
@@ -39,7 +41,8 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
         @Param("invoiceNumber") String invoiceNumber,
         @Param("supplierName") String supplierName,
         @Param("minPrice") BigDecimal minPrice,
-        @Param("maxPrice") BigDecimal maxPrice
+        @Param("maxPrice") BigDecimal maxPrice,
+        Pageable pageable
     );
 
 }
