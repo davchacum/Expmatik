@@ -44,10 +44,10 @@ const EditInvoice = () => {
         });
         setBatches(data.batches);
       } else {
-        setError("No se pudo cargar la factura.");
+        setError("No se pudo cargar la factura seleccionada.");
       }
     } catch (err) {
-      setError("Error de conexión al cargar:" + err.message);
+      setError("Error de conexión al cargar los datos: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -78,37 +78,12 @@ const EditInvoice = () => {
       });
 
       if (response.ok) {
-        setSuccess("Datos de factura actualizados correctamente.");
+        setSuccess("Datos generales actualizados correctamente.");
       } else {
-        let errorMsg = "Error al actualizar la factura.";
-        try {
-          const data = await response.json();
-          if (data.message) {
-            errorMsg = data.message;
-          }
-          let details = [];
-          if (data.errors && Array.isArray(data.errors)) {
-            details = data.errors;
-          } else if (data.errors && typeof data.errors === "object") {
-            details = Object.values(data.errors);
-          }
-          if (data.detail) {
-            details.push(data.detail);
-          }
-          if (data.fieldErrors) {
-            details = details.concat(Object.values(data.fieldErrors));
-          }
-
-          if (details.length > 0) {
-            errorMsg += ": " + details.join("; ");
-          }
-        } catch (err) {
-          console.error("Error validando factura:", err);
-        }
-        setError(errorMsg);
+        setError("Error al actualizar los datos de la factura.");
       }
     } catch (err) {
-      setError("Error de red: " + err.message);
+      setError("Error de red al intentar actualizar: " + err.message);
     } finally {
       setActionLoading(false);
     }
@@ -117,7 +92,7 @@ const EditInvoice = () => {
   const handleDeleteInvoice = async () => {
     if (
       !window.confirm(
-        "¿Estás seguro de que deseas eliminar esta factura y todos sus lotes permanentemente?",
+        "¿Estás seguro de que deseas eliminar esta factura y todos sus lotes?",
       )
     )
       return;
@@ -133,11 +108,10 @@ const EditInvoice = () => {
       if (response.ok) {
         navigate("/invoices");
       } else {
-        const data = await response.json().catch(() => ({}));
-        setError(data.message || "No se pudo eliminar la factura.");
+        setError("No se pudo eliminar la factura.");
       }
     } catch (err) {
-      setError("Error de red: " + err.message);
+      setError("Error de red al intentar eliminar: " + err.message);
     } finally {
       setActionLoading(false);
     }
@@ -165,11 +139,7 @@ const EditInvoice = () => {
         });
         fetchInvoiceData();
       } else {
-        const data = await response.json().catch(() => ({}));
-        setError(
-          data.message ||
-            "Error al crear el lote (verifique el código de barras)",
-        );
+        setError("Error al añadir el lote. Verifique el código de barras.");
       }
     } catch (err) {
       setError("Error de red: " + err.message);
@@ -216,26 +186,7 @@ const EditInvoice = () => {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (response.ok) {
-        fetchInvoiceData();
-      } else {
-        let errorMsg = "Error al eliminar lote.";
-        try {
-          const data = await response.json();
-          if (data.message) {
-            errorMsg = data.message;
-          } else if (data.detail) {
-            errorMsg = data.detail;
-          } else if (data.errors) {
-            errorMsg = Array.isArray(data.errors)
-              ? data.errors.join("; ")
-              : data.errors;
-          }
-        } catch (err) {
-          console.error("Error validando eliminación de lote:", err);
-        }
-        setError(errorMsg);
-      }
+      if (response.ok) fetchInvoiceData();
     } catch (err) {
       setError("Error de red: " + err.message);
     }
@@ -250,33 +201,44 @@ const EditInvoice = () => {
   if (loading)
     return (
       <main className="home-container">
-        <div className="list-container">Cargando...</div>
+        <div className="list-container" aria-busy="true">
+          Cargando datos de la factura...
+        </div>
       </main>
     );
 
   return (
-    <main className="home-container">
+    <main className="home-container" role="main">
       <div className="list-container" style={{ maxWidth: "1100px" }}>
-        <span className="section-label">
-          Editando Factura: {invoice.invoiceNumber}
-        </span>
-
-        {error && (
-          <div className="message-error" style={{ marginBottom: "20px" }}>
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="message-success" style={{ marginBottom: "20px" }}>
-            {success}
-          </div>
-        )}
+        <div aria-live="polite">
+          {error && (
+            <div
+              className="message-error"
+              role="alert"
+              style={{ marginBottom: "20px" }}
+            >
+              {error}
+            </div>
+          )}
+          {success && (
+            <div
+              className="message-success"
+              role="status"
+              style={{ marginBottom: "20px" }}
+            >
+              {success}
+            </div>
+          )}
+        </div>
 
         <form onSubmit={handleUpdateInvoice}>
           <div className="form-grid">
             <div className="input-group">
-              <label className="input-label">Nº Factura</label>
+              <label htmlFor="edit-inv-num" className="input-label">
+                Nº Factura
+              </label>
               <input
+                id="edit-inv-num"
                 className="dark-input"
                 value={invoice.invoiceNumber}
                 onChange={(e) =>
@@ -285,8 +247,11 @@ const EditInvoice = () => {
               />
             </div>
             <div className="input-group">
-              <label className="input-label">Proveedor</label>
+              <label htmlFor="edit-supplier" className="input-label">
+                Proveedor
+              </label>
               <input
+                id="edit-supplier"
                 className="dark-input"
                 value={invoice.supplierName}
                 onChange={(e) =>
@@ -295,8 +260,11 @@ const EditInvoice = () => {
               />
             </div>
             <div className="input-group">
-              <label className="input-label">Fecha</label>
+              <label htmlFor="edit-date" className="input-label">
+                Fecha
+              </label>
               <input
+                id="edit-date"
                 type="date"
                 className="dark-input"
                 value={invoice.invoiceDate}
@@ -306,8 +274,11 @@ const EditInvoice = () => {
               />
             </div>
             <div className="input-group">
-              <label className="input-label">Estado</label>
+              <label htmlFor="edit-status" className="input-label">
+                Estado
+              </label>
               <select
+                id="edit-status"
                 className="dark-input"
                 value={invoice.status}
                 onChange={(e) =>
@@ -334,91 +305,117 @@ const EditInvoice = () => {
               onClick={handleDeleteInvoice}
               disabled={actionLoading}
             >
-              {actionLoading ? "Procesando..." : "Eliminar Factura"}
+              Eliminar Factura
             </button>
           </div>
         </form>
 
         <div className="divider-dark" />
 
-        <span className="section-label">Añadir Nuevo Lote</span>
-        <div
-          className="form-grid"
-          style={{
-            gridTemplateColumns: "2fr 1fr 1fr 1fr auto",
-            alignItems: "end",
-          }}
-        >
-          <div className="input-group">
-            <label className="input-label">Barcode</label>
-            <input
-              className="dark-input"
-              value={currentBatch.productBarcode}
-              onChange={(e) =>
-                setCurrentBatch({
-                  ...currentBatch,
-                  productBarcode: e.target.value,
-                })
-              }
-            />
-          </div>
-          <div className="input-group">
-            <label className="input-label">Cant.</label>
-            <input
-              type="number"
-              className="dark-input"
-              value={currentBatch.quantity}
-              onChange={(e) =>
-                setCurrentBatch({ ...currentBatch, quantity: e.target.value })
-              }
-            />
-          </div>
-          <div className="input-group">
-            <label className="input-label">Precio</label>
-            <input
-              type="number"
-              step="0.01"
-              className="dark-input"
-              value={currentBatch.unitPrice}
-              onChange={(e) =>
-                setCurrentBatch({ ...currentBatch, unitPrice: e.target.value })
-              }
-            />
-          </div>
-          <div className="input-group">
-            <label className="input-label">Caducidad</label>
-            <input
-              type="date"
-              className="dark-input"
-              value={currentBatch.expirationDate}
-              onChange={(e) =>
-                setCurrentBatch({
-                  ...currentBatch,
-                  expirationDate: e.target.value,
-                })
-              }
-            />
-          </div>
-          <button
-            type="button"
-            className="action-btn-blue"
-            onClick={handleAddBatch}
-            disabled={actionLoading}
+        <section aria-labelledby="add-batch-section">
+          <h2
+            id="add-batch-section"
+            className="section-label"
+            style={{ marginBottom: "15px" }}
           >
-            Añadir Lote
-          </button>
-        </div>
+            Añadir Nuevo Lote
+          </h2>
+          <div
+            className="form-grid"
+            style={{
+              gridTemplateColumns: "2fr 1fr 1fr 1fr auto",
+              alignItems: "end",
+            }}
+          >
+            <div className="input-group">
+              <label htmlFor="new-batch-barcode" className="input-label">
+                Código de Barras
+              </label>
+              <input
+                id="new-batch-barcode"
+                className="dark-input"
+                placeholder="Barcode..."
+                value={currentBatch.productBarcode}
+                onChange={(e) =>
+                  setCurrentBatch({
+                    ...currentBatch,
+                    productBarcode: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <div className="input-group">
+              <label htmlFor="new-batch-qty" className="input-label">
+                Unidades
+              </label>
+              <input
+                id="new-batch-qty"
+                type="number"
+                className="dark-input"
+                value={currentBatch.quantity}
+                onChange={(e) =>
+                  setCurrentBatch({ ...currentBatch, quantity: e.target.value })
+                }
+              />
+            </div>
+            <div className="input-group">
+              <label htmlFor="new-batch-price" className="input-label">
+                Precio
+              </label>
+              <input
+                id="new-batch-price"
+                type="number"
+                step="0.01"
+                className="dark-input"
+                value={currentBatch.unitPrice}
+                onChange={(e) =>
+                  setCurrentBatch({
+                    ...currentBatch,
+                    unitPrice: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <div className="input-group">
+              <label htmlFor="new-batch-exp" className="input-label">
+                Caducidad
+              </label>
+              <input
+                id="new-batch-exp"
+                type="date"
+                className="dark-input"
+                value={currentBatch.expirationDate}
+                onChange={(e) =>
+                  setCurrentBatch({
+                    ...currentBatch,
+                    expirationDate: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <button
+              type="button"
+              className="action-btn-blue"
+              onClick={handleAddBatch}
+              disabled={actionLoading}
+            >
+              Añadir Lote
+            </button>
+          </div>
+        </section>
 
         <div className="table-responsive" style={{ marginTop: "20px" }}>
-          <table className="dark-table">
+          <table className="dark-table" aria-label="Lotes de esta factura">
             <thead>
               <tr>
-                <th>Código de Barras</th>
-                <th>Cant.</th>
-                <th>P. Unitario</th>
-                <th>Subtotal</th>
-                <th>Caducidad</th>
-                <th style={{ textAlign: "center" }}>Acciones</th>
+                <th scope="col">Código de Barras</th>
+                <th scope="col">Cant.</th>
+                <th scope="col">P. Unitario</th>
+                <th scope="col">Subtotal</th>
+                <th scope="col">Caducidad</th>
+                <th scope="col" style={{ textAlign: "center" }}>
+                  Acciones
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -428,15 +425,21 @@ const EditInvoice = () => {
                     <>
                       <td>
                         <input
+                          aria-label="Editar código"
                           className="dark-input"
-                          value={b.barcode}
+                          value={b.productBarcode}
                           onChange={(e) =>
-                            handleEditBatchChange(i, "barcode", e.target.value)
+                            handleEditBatchChange(
+                              i,
+                              "productBarcode",
+                              e.target.value,
+                            )
                           }
                         />
                       </td>
                       <td>
                         <input
+                          aria-label="Editar cantidad"
                           type="number"
                           className="dark-input"
                           value={b.quantity}
@@ -447,6 +450,7 @@ const EditInvoice = () => {
                       </td>
                       <td>
                         <input
+                          aria-label="Editar precio"
                           type="number"
                           step="0.01"
                           className="dark-input"
@@ -463,6 +467,7 @@ const EditInvoice = () => {
                       <td>{(b.quantity * b.unitPrice).toFixed(2)}€</td>
                       <td>
                         <input
+                          aria-label="Editar caducidad"
                           type="date"
                           className="dark-input"
                           value={b.expirationDate}
@@ -476,15 +481,17 @@ const EditInvoice = () => {
                         />
                       </td>
                       <td style={{ textAlign: "center" }}>
-                        <div style={{ display: "flex", gap: "5px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "5px",
+                            justifyContent: "center",
+                          }}
+                        >
                           <button
                             type="button"
                             className="action-btn-red"
-                            onClick={() => {
-                              setEditingIndex(null);
-                              setError("");
-                            }}
-                            style={{ height: "44px", padding: "0 15px" }}
+                            onClick={() => setEditingIndex(null)}
                           >
                             Cancelar
                           </button>
@@ -492,9 +499,9 @@ const EditInvoice = () => {
                             type="button"
                             className="action-btn-blue"
                             onClick={() => handleUpdateBatch(i)}
-                            disabled={loading}
+                            disabled={actionLoading}
                           >
-                            {loading ? "..." : "Confirmar"}
+                            Confirmar
                           </button>
                         </div>
                       </td>
@@ -520,6 +527,7 @@ const EditInvoice = () => {
                             type="button"
                             className="action-btn-red"
                             onClick={() => handleDeleteBatch(b.id)}
+                            aria-label="Eliminar lote"
                           >
                             Borrar
                           </button>
@@ -527,6 +535,7 @@ const EditInvoice = () => {
                             type="button"
                             className="action-btn-blue"
                             onClick={() => setEditingIndex(i)}
+                            aria-label="Editar lote"
                           >
                             Editar
                           </button>
@@ -544,6 +553,7 @@ const EditInvoice = () => {
           <button
             className="action-btn-red"
             onClick={() => navigate("/invoices")}
+            aria-label="Volver al listado"
           >
             Volver
           </button>

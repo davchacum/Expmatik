@@ -20,10 +20,14 @@ const Header = () => {
     }
     if (path === "/profile") return "Mi Perfil";
     if (path === "/products") return "Catálogo de Productos";
-    if (path === "/products/create-custom") return "Crear Producto Personalizado";
+    if (path === "/products/create-custom")
+      return "Crear Producto Personalizado";
     if (path === "/inventory") return "Inventario";
     if (path === "/analytics") return "Analíticas";
-    if (path === "/invoices") return "Facturas";
+    if (path === "/invoices") return "Gestión de Facturas";
+    if (path === "/invoices/create") return "Crear Nueva Factura";
+    if (path.startsWith("/invoices/") && path.endsWith("/edit"))
+      return "Editar Factura";
     if (path === "/machines") return "Máquinas";
     if (path === "/sales") return "Ventas";
     if (path === "/maintenance") return "Tareas de Mantenimiento";
