@@ -14,6 +14,8 @@ public record BatchResponse(
     BigDecimal totalPrice,
     UUID productId,
     String productName,
+    String barcode,
+    String brand,
     UUID invoiceId
 ) {
     public static BatchResponse fromBatch(Batch batch) {
@@ -25,6 +27,8 @@ public record BatchResponse(
             batch.getTotalPrice(),
             batch.getProduct().getId(),
             batch.getProduct().getName(),
+            batch.getProduct().getBarcode(),
+            batch.getProduct().getBrand(),
             batch.getInvoice().getId()
         );
     }

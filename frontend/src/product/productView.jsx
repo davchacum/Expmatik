@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Modal from "../components/Modal";
 import "../global-list.css";
 
 const EyeIcon = ({ visible }) =>
@@ -41,7 +42,6 @@ const Products = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("accessToken");
 
-  // Referencia para el foco del modal
   const modalTitleRef = useRef(null);
 
   const [products, setProducts] = useState([]);
@@ -55,7 +55,6 @@ const Products = () => {
   const [offBarcode, setOffBarcode] = useState("");
   const [message, setMessage] = useState({ text: "", type: "" });
 
-  // FOCO DINÁMICO: Solo al abrir la descripción
   useEffect(() => {
     if (selectedProduct && modalTitleRef.current) {
       modalTitleRef.current.focus();
@@ -81,6 +80,13 @@ const Products = () => {
         const data = await response.json();
         setProducts(data.content);
         setTotalPages(data.totalPages);
+      } else if (response.status === 401) {
+        setMessage({
+          text: "Tu sesión ha expirado. Por favor, inicia sesión de nuevo.",
+          type: "error",
+        });
+        setProducts([]);
+        setTotalPages(0);
       }
     } catch (err) {
       console.error(err);
@@ -129,11 +135,12 @@ const Products = () => {
         });
       }
     } catch (err) {
-      setMessage({
-        text: "Error de conexión",
-        type: "error",
-        err: err.toString(),
-      });
+      setMessage({ text: "Error de conexión o inesperado.", type: "error" });
+      setProducts([]);
+      setTotalPages(0);
+      console.error("Error fetching products:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -176,10 +183,11 @@ const Products = () => {
         {message.text && (
           <div
             className={
-              message.type === "error" ? "login-error" : "success-message"
+              message.type === "error" ? "message-error" : "message-success"
             }
             role="alert"
             aria-live="assertive"
+            style={{ marginBottom: "16px" }}
           >
             {message.text}
           </div>
@@ -330,51 +338,37 @@ const Products = () => {
       </div>
 
       {selectedProduct && (
-        <div
-          className="modal-overlay"
-          onClick={() => setSelectedProduct(null)}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <h2
-              ref={modalTitleRef}
-              className="section-title"
-              style={{ fontSize: "1.2rem" }}
-              tabIndex="-1"
-            >
-              Detalles del Producto
-            </h2>
-            <div className="divider-dark" aria-hidden="true" />
-
-            <div className="input-group" style={{ marginBottom: "15px" }}>
-              <span className="section-label">Producto y Marca</span>
-              <p style={{ color: "var(--text-main)" }}>
-                {selectedProduct.name} — {selectedProduct.brand}
-              </p>
-            </div>
-
-            <div className="input-group">
-              <span className="section-label">Descripción Completa</span>
-              <p className="description-popup-text">
-                {selectedProduct.description}
-              </p>
-            </div>
-
-            <div
-              className="list-footer"
-              style={{ justifyContent: "flex-end", marginTop: "20px" }}
-            >
-              <button
-                className="btn-primary"
-                onClick={() => setSelectedProduct(null)}
-                aria-label="Cerrar detalles"
-              >
-                Cerrar
-              </button>
-            </div>
+        <Modal onClose={() => setSelectedProduct(null)}>
+          <h2
+            ref={modalTitleRef}
+            className="section-title modal-title"
+            tabIndex="-1"
+          >
+            Detalles del Producto
+          </h2>
+          <div className="divider-dark" aria-hidden="true" />
+          <div className="modal-content-group">
+            <span className="section-label">Producto y Marca</span>
+            <p className="modal-product-text">
+              {selectedProduct.name} — {selectedProduct.brand}
+            </p>
           </div>
-        </div>
+          <div className="modal-content-group">
+            <span className="section-label">Descripción Completa</span>
+            <p className="description-popup-text">
+              {selectedProduct.description}
+            </p>
+          </div>
+          <div className="list-footer modal-footer">
+            <button
+              className="btn-primary"
+              onClick={() => setSelectedProduct(null)}
+              aria-label="Cerrar detalles"
+            >
+              Cerrar
+            </button>
+          </div>
+        </Modal>
       )}
     </main>
   );

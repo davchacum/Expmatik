@@ -4,6 +4,7 @@ import Register from "./auth/register";
 import Profile from "./auth/profile";
 import PrivateRoute from "./PrivateRoute";
 import Products from "./product/productView";
+import Invoices from "./invoice/invoiceView";
 import CreateCustomProduct from "./product/createCustomProduct";
 import HomeMenu from "./home/HomeMenu";
 
@@ -43,6 +44,14 @@ const AppRouter = () => {
         element={
           <PrivateRoute allowedRoles={["ADMINISTRATOR"]}>
             <CreateCustomProduct />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/invoices"
+        element={
+          <PrivateRoute allowedRoles={["ADMINISTRATOR"]}>
+            <Invoices />
           </PrivateRoute>
         }
       />
