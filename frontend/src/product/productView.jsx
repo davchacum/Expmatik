@@ -42,6 +42,13 @@ const Products = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("accessToken");
 
+  useEffect(() => {
+    if (!token) {
+      navigate("/login", { replace: true });
+      return;
+    }
+  }, [token, navigate]);
+
   const modalTitleRef = useRef(null);
 
   const [products, setProducts] = useState([]);

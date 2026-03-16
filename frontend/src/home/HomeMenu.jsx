@@ -1,5 +1,5 @@
+import { useState,useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
 import "./home.css";
 
 const HomeMenu = () => {
@@ -9,6 +9,14 @@ const HomeMenu = () => {
     const storedUser = localStorage.getItem("user");
     return storedUser ? JSON.parse(storedUser) : null;
   });
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      navigate("/login", { replace: true });
+      return;
+    }
+  }, [navigate]);
 
   const allItems = [
     {

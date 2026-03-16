@@ -1,10 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../global-form.css";
 
 const CreateCustomProduct = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("accessToken");
+
+  useEffect(() => {
+    if (!token) {
+      navigate("/login", { replace: true });
+      return;
+    }
+  }, [token, navigate]);
 
   const [formData, setFormData] = useState({
     name: "",

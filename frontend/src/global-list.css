@@ -11,6 +11,7 @@
   --text-muted: #94a3b8;
   --primary-blue: #38bdf8;
   --primary-orange: #f97316;
+  --primary-green: #22c55e;
   --radius: 8px;
 }
 
@@ -147,6 +148,17 @@
   background: var(--primary-orange);
   color: white;
   transform: translateY(-1px);
+}
+
+.btn-success {
+  background: rgba(34, 197, 94, 0.1);
+  color: var(--primary-green);
+  border-color: var(--primary-green);
+}
+
+.btn-success:hover {
+  background: var(--primary-green);
+  color: var(--bg-dark);
 }
 
 /* --- Tabla --- */

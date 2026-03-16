@@ -10,6 +10,8 @@
   --text-muted: #94a3b8;
   --primary-blue: #38bdf8;
   --primary-orange: #f97316;
+  --primary-green: #22c55e;
+  --primary-red: #ef4444;
   --radius: 8px;
 }
 
@@ -147,7 +149,7 @@
   letter-spacing: 0.05em;
 }
 
-.action-btn-blue, .action-btn-orange {
+.action-btn-blue, .action-btn-orange, .action-btn-green, .action-btn-red {
   border-radius: var(--radius);
   font-weight: 600;
   transition: all 0.2s;
@@ -182,6 +184,32 @@
   color: white;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
+}
+
+.action-btn-green {
+  background: rgba(34, 197, 94, 0.1);
+  color: var(--primary-green);
+  border-color: var(--primary-green);
+}
+
+.action-btn-green:hover {
+  background: var(--primary-green);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+}
+
+.action-btn-red {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--primary-red);
+  border-color: var(--primary-red);
+}
+
+.action-btn-red:hover {
+  background: var(--primary-red);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
 }
 
 .form-footer {

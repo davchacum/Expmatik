@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Modal from "../components/Modal";
 import "../global-list.css";
 
@@ -39,7 +40,7 @@ const EyeIcon = ({ visible }) =>
 
 const Invoices = () => {
   const token = localStorage.getItem("accessToken");
-
+  const navigate = useNavigate();
   const [invoices, setInvoices] = useState([]);
   const [filters, setFilters] = useState({
     status: "",
@@ -72,6 +73,13 @@ const Invoices = () => {
       modalTitleRef.current.focus();
     }
   }, [selectedInvoice]);
+
+  useEffect(() => {
+    if (!token) {
+      navigate("/login", { replace: true });
+      return;
+    }
+  }, [token, navigate]);
   const fetchInvoices = useCallback(async () => {
     setLoading(true);
     try {
@@ -142,6 +150,33 @@ const Invoices = () => {
   return (
     <main className="home-container">
       <div className="list-container">
+        <div className="list-header-actions" style={{ marginBottom: "end" }}>
+          <div className="input-group">
+            <span className="section-label">Crear factura manualmente</span>
+            <button
+              className="action-btn-orange"
+              onClick={() => navigate("/invoices/create")}
+              style={{ width: "100%", height: "44px" }}
+            >
+              Crear Factura Manual
+            </button>
+          </div>
+          <div className="input-group">
+            <label className="section-label">Importar facturas CSV</label>
+            <div className="inline-form">
+              <button
+                className="action-btn-green"
+                onClick={() => {}}
+                style={{ width: "100%", height: "44px" }}
+              >
+                Importar CSV
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="divider-dark" style={{ marginBottom: "20px" }} />
+
         <span className="section-label">Filtrar facturas</span>
         <div
           className="search-row"
@@ -219,6 +254,7 @@ const Invoices = () => {
             <input
               type="number"
               className="dark-input"
+              step="0.01"
               placeholder="0.00 €"
               min="0"
               value={filters.minPrice}
@@ -232,6 +268,7 @@ const Invoices = () => {
             <input
               type="number"
               className="dark-input"
+              step="0.01"
               placeholder="0.00 €"
               min="0"
               value={filters.maxPrice}
@@ -404,7 +441,7 @@ const Invoices = () => {
                     <td>{b.productName}</td>
                     <td>{b.brand}</td>
                     <td>{b.barcode}</td>
-                    <td>{b.expirationDate ? b.expirationDate : "No caduca"}</td>
+                    <td>{b.expirationDate ? b.expirationDate : "N/A"}</td>
                     <td>{b.quantity}</td>
                     <td>{b.unitPrice}€</td>
                     <td>{b.totalPrice}€</td>
