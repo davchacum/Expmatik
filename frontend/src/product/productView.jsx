@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./products.css";
+import "../global-list.css";
 
 const EyeIcon = ({ visible }) =>
   visible ? (
@@ -132,12 +132,12 @@ const Products = () => {
 
   return (
     <main className="home-container" role="main">
-      <div className="profile-card products-wide">
-        <div className="product-top-actions">
-          <div className="profile-info-group">
-            <label htmlFor="barcode-import">
+      <div className="list-container">
+        <div className="list-header-actions">
+          <div className="action-group">
+            <span className="section-label">
               Importar desde Open Food Facts
-            </label>
+            </span>
             <form onSubmit={handleAddOFF} className="inline-form">
               <input
                 id="barcode-import"
@@ -146,23 +146,24 @@ const Products = () => {
                 value={offBarcode}
                 onChange={(e) => setOffBarcode(e.target.value)}
               />
-              <button type="submit" className="action-btn-blue">
+              <button type="submit" className="btn-primary">
                 Importar
               </button>
             </form>
           </div>
 
-          <div className="profile-info-group">
-            <label>Gestión Manual</label>
+          <div className="action-group">
+            <span className="section-label">Gestión Manual</span>
             <button
-              className="action-btn-orange"
+              className="btn-secondary"
               onClick={() => navigate("/products/create-custom")}
+              style={{ width: "100%" }}
             >
               Añadir Nuevo Producto Personalizado
             </button>
           </div>
         </div>
-        
+
         {message.text && (
           <div
             className={
@@ -175,42 +176,34 @@ const Products = () => {
         )}
 
         <div className="divider-dark" />
-
-        <div className="search-container-dark">
-          <div className="profile-info-group">
-            <label>Filtrar productos</label>
-            <div className="search-row">
-              <input
-                className="dark-input"
-                placeholder="Nombre..."
-                value={filters.name}
-                onChange={(e) =>
-                  setFilters({ ...filters, name: e.target.value })
-                }
-                aria-label="Filtrar por nombre"
-              />
-              <input
-                className="dark-input"
-                placeholder="Marca..."
-                value={filters.brand}
-                onChange={(e) =>
-                  setFilters({ ...filters, brand: e.target.value })
-                }
-                aria-label="Filtrar por marca"
-              />
-              <input
-                className="dark-input"
-                placeholder="Código de barras..."
-                value={filters.barcode}
-                onChange={(e) =>
-                  setFilters({ ...filters, barcode: e.target.value })
-                }
-                aria-label="Filtrar por código de barras"
-              />
-              <button className="action-btn-blue" onClick={handleApplySearch}>
-                Buscar
-              </button>
-            </div>
+        <div className="search-section">
+          <span className="section-label">Filtrar productos</span>
+          <div className="search-row">
+            <input
+              className="dark-input"
+              placeholder="Nombre..."
+              value={filters.name}
+              onChange={(e) => setFilters({ ...filters, name: e.target.value })}
+            />
+            <input
+              className="dark-input"
+              placeholder="Marca..."
+              value={filters.brand}
+              onChange={(e) =>
+                setFilters({ ...filters, brand: e.target.value })
+              }
+            />
+            <input
+              className="dark-input"
+              placeholder="Código de barras..."
+              value={filters.barcode}
+              onChange={(e) =>
+                setFilters({ ...filters, barcode: e.target.value })
+              }
+            />
+            <button className="btn-primary" onClick={handleApplySearch}>
+              Buscar
+            </button>
           </div>
         </div>
 
@@ -231,26 +224,24 @@ const Products = () => {
             <tbody style={{ opacity: loading ? 0.5 : 1 }}>
               {products.map((p) => (
                 <tr key={p.id}>
-                  <td className="product-cell">
-                    <div className="product-name-stack">
-                      <span>{p.name}</span>
-                    </div>
+                  <td>
+                    <strong>{p.name}</strong>
                   </td>
                   <td>{p.brand}</td>
                   <td className="barcode-text">{p.barcode}</td>
                   <td>
                     <span
-                      className={`profile-role-badge ${p.isCustom ? "role-maintainer" : "role-admin"}`}
+                      className={`badge ${p.isCustom ? "badge-orange" : "badge-blue"}`}
                     >
                       {p.isCustom ? "Propio" : "Catálogo"}
                     </span>
                   </td>
                   <td style={{ textAlign: "center" }}>
-                    {p.isPerishable ? (
-                      <span className="badge-perishable yes">Sí</span>
-                    ) : (
-                      <span className="badge-perishable no">No</span>
-                    )}
+                    <span
+                      className={`badge-perishable ${p.isPerishable ? "yes" : "no"}`}
+                    >
+                      {p.isPerishable ? "Sí" : "No"}
+                    </span>
                   </td>
                   <td>
                     {p.description && (
@@ -269,8 +260,7 @@ const Products = () => {
             </tbody>
           </table>
         </div>
-
-        <div className="profile-actions pagination-gap">
+        <div className="list-footer">
           <button
             className="page-btn"
             disabled={page === 0}
@@ -278,8 +268,8 @@ const Products = () => {
           >
             Anterior
           </button>
-          <span className="page-info" aria-live="polite">
-            Página {page + 1} de {totalPages}
+          <span className="page-info">
+            Página <strong>{page + 1}</strong> de <strong>{totalPages}</strong>
           </span>
           <button
             className="page-btn"
@@ -292,35 +282,36 @@ const Products = () => {
       </div>
 
       {selectedProduct && (
-        <div
-          className="modal-overlay"
-          onClick={() => setSelectedProduct(null)}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div
-            className="modal-content profile-card"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="profile-card-title">Descripción del Producto</h2>
+        <div className="modal-overlay" onClick={() => setSelectedProduct(null)}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+            <h2
+              className="section-label"
+              style={{ fontSize: "1.1rem", marginBottom: "15px" }}
+            >
+              Descripción del Producto
+            </h2>
+            <div className="divider-dark" style={{ margin: "15px 0" }} />
 
-            <div className="profile-info-group">
-              <label>Nombre y Marca</label>
-              <p>
+            <div style={{ marginBottom: "15px" }}>
+              <span className="section-label">Nombre y Marca</span>
+              <p style={{ marginTop: "5px" }}>
                 {selectedProduct.name} - {selectedProduct.brand}
               </p>
             </div>
 
-            <div className="profile-info-group">
-              <label>Detalles</label>
+            <div style={{ marginBottom: "20px" }}>
+              <span className="section-label">Detalles</span>
               <p className="description-popup-text">
                 {selectedProduct.description}
               </p>
             </div>
 
-            <div className="profile-actions">
+            <div
+              className="list-footer"
+              style={{ justifyContent: "flex-end", marginTop: "0" }}
+            >
               <button
-                className="logout-danger-btn"
+                className="btn-primary"
                 onClick={() => setSelectedProduct(null)}
               >
                 Cerrar

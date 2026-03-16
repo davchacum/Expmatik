@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./createCustomProduct.css";
+import "../global-form.css";
 
 const CreateCustomProduct = () => {
   const navigate = useNavigate();
