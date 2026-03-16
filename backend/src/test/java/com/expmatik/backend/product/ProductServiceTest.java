@@ -322,12 +322,12 @@ public class ProductServiceTest {
     void testCheckUniqueBarcodeSuccess() {
         String barcode = "1111111111111";
 
-        when(productRepository.findByBarcodeAndIsCustomFalse(barcode))
+        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, user1.getId()))
                 .thenReturn(Optional.empty());
 
-        productService.checkUniqueBarcode(barcode);
+        productService.checkUniqueBarcode(barcode, user1.getId());
 
-        verify(productRepository).findByBarcodeAndIsCustomFalse(barcode);
+        verify(productRepository).findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, user1.getId());
     }
 
     @Test
@@ -339,12 +339,12 @@ public class ProductServiceTest {
         existingProduct.setBarcode(barcode);
         existingProduct.setIsCustom(false);
 
-        when(productRepository.findByBarcodeAndIsCustomFalse(barcode))
+        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, user1.getId()))
                 .thenReturn(Optional.of(existingProduct));
 
-        assertThatThrownBy(() -> productService.checkUniqueBarcode(barcode))
+        assertThatThrownBy(() -> productService.checkUniqueBarcode(barcode, user1.getId()))
                 .isInstanceOf(ConflictException.class)
-                .hasMessage("A product with this barcode already exists in the catalog.");
+                .hasMessage("A product with this barcode already exists.");
     }
 
     @Test
@@ -477,7 +477,7 @@ public class ProductServiceTest {
         apiProduct.setIsCustom(false);
 
         // Mock checkUniqueBarcode (no lanza excepción)
-        when(productRepository.findByBarcodeAndIsCustomFalse(barcode))
+        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
                 .thenReturn(Optional.empty());
 
         // Mock findProductInOpenFoodFacts
@@ -489,7 +489,7 @@ public class ProductServiceTest {
         Product result = productService.createProductOpenFoodFacts(barcode, userId);
 
         // Verificar que se llamaron los métodos en orden
-        verify(productRepository).findByBarcodeAndIsCustomFalse(barcode);
+        verify(productRepository).findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId);
         verify(productService).findProductInOpenFoodFacts(barcode);
         verify(productRepository).save(apiProduct);
 
@@ -510,13 +510,13 @@ public class ProductServiceTest {
         existingProduct.setBarcode(barcode);
         existingProduct.setIsCustom(false);
 
-        when(productRepository.findByBarcodeAndIsCustomFalse(barcode))
+        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
                 .thenReturn(Optional.of(existingProduct));
 
         // Debe lanzar excepción de checkUniqueBarcode
         assertThatThrownBy(() -> productService.createProductOpenFoodFacts(barcode, userId))
                 .isInstanceOf(ConflictException.class)
-                .hasMessage("A product with this barcode already exists in the catalog.");
+                .hasMessage("A product with this barcode already exists.");
 
         // Verificar que findProductInOpenFoodFacts y updateProductImage NO se ejecutaron
         verify(productService, never()).findProductInOpenFoodFacts(any());
@@ -529,7 +529,7 @@ public class ProductServiceTest {
         String barcode = "9999999999999";
         UUID userId = user1.getId();
 
-        when(productRepository.findByBarcodeAndIsCustomFalse(barcode))
+        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
                 .thenReturn(Optional.empty());
 
         doReturn(Optional.empty()).when(productService).findProductInOpenFoodFacts(barcode);

@@ -119,6 +119,8 @@ const Products = () => {
         });
       } else if (response.status === 404) {
         setMessage({ text: "No encontrado en Open Food Facts", type: "error" });
+      } else if (response.status === 409) {
+        setMessage({ text: "Producto ya existe en el sistema", type: "error" });
       } else {
         setMessage({ text: "Error en el servidor", type: "error" });
       }

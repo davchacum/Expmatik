@@ -160,9 +160,9 @@ public class ProductService {
         }
     }
 
-    public void checkUniqueBarcode(String barcode) {
-        if (productRepository.findByBarcodeAndIsCustomFalse(barcode).isPresent()) {
-            throw new ConflictException("A product with this barcode already exists in the catalog.");
+    public void checkUniqueBarcode(String barcode, UUID userId) {
+        if (productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId).isPresent()) {
+            throw new ConflictException("A product with this barcode already exists.");
         }
     }
 
@@ -243,7 +243,7 @@ public class ProductService {
     @Transactional
     public Product createProductOpenFoodFacts(String barcode,UUID userId) {
 
-        checkUniqueBarcode(barcode);
+        checkUniqueBarcode(barcode, userId);
 
         Optional<Product> openFoodFactsProduct = findProductInOpenFoodFacts(barcode);
         
