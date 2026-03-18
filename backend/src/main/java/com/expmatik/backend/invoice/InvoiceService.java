@@ -56,7 +56,7 @@ public class InvoiceService {
         Supplier supplier = supplierService.findOrRegister(invoice.supplierName());
         
         if(invoiceRepository.findByInvoiceNumber(invoice.invoiceNumber()).isPresent()) {
-            throw new ConflictException("Invoice number already exists");
+            throw new ConflictException("Invoice number: " + invoice.invoiceNumber() + " already exists");
         }
         
         Invoice newInvoice = new Invoice();
@@ -83,6 +83,7 @@ public class InvoiceService {
         }
         return save(newInvoice);
     }
+
 
     @Transactional(readOnly = true)
     public Invoice findInvoiceById(UUID id,UUID userId) {
@@ -173,7 +174,7 @@ public class InvoiceService {
         }
         if(!existingInvoice.getInvoiceNumber().equals(invoiceRequest.invoiceNumber()) 
             && invoiceRepository.findByInvoiceNumber(invoiceRequest.invoiceNumber()).isPresent()) {
-            throw new ConflictException("Invoice number already exists");
+            throw new ConflictException("Invoice number: " + invoiceRequest.invoiceNumber() + " already exists");
         }
         
         existingInvoice.setInvoiceNumber(invoiceRequest.invoiceNumber());
@@ -190,7 +191,7 @@ public class InvoiceService {
         return save(existingInvoice);
     }
     @Transactional
-    public List<Invoice> createInvoicesFromCSV(User user,MultipartFile csvContent) {
+    public List<InvoiceRequest> createInvoicesFromCSV(User user,MultipartFile csvContent) {
         if (csvContent == null || csvContent.isEmpty()) {
             throw new BadRequestException("No file uploaded or file is empty.");
         }
@@ -201,22 +202,15 @@ public class InvoiceService {
 
         File tempCsv;
         try {
-            tempCsv = File.createTempFile("invoice-import-", ".csv");
+            tempCsv = File.createTempFile("preview-", ".csv");
             csvContent.transferTo(tempCsv);
-        } catch (IOException ex) {
-            throw new BadRequestException("Could not process the CSV file: " + ex.getMessage());
-        }
-
-        List<Invoice> createdInvoices = new ArrayList<>();
-        try {
+            
             List<InvoiceRequest> requests = invoiceCSVLector.readCSV(tempCsv);
-            for (InvoiceRequest request : requests) {
-                createdInvoices.add(createInvoice(user, request));
-            }
-        } finally {
+            
             tempCsv.delete();
+            return requests;
+        } catch (IOException ex) {
+            throw new BadRequestException("Could not process file");
         }
-        return createdInvoices;
-
     }
 }

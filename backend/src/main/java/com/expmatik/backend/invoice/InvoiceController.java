@@ -136,8 +136,8 @@ public class InvoiceController {
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> createInvoicesFromCSV(@RequestPart(value = "file") MultipartFile csvContent) {
         User user = userService.getUserProfile();
-        List<Invoice> createdInvoices = invoiceService.createInvoicesFromCSV(user,csvContent);
-        return ResponseEntity.ok(InvoiceResponse.fromInvoiceList(createdInvoices));
+        List<InvoiceRequest> createdInvoices = invoiceService.createInvoicesFromCSV(user,csvContent);
+        return ResponseEntity.ok(createdInvoices);
     }
 
 }

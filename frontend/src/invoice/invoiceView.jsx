@@ -165,7 +165,7 @@ const Invoices = () => {
             <h2 className="section-label">Importar facturas CSV</h2>
             <button
               className="action-btn-green"
-              onClick={() => {}}
+              onClick={() => navigate("/invoices/create/csv")}
               style={{ width: "100%", height: "44px" }}
             >
               Importar CSV
@@ -354,9 +354,9 @@ const Invoices = () => {
                           handleStatusChange(inv.id, e.target.value)
                         }
                       >
-                        <option value="PENDING">PENDIENTE</option>
-                        <option value="RECEIVED">RECIBIDO</option>
-                        <option value="CANCELED">CANCELADO</option>
+                        <option value="PENDING" className="badge">PENDIENTE</option>
+                        <option value="RECEIVED" className="badge badge-green">RECIBIDO</option>
+                        <option value="CANCELED" className="badge badge-red">CANCELADO</option>
                       </select>
                     ) : (
                       <span

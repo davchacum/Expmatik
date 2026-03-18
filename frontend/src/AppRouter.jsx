@@ -9,6 +9,7 @@ import CreateCustomProduct from "./product/createCustomProduct";
 import HomeMenu from "./home/HomeMenu";
 import CreateInvoice from "./invoice/createInvoice";
 import EditInvoice from "./invoice/editInvoice";
+import ImportInvoiceCSV from "./invoice/importInvoiceCSV";
 
 const AppRouter = () => {
   return (
@@ -70,6 +71,14 @@ const AppRouter = () => {
         element={
           <PrivateRoute allowedRoles={["ADMINISTRATOR"]}>
             <EditInvoice />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/invoices/create/csv"
+        element={
+          <PrivateRoute allowedRoles={["ADMINISTRATOR"]}>
+            <ImportInvoiceCSV />
           </PrivateRoute>
         }
       />

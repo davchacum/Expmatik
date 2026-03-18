@@ -28,6 +28,7 @@ const Header = () => {
     if (path === "/invoices/create") return "Crear Nueva Factura";
     if (path.startsWith("/invoices/") && path.endsWith("/edit"))
       return "Editar Factura";
+    if( path === "/invoices/create/csv") return "Importar Factura desde CSV";
     if (path === "/machines") return "Máquinas";
     if (path === "/sales") return "Ventas";
     if (path === "/maintenance") return "Tareas de Mantenimiento";

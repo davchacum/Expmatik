@@ -1208,15 +1208,12 @@ public class InvoiceIntegrationTest {
                 .andExpect(jsonPath("$[0].status").value("PENDING"))
                 .andExpect(jsonPath("$[0].invoiceDate").value("2026-03-10"))
                 .andExpect(jsonPath("$[0].batches.length()").value(3))
-                .andExpect(jsonPath("$[0].batches[0].productId").value("00000000-0000-0000-0000-000000000001"))
                 .andExpect(jsonPath("$[0].batches[0].quantity").value(24))
                 .andExpect(jsonPath("$[0].batches[0].unitPrice").value(0.85))
                 .andExpect(jsonPath("$[0].batches[0].expirationDate").value("2026-09-30"))
-                .andExpect(jsonPath("$[0].batches[1].productId").value("00000000-0000-0000-0000-000000000001"))
                 .andExpect(jsonPath("$[0].batches[1].quantity").value(10))
                 .andExpect(jsonPath("$[0].batches[1].unitPrice").value(1.20))
                 .andExpect(jsonPath("$[0].batches[1].expirationDate").value("2026-09-30"))
-                .andExpect(jsonPath("$[0].batches[2].productId").value("00000000-0000-0000-0000-000000000004"))
                 .andExpect(jsonPath("$[0].batches[2].quantity").value(10))
                 .andExpect(jsonPath("$[0].batches[2].unitPrice").value(1.20))
                 .andExpect(jsonPath("$[0].batches[2].expirationDate").doesNotExist())
@@ -1225,11 +1222,9 @@ public class InvoiceIntegrationTest {
                 .andExpect(jsonPath("$[1].status").value("PENDING"))
                 .andExpect(jsonPath("$[1].invoiceDate").value("2026-03-11"))
                 .andExpect(jsonPath("$[1].batches.length()").value(2))
-                .andExpect(jsonPath("$[1].batches[0].productId").value("00000000-0000-0000-0000-000000000001"))
                 .andExpect(jsonPath("$[1].batches[0].quantity").value(24))
                 .andExpect(jsonPath("$[1].batches[0].unitPrice").value(1.20))
                 .andExpect(jsonPath("$[1].batches[0].expirationDate").value("2026-08-10"))
-                .andExpect(jsonPath("$[1].batches[1].productId").value("00000000-0000-0000-0000-000000000001"))
                 .andExpect(jsonPath("$[1].batches[1].quantity").value(12))
                 .andExpect(jsonPath("$[1].batches[1].unitPrice").value(0.95))
                 .andExpect(jsonPath("$[1].batches[1].expirationDate").value("2026-08-01"));
@@ -1261,12 +1256,6 @@ public class InvoiceIntegrationTest {
              "FAC-2026-002,Supplier B,RECEIVED,2026-03-11,20000001,24,1.20,2026-08-10\n" +
              "FAC-2026-002,Supplier B,RECEIVED,2026-03-11,20000001,12,0.95,2026-08-01").getBytes());
 
-        Integer quantity2 = 24 + 10 + 24 + 12;
-        Integer quantity1 = 10;
-
-        Double lastPurchaseUnitPrice2 = 0.95;
-        Double lastPurchaseUnitPrice1 = 1.2;
-
 
         mockMvc.perform(MockMvcRequestBuilders.multipart("/api/invoices/csv")
                 .file(csvContent))
@@ -1277,15 +1266,12 @@ public class InvoiceIntegrationTest {
                 .andExpect(jsonPath("$[0].status").value("RECEIVED"))
                 .andExpect(jsonPath("$[0].invoiceDate").value("2026-03-10"))
                 .andExpect(jsonPath("$[0].batches.length()").value(3))
-                .andExpect(jsonPath("$[0].batches[0].productId").value("00000000-0000-0000-0000-000000000001"))
                 .andExpect(jsonPath("$[0].batches[0].quantity").value(24))
                 .andExpect(jsonPath("$[0].batches[0].unitPrice").value(0.85))
                 .andExpect(jsonPath("$[0].batches[0].expirationDate").value("2026-09-30"))
-                .andExpect(jsonPath("$[0].batches[1].productId").value("00000000-0000-0000-0000-000000000001"))
                 .andExpect(jsonPath("$[0].batches[1].quantity").value(10))
                 .andExpect(jsonPath("$[0].batches[1].unitPrice").value(1.20))
                 .andExpect(jsonPath("$[0].batches[1].expirationDate").value("2026-09-30"))
-                .andExpect(jsonPath("$[0].batches[2].productId").value("00000000-0000-0000-0000-000000000004"))
                 .andExpect(jsonPath("$[0].batches[2].quantity").value(10))
                 .andExpect(jsonPath("$[0].batches[2].unitPrice").value(1.20))
                 .andExpect(jsonPath("$[0].batches[2].expirationDate").doesNotExist())
@@ -1294,29 +1280,12 @@ public class InvoiceIntegrationTest {
                 .andExpect(jsonPath("$[1].status").value("RECEIVED"))
                 .andExpect(jsonPath("$[1].invoiceDate").value("2026-03-11"))
                 .andExpect(jsonPath("$[1].batches.length()").value(2))
-                .andExpect(jsonPath("$[1].batches[0].productId").value("00000000-0000-0000-0000-000000000001"))
                 .andExpect(jsonPath("$[1].batches[0].quantity").value(24))
                 .andExpect(jsonPath("$[1].batches[0].unitPrice").value(1.20))
                 .andExpect(jsonPath("$[1].batches[0].expirationDate").value("2026-08-10"))
-                .andExpect(jsonPath("$[1].batches[1].productId").value("00000000-0000-0000-0000-000000000001"))
                 .andExpect(jsonPath("$[1].batches[1].quantity").value(12))
                 .andExpect(jsonPath("$[1].batches[1].unitPrice").value(0.95))
                 .andExpect(jsonPath("$[1].batches[1].expirationDate").value("2026-08-01"));
-
-        //quantity, lastPurchaseUnitPrice 2
-        UUID productInfoId1 = UUID.fromString("00000000-0000-0000-0000-000000000001");
-        //quantity, lastPurchaseUnitPrice 3
-        UUID productInfoId2 = UUID.fromString("00000000-0000-0000-0000-000000000002");
-
-        mockMvc.perform(get("/api/product-info"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].productInfoId").value(productInfoId2.toString()))
-                .andExpect(jsonPath("$[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2 + quantity2))
-                .andExpect(jsonPath("$[0].lastPurchaseUnitPrice").value(lastPurchaseUnitPrice2))
-                .andExpect(jsonPath("$[1].productInfoId").value(productInfoId1.toString()))
-                .andExpect(jsonPath("$[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1 + quantity1))
-                .andExpect(jsonPath("$[1].lastPurchaseUnitPrice").value(lastPurchaseUnitPrice1));
     }
 
     @Test
@@ -1335,23 +1304,10 @@ public class InvoiceIntegrationTest {
                 .andExpect(jsonPath("$[0].status").value("PENDING"))
                 .andExpect(jsonPath("$[0].invoiceDate").value("2026-03-11"))
                 .andExpect(jsonPath("$[0].batches.length()").value(1))
-                .andExpect(jsonPath("$[0].batches[0].productName").value("Choco Bom"))
                 .andExpect(jsonPath("$[0].batches[0].quantity").value(12))
                 .andExpect(jsonPath("$[0].batches[0].unitPrice").value(0.95))
                 .andExpect(jsonPath("$[0].batches[0].expirationDate").value("2026-08-01"));
 
-    }
-
-    @Test
-    @WithUserDetails("admin@expmatik.com")
-    void testCreateInvoicesFromCSV_ProductNotInDatabaseAndNotInOpenFoodFacts() throws Exception {
-        MockMultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
-            ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
-             "FAC-2026-001,Supplier B,PENDING,2026-03-11,20000010,12,0.95,").getBytes());
-
-        mockMvc.perform(MockMvcRequestBuilders.multipart("/api/invoices/csv")
-                .file(csvContent))
-                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -1395,18 +1351,6 @@ public class InvoiceIntegrationTest {
 
     @Test
     @WithUserDetails("admin2@expmatik.com")
-    void testCreateInvoicesFromCSV_ProductExistsButNotOwnedByUser() throws Exception {
-        MockMultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
-            ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
-            "FAC-2026-001,Supplier B,PENDING,2026-03-11,20000000,12,0.95,").getBytes());
-
-        mockMvc.perform(MockMvcRequestBuilders.multipart("/api/invoices/csv")
-                .file(csvContent))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    @WithUserDetails("admin2@expmatik.com")
     void testCreateInvoicesFromCSV_EmptyFile() throws Exception {
 
         MockMultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
@@ -1439,29 +1383,6 @@ public class InvoiceIntegrationTest {
                 .file(csvContent))
                 .andExpect(status().isOk());
     }
-
-    @Test
-    @WithUserDetails("admin@expmatik.com")
-    void testCreateInvoicesFromCSV_ConflictNotPerishableProductNotRequireExpirationDate() throws Exception {
-        MockMultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
-            ("FAC-2026-001,Supplier B,PENDING,2026-03-11,20000000,12,0.95,2026-08-01").getBytes());
-
-        mockMvc.perform(MockMvcRequestBuilders.multipart("/api/invoices/csv")
-                .file(csvContent))
-                .andExpect(status().isConflict());
-    }
-
-    @Test
-    @WithUserDetails("admin@expmatik.com")
-    void testCreateInvoicesFromCSV_ConflictPerishableProductRequireExpirationDate() throws Exception {
-        MockMultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
-            ("FAC-2026-001,Supplier B,PENDING,2026-03-11,20000001,12,0.95,").getBytes());
-
-        mockMvc.perform(MockMvcRequestBuilders.multipart("/api/invoices/csv")
-                .file(csvContent))
-                .andExpect(status().isConflict());
-    }
-    
 
 }
 

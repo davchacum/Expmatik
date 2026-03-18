@@ -455,7 +455,7 @@ public class ProductIntegrationTest {
         mockMvc.perform(post("/api/products/non-custom")
                 .param("barcode", barcode))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message").value("A product with this barcode already exists in the catalog."));
+                .andExpect(jsonPath("$.message").value("A product with this barcode already exists."));
     }
 
     @Test

@@ -300,34 +300,13 @@ public class InvoiceServiceTest {
         @DisplayName("createInvoicesFromCSV should skip blank rows and not throw error")
         void testCreateInvoicesFromCSV_BlankRow() {
             User user = user1;
-            UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000099");
             MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                 ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
                  "FAC-2026-001,Supplier A,PENDING,2026-03-10,12345678,24,0.85,2026-09-30\n" +
                  ",,,,,,,\n" + // blank row
                  "FAC-2026-002,Supplier B,PENDING,2026-03-11,12345678,12,0.95,2026-08-01").getBytes());
 
-            when(supplierService.findOrRegister("Supplier A")).thenReturn(supplier1);
-            when(supplierService.findOrRegister("Supplier B")).thenReturn(supplier2);
-            when(invoiceRepository.findByInvoiceNumber(any(String.class))).thenReturn(Optional.empty());
-            when(invoiceRepository.save(any(Invoice.class))).thenAnswer(invocation -> {
-                Invoice invoice = invocation.getArgument(0);
-                if (invoice.getId() == null) {
-                    invoice.setId(invoiceId);
-                }
-                return invoice;
-            });
-            when(batchService.createBatch(any(UUID.class), any(BatchCreate.class), any(UUID.class))).thenAnswer(invocation -> {
-                BatchCreate batchCreate = invocation.getArgument(1);
-                Batch batch = new Batch();
-                batch.setId(UUID.randomUUID());
-                batch.setProduct(new Product());
-                batch.setQuantity(batchCreate.quantity());
-                batch.setUnitPrice(batchCreate.unitPrice());
-                return batch;
-            });
-
-            List<Invoice> createdInvoices = invoiceService.createInvoicesFromCSV(user, csvContent);
+            List<InvoiceRequest> createdInvoices = invoiceService.createInvoicesFromCSV(user, csvContent);
             assertNotNull(createdInvoices);
             assertEquals(2, createdInvoices.size());
         }
@@ -901,60 +880,27 @@ public class InvoiceServiceTest {
     @DisplayName("createInvoicesFromCSV should create multiple invoices from valid CSV")
     void testCreateInvoicesFromCSV_Valid() {
         User user = user1;
-        UUID firstInvoiceId = UUID.fromString("00000000-0000-0000-0000-000000000099");
-        UUID secondInvoiceId = UUID.fromString("00000000-0000-0000-0000-000000000102");
         MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
             ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
              "FAC-2026-001,Supplier A,PENDING,2026-03-10,5000112556780,24,0.85,2026-09-30\n" +
              "FAC-2026-001,Supplier A,PENDING,2026-03-10,5000112556780,10,1.20,2026-09-30\n" +
              "FAC-2026-002,Supplier B,PENDING,2026-03-11,8410494300050,12,0.95,2026-08-01").getBytes());
 
-
-        when(supplierService.findOrRegister("Supplier A")).thenReturn(supplier1);
-        when(supplierService.findOrRegister("Supplier B")).thenReturn(supplier2);
-        when(invoiceRepository.findByInvoiceNumber(any(String.class))).thenReturn(Optional.empty());
-        when(invoiceRepository.save(any(Invoice.class))).thenAnswer(invocation -> {
-            Invoice invoice = invocation.getArgument(0);
-            if (invoice.getId() == null) {
-                if ("FAC-2026-001".equals(invoice.getInvoiceNumber())) {
-                    invoice.setId(firstInvoiceId);
-                } else if ("FAC-2026-002".equals(invoice.getInvoiceNumber())) {
-                    invoice.setId(secondInvoiceId);
-                }
-            }
-            return invoice;
-        });
-        when(batchService.createBatch(any(UUID.class), any(BatchCreate.class), any(UUID.class))).thenAnswer(invocation -> {
-            BatchCreate batchCreate = invocation.getArgument(1);
-            Batch batch = new Batch();
-            batch.setId(UUID.randomUUID());
-            batch.setProduct(new Product());
-            batch.setQuantity(batchCreate.quantity());
-            batch.setUnitPrice(batchCreate.unitPrice());
-            return batch;
-        });
-
-        List<Invoice> createdInvoices = invoiceService.createInvoicesFromCSV(user, csvContent);
+        List<InvoiceRequest> createdInvoices = invoiceService.createInvoicesFromCSV(user, csvContent);
 
         assertNotNull(createdInvoices);
         assertEquals(2, createdInvoices.size());
 
-        Invoice firstInvoice = createdInvoices.get(0);
-        Invoice secondInvoice = createdInvoices.get(1);
+        InvoiceRequest firstInvoice = createdInvoices.get(0);
+        InvoiceRequest secondInvoice = createdInvoices.get(1);
 
-        assertEquals("FAC-2026-001", firstInvoice.getInvoiceNumber());
-        assertEquals(supplier1, firstInvoice.getSupplier());
-        assertEquals(2, firstInvoice.getBatch().size());
+        assertEquals("FAC-2026-001", firstInvoice.invoiceNumber());
+        assertEquals("Supplier A", firstInvoice.supplierName());
+        assertEquals(2, firstInvoice.batches().size());
 
-        assertEquals("FAC-2026-002", secondInvoice.getInvoiceNumber());
-        assertEquals(supplier2, secondInvoice.getSupplier());
-        assertEquals(1, secondInvoice.getBatch().size());
-
-        verify(supplierService).findOrRegister("Supplier A");
-        verify(supplierService).findOrRegister("Supplier B");
-        verify(invoiceRepository, times(2)).findByInvoiceNumber(any(String.class));
-        verify(invoiceRepository, times(4)).save(any(Invoice.class));
-        verify(batchService, times(3)).createBatch(eq(user.getId()), any(BatchCreate.class), any(UUID.class));
+        assertEquals("FAC-2026-002", secondInvoice.invoiceNumber());
+        assertEquals("Supplier B", secondInvoice.supplierName());
+        assertEquals(1, secondInvoice.batches().size());
     }
 
     @Test
