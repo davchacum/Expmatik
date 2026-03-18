@@ -80,7 +80,16 @@ const EditInvoice = () => {
       if (response.ok) {
         setSuccess("Datos generales actualizados correctamente.");
       } else {
-        setError("Error al actualizar los datos de la factura.");
+        let errorMsg = "Error al actualizar los datos de la factura.";
+        try {
+          const data = await response.json();
+          if (data && data.message) {
+            errorMsg = data.message;
+          }
+        } catch (err) {
+          console.error("Error al parsear la respuesta del backend:", err);
+        }
+        setError(errorMsg);
       }
     } catch (err) {
       setError("Error de red al intentar actualizar: " + err.message);
@@ -139,7 +148,17 @@ const EditInvoice = () => {
         });
         fetchInvoiceData();
       } else {
-        setError("Error al añadir el lote. Verifique el código de barras.");
+        let errorMsg =
+          "Error al añadir el lote. Verifique el código de barras.";
+        try {
+          const data = await response.json();
+          if (data && data.message) {
+            errorMsg = data.message;
+          }
+        } catch (err) {
+          console.error("Error al parsear la respuesta del backend:", err);
+        }
+        setError(errorMsg);
       }
     } catch (err) {
       setError("Error de red: " + err.message);
@@ -170,7 +189,16 @@ const EditInvoice = () => {
         setEditingIndex(null);
         fetchInvoiceData();
       } else {
-        setError("Error al actualizar lote.");
+        let errorMsg = "Error al actualizar lote.";
+        try {
+          const data = await response.json();
+          if (data && data.message) {
+            errorMsg = data.message;
+          }
+        } catch (err) {
+          console.error("Error al parsear la respuesta del backend:", err);
+        }
+        setError(errorMsg);
       }
     } catch (err) {
       setError("Error de red: " + err.message);
@@ -351,6 +379,8 @@ const EditInvoice = () => {
               <input
                 id="new-batch-qty"
                 type="number"
+                min={0}
+                step={1}
                 className="dark-input"
                 value={currentBatch.quantity}
                 onChange={(e) =>
@@ -366,6 +396,7 @@ const EditInvoice = () => {
                 id="new-batch-price"
                 type="number"
                 step="0.01"
+                min={0}
                 className="dark-input"
                 value={currentBatch.unitPrice}
                 onChange={(e) =>

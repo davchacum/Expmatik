@@ -63,7 +63,7 @@ const Invoices = () => {
       navigate("/login", { replace: true });
     }
   }, [token, navigate]);
-  
+
   const fetchInvoices = useCallback(async () => {
     setLoading(true);
     try {
@@ -424,33 +424,54 @@ const Invoices = () => {
           </h2>
           <div className="divider-dark" />
           <article className="modal-content-group">
-            <div className="input-group">
-              <span className="input-label">Proveedor</span>
-              <p className="modal-product-text">
-                {selectedInvoice.supplierName}
-              </p>
-            </div>
-            <div className="input-group">
-              <span className="input-label">Fecha</span>
-              <p className="modal-product-text">
-                {selectedInvoice.invoiceDate}
-              </p>
-            </div>
-            <div className="input-group">
-              <span className="input-label">Estado</span>
-              <div>
-                <span
-                  className={`badge ${selectedInvoice.status === "PENDING" ? "badge-yellow" : selectedInvoice.status === "RECEIVED" ? "badge-green" : selectedInvoice.status === "CANCELED" ? "badge-red" : "badge-blue"}`}
-                >
-                  {selectedInvoice.status.toLowerCase()}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+                marginBottom: "16px",
+              }}
+            >
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "12px" }}
+              >
+                <span className="input-label" style={{ minWidth: "120px" }}>
+                  Proveedor:
+                </span>
+                <span>{selectedInvoice.supplierName}</span>
+              </div>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "12px" }}
+              >
+                <span className="input-label" style={{ minWidth: "120px" }}>
+                  Fecha:
+                </span>
+                <span>{selectedInvoice.invoiceDate}</span>
+              </div>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "12px" }}
+              >
+                <span className="input-label" style={{ minWidth: "120px" }}>
+                  Estado:
+                </span>
+                <span>
+                  <span
+                    className={`badge ${selectedInvoice.status === "PENDING" ? "badge-yellow" : selectedInvoice.status === "RECEIVED" ? "badge-green" : selectedInvoice.status === "CANCELED" ? "badge-red" : "badge-blue"}`}
+                  >
+                    {selectedInvoice.status.toLowerCase()}
+                  </span>
                 </span>
               </div>
-            </div>
-            <div className="input-group">
-              <span className="input-label">Total sin IVA</span>
-              <p className="modal-product-text">
-                <strong>{selectedInvoice.totalAmount.toFixed(2)}€</strong>
-              </p>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "12px" }}
+              >
+                <span className="input-label" style={{ minWidth: "120px" }}>
+                  Total sin IVA:
+                </span>
+                <span>
+                  <strong>{selectedInvoice.totalAmount.toFixed(2)}€</strong>
+                </span>
+              </div>
             </div>
           </article>
 

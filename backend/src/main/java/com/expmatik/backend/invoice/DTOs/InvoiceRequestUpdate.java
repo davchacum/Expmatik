@@ -4,7 +4,6 @@ import java.time.LocalDate;
 
 import com.expmatik.backend.invoice.InvoiceStatus;
 
-import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -12,7 +11,7 @@ public record InvoiceRequestUpdate(
         @NotBlank String invoiceNumber,
         @NotBlank String supplierName,
         @NotNull InvoiceStatus status,
-        @NotNull @FutureOrPresent LocalDate invoiceDate
+        @NotNull LocalDate invoiceDate
 ) {
 
 
