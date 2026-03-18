@@ -82,7 +82,6 @@ const ImportInvoiceCSV = () => {
     setLoading(true);
     setError("");
 
-    // Hacemos una copia para ir marcando resultados
     const currentInvoices = [...importedInvoices];
     const remainingInvoices = [];
 
@@ -135,9 +134,11 @@ const ImportInvoiceCSV = () => {
     <main className="home-container" role="main">
       <div className="list-container" style={{ maxWidth: "1100px" }}>
         <h1 className="section-title">Importar Factura (CSV)</h1>
-
         <div
           className="upload-zone"
+          role="button"
+          tabIndex="0"
+          aria-label="Zona de carga de archivo CSV. Haz clic o presiona Enter para seleccionar."
           style={{
             border: "2px dashed var(--border-color)",
             borderRadius: "16px",
@@ -148,6 +149,12 @@ const ImportInvoiceCSV = () => {
             transition: "all 0.3s",
           }}
           onClick={() => fileInputRef.current.click()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              fileInputRef.current.click();
+            }
+          }}
         >
           <input
             type="file"
@@ -155,6 +162,7 @@ const ImportInvoiceCSV = () => {
             style={{ display: "none" }}
             accept=".csv"
             onChange={handleFileUpload}
+            aria-hidden="true"
           />
           <p className="section-label">Haz click para seleccionar</p>
           <p className="input-label" style={{ fontSize: "0.7rem" }}>
@@ -164,10 +172,18 @@ const ImportInvoiceCSV = () => {
         </div>
 
         {importedInvoices.length > 0 && (
-          <div style={{ marginTop: "40px" }}>
-            <h2 className="section-label">Previsualización de Facturas</h2>
+          <section
+            style={{ marginTop: "40px" }}
+            aria-labelledby="preview-heading"
+          >
+            <h2 id="preview-heading" className="section-label">
+              Previsualización de Facturas
+            </h2>
             <div className="table-responsive">
-              <table className="dark-table">
+              <table
+                className="dark-table"
+                aria-label="Facturas importadas listas para procesar"
+              >
                 <thead>
                   <tr>
                     <th scope="col">Número</th>
@@ -230,6 +246,7 @@ const ImportInvoiceCSV = () => {
                         <button
                           className="action-btn-red"
                           onClick={() => deleteInvoice(idx)}
+                          aria-label={`Borrar factura ${inv.invoiceNumber}`}
                         >
                           Borrar
                         </button>
@@ -239,6 +256,7 @@ const ImportInvoiceCSV = () => {
                             setEditingIndex(idx);
                             setIsModalOpen(true);
                           }}
+                          aria-label={`Editar factura ${inv.invoiceNumber}`}
                         >
                           Editar
                         </button>
@@ -260,11 +278,16 @@ const ImportInvoiceCSV = () => {
                   : `Confirmar Importación (${importedInvoices.length})`}
               </button>
             </div>
-          </div>
+          </section>
         )}
 
         {error && (
-          <div className="message-error" style={{ marginTop: "20px" }}>
+          <div
+            className="message-error"
+            role="alert"
+            aria-live="assertive"
+            style={{ marginTop: "20px" }}
+          >
             {error}
           </div>
         )}
@@ -282,7 +305,6 @@ const ImportInvoiceCSV = () => {
   );
 };
 
-// MODAL DE EDICIÓN CON LÓGICA DE VALIDACIÓN
 const EditInvoiceModal = ({ invoiceData, onClose, onSave, token }) => {
   const [invoice, setInvoice] = useState({ ...invoiceData });
   const [batches, setBatches] = useState(invoiceData.batches || []);
@@ -344,7 +366,12 @@ const EditInvoiceModal = ({ invoiceData, onClose, onSave, token }) => {
   };
 
   return (
-    <div className="modal-overlay">
+    <div
+      className="modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="edit-modal-title"
+    >
       <div
         className="modal-box"
         style={{
@@ -354,20 +381,28 @@ const EditInvoiceModal = ({ invoiceData, onClose, onSave, token }) => {
           overflowY: "auto",
         }}
       >
-        <h2 className="section-title">
+        <h2 className="section-title" id="edit-modal-title">
           Editando Factura {invoice.invoiceNumber}
         </h2>
 
         {error && (
-          <div className="message-error" style={{ marginBottom: "15px" }}>
+          <div
+            className="message-error"
+            role="alert"
+            aria-live="assertive"
+            style={{ marginBottom: "15px" }}
+          >
             {error}
           </div>
         )}
 
         <div className="form-grid">
           <div className="input-group">
-            <label className="input-label">Número de Factura</label>
+            <label htmlFor="modal-invoice-num" className="input-label">
+              Número de Factura
+            </label>
             <input
+              id="modal-invoice-num"
               className="dark-input"
               value={invoice.invoiceNumber}
               onChange={(e) =>
@@ -376,8 +411,11 @@ const EditInvoiceModal = ({ invoiceData, onClose, onSave, token }) => {
             />
           </div>
           <div className="input-group">
-            <label className="input-label">Nombre del Proveedor</label>
+            <label htmlFor="modal-supplier" className="input-label">
+              Nombre del Proveedor
+            </label>
             <input
+              id="modal-supplier"
               className="dark-input"
               value={invoice.supplierName}
               onChange={(e) =>
@@ -386,8 +424,11 @@ const EditInvoiceModal = ({ invoiceData, onClose, onSave, token }) => {
             />
           </div>
           <div className="input-group">
-            <label className="input-label">Fecha Emisión</label>
+            <label htmlFor="modal-date" className="input-label">
+              Fecha Emisión
+            </label>
             <input
+              id="modal-date"
               type="date"
               className="dark-input"
               value={invoice.invoiceDate}
@@ -397,8 +438,11 @@ const EditInvoiceModal = ({ invoiceData, onClose, onSave, token }) => {
             />
           </div>
           <div className="input-group">
-            <label className="input-label">Estado</label>
+            <label htmlFor="modal-status" className="input-label">
+              Estado
+            </label>
             <select
+              id="modal-status"
               className="dark-input"
               value={invoice.status}
               onChange={(e) =>
@@ -414,17 +458,23 @@ const EditInvoiceModal = ({ invoiceData, onClose, onSave, token }) => {
 
         <div className="divider-dark" />
 
-        <h3 className="section-label">Añadir o Modificar Lotes</h3>
+        <h3 className="section-label" id="add-batch-heading">
+          Añadir o Modificar Lotes
+        </h3>
         <div
           className="form-grid"
           style={{
             gridTemplateColumns: "2fr 1fr 1fr 1fr auto",
             alignItems: "end",
           }}
+          aria-labelledby="add-batch-heading"
         >
           <div className="input-group">
-            <label className="input-label">Código de Barras</label>
+            <label htmlFor="batch-barcode" className="input-label">
+              Código de Barras
+            </label>
             <input
+              id="batch-barcode"
               className="dark-input"
               value={currentBatch.productBarcode}
               onChange={(e) =>
@@ -436,8 +486,11 @@ const EditInvoiceModal = ({ invoiceData, onClose, onSave, token }) => {
             />
           </div>
           <div className="input-group">
-            <label className="input-label">Cantidad</label>
+            <label htmlFor="batch-quantity" className="input-label">
+              Cantidad
+            </label>
             <input
+              id="batch-quantity"
               type="number"
               className="dark-input"
               value={currentBatch.quantity}
@@ -447,8 +500,11 @@ const EditInvoiceModal = ({ invoiceData, onClose, onSave, token }) => {
             />
           </div>
           <div className="input-group">
-            <label className="input-label">Precio</label>
+            <label htmlFor="batch-price" className="input-label">
+              Precio
+            </label>
             <input
+              id="batch-price"
               type="number"
               className="dark-input"
               value={currentBatch.unitPrice}
@@ -458,8 +514,11 @@ const EditInvoiceModal = ({ invoiceData, onClose, onSave, token }) => {
             />
           </div>
           <div className="input-group">
-            <label className="input-label">Caducidad</label>
+            <label htmlFor="batch-exp" className="input-label">
+              Caducidad
+            </label>
             <input
+              id="batch-exp"
               type="date"
               className="dark-input"
               value={currentBatch.expirationDate}
@@ -482,14 +541,19 @@ const EditInvoiceModal = ({ invoiceData, onClose, onSave, token }) => {
         </div>
 
         <div className="table-responsive" style={{ marginTop: "20px" }}>
-          <table className="dark-table">
+          <table
+            className="dark-table"
+            aria-label="Lotes de la factura en edición"
+          >
             <thead>
               <tr>
-                <th>Código</th>
-                <th>Cant.</th>
-                <th>Precio</th>
-                <th>Subtotal</th>
-                <th style={{ textAlign: "center" }}>Acciones</th>
+                <th scope="col">Código</th>
+                <th scope="col">Cant.</th>
+                <th scope="col">Precio</th>
+                <th scope="col">Subtotal</th>
+                <th scope="col" style={{ textAlign: "center" }}>
+                  Acciones
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -514,12 +578,14 @@ const EditInvoiceModal = ({ invoiceData, onClose, onSave, token }) => {
                       onClick={() =>
                         setBatches(batches.filter((_, idx) => idx !== i))
                       }
+                      aria-label={`Borrar lote ${b.productBarcode}`}
                     >
                       Borrar
                     </button>
                     <button
                       className="action-btn-blue"
                       onClick={() => editBatch(i)}
+                      aria-label={`Editar lote ${b.productBarcode}`}
                     >
                       Editar
                     </button>
@@ -537,6 +603,7 @@ const EditInvoiceModal = ({ invoiceData, onClose, onSave, token }) => {
           <button
             className="action-btn-green"
             onClick={() => onSave({ ...invoice, batches })}
+            aria-label="Guardar cambios de la factura"
           >
             Guardar Cambios
           </button>
