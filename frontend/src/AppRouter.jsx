@@ -10,6 +10,8 @@ import HomeMenu from "./home/HomeMenu";
 import CreateInvoice from "./invoice/createInvoice";
 import EditInvoice from "./invoice/editInvoice";
 import ImportInvoiceCSV from "./invoice/importInvoiceCSV";
+import InventoryList from "./inventory/inventoryView";
+import EditProductInventory from "./inventory/editProductInventory";
 
 const AppRouter = () => {
   return (
@@ -79,6 +81,22 @@ const AppRouter = () => {
         element={
           <PrivateRoute allowedRoles={["ADMINISTRATOR"]}>
             <ImportInvoiceCSV />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/inventory"
+        element={
+          <PrivateRoute allowedRoles={["ADMINISTRATOR"]}>
+            <InventoryList />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/inventory/:id/edit"
+        element={
+          <PrivateRoute allowedRoles={["ADMINISTRATOR"]}>
+            <EditProductInventory />
           </PrivateRoute>
         }
       />

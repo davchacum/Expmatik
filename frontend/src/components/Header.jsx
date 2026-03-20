@@ -22,7 +22,9 @@ const Header = () => {
     if (path === "/products") return "Catálogo de Productos";
     if (path === "/products/create-custom")
       return "Crear Producto Personalizado";
-    if (path === "/inventory") return "Inventario";
+    if (path === "/inventory") return "Gestión de Inventario";
+    if (path.startsWith("/inventory/") && path.endsWith("/edit"))
+      return "Editar Artículo de Inventario";
     if (path === "/analytics") return "Analíticas";
     if (path === "/invoices") return "Gestión de Facturas";
     if (path === "/invoices/create") return "Crear Nueva Factura";
