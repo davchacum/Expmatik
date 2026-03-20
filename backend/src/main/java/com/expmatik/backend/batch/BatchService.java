@@ -125,7 +125,7 @@ public class BatchService {
     @Transactional
     public void addStockQuantity(Batch batch, Integer quantity, User user) {
         ProductInfo productInfo =productInfoService.getOrCreateProductInfo(batch.getProduct().getId(), user,batch.getUnitPrice());
-        productInfoService.addStockQuantity(productInfo.getId(), user, quantity, batch.getUnitPrice());
+        productInfoService.editStockQuantity(productInfo.getId(), user, quantity, batch.getUnitPrice());
     }
 
 }

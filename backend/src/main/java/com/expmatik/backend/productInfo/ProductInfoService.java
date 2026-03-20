@@ -69,6 +69,7 @@ public class ProductInfoService {
         productInfo.setSaleUnitPrice(unitPrice.multiply(vatRate.add(BigDecimal.ONE)).setScale(2, RoundingMode.CEILING));
         productInfo.setProduct(product);
         productInfo.setUser(user);
+        productInfo.setNeedUpdate(true);   
         return save(productInfo);
     }
 
@@ -82,19 +83,21 @@ public class ProductInfoService {
         existingInfo.setStockQuantity(updatedInfo.stockQuantity());
         existingInfo.setSaleUnitPrice(updatedInfo.saleUnitPrice());
         existingInfo.setVatRate(updatedInfo.vatRate());
+        existingInfo.setNeedUpdate(true);
         return save(existingInfo);
     }
 
     @Transactional
-    public ProductInfo addStockQuantity(UUID productInfoId, User user, Integer newStockQuantity, BigDecimal lastPurchaseUnitPrice) {
+    public ProductInfo editStockQuantity(UUID productInfoId, User user, Integer newStockQuantity, BigDecimal lastPurchaseUnitPrice) {
         ProductInfo existingInfo = findById(productInfoId);
         if(!existingInfo.getUser().getId().equals(user.getId())) {
             throw new UnauthorizedActionException("You are not authorized to update this product info.");
         }
-        if(newStockQuantity == null || newStockQuantity < 0) {
-            throw new ConflictException("New stock quantity must be non-negative.");
+        Integer updatedStockQuantity = existingInfo.getStockQuantity() + newStockQuantity;
+        if(updatedStockQuantity < 0) {
+            updatedStockQuantity = 0;
         }
-        existingInfo.setStockQuantity(existingInfo.getStockQuantity() + newStockQuantity);
+        existingInfo.setStockQuantity(updatedStockQuantity);
         if(lastPurchaseUnitPrice != null) {
             existingInfo.setLastPurchaseUnitPrice(lastPurchaseUnitPrice);
         }

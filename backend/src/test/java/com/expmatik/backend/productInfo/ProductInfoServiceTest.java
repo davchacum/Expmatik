@@ -224,10 +224,10 @@ public class ProductInfoServiceTest {
                 .hasMessageContaining("You are not authorized to update this product info.");
     }
 
-    // ==================== addStockQuantity Tests ====================
+    // ==================== editStockQuantity Tests ====================
 
     @Test
-    void testAddStockQuantity_Success() {
+    void testEditStockQuantity_Success() {
         UUID productInfoId = productInfo.getId();
         Integer newStockQuantity = 5;
         BigDecimal lastPurchaseUnitPrice = new BigDecimal("4.99");
@@ -235,12 +235,12 @@ public class ProductInfoServiceTest {
         when(productInfoRepository.findById(productInfoId)).thenReturn(Optional.of(productInfo));
         when(productInfoRepository.save(ArgumentMatchers.any(ProductInfo.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
-        ProductInfo result = productInfoService.addStockQuantity(productInfoId, user1, newStockQuantity, lastPurchaseUnitPrice);
+        ProductInfo result = productInfoService.editStockQuantity(productInfoId, user1, newStockQuantity, lastPurchaseUnitPrice);
         assertThat(result.getStockQuantity()).isEqualTo(15);
     }
 
     @Test
-    void testAddStockQuantity_SuccessNullLastPurchaseUnitPrice() {
+    void testEditStockQuantity_SuccessNullLastPurchaseUnitPrice() {
         UUID productInfoId = productInfo.getId();
         Integer newStockQuantity = 5;
         BigDecimal lastPurchaseUnitPrice = null;
@@ -248,44 +248,46 @@ public class ProductInfoServiceTest {
         when(productInfoRepository.findById(productInfoId)).thenReturn(Optional.of(productInfo));
         when(productInfoRepository.save(ArgumentMatchers.any(ProductInfo.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
-        ProductInfo result = productInfoService.addStockQuantity(productInfoId, user1, newStockQuantity, lastPurchaseUnitPrice);
+        ProductInfo result = productInfoService.editStockQuantity(productInfoId, user1, newStockQuantity, lastPurchaseUnitPrice);
         assertThat(result.getStockQuantity()).isEqualTo(15);
     }
 
     @Test
-    void testAddStockQuantity_Unauthorized() {
+    void testEditStockQuantity_Unauthorized() {
         UUID productInfoId = productInfo.getId();
         Integer newStockQuantity = 5;
         BigDecimal lastPurchaseUnitPrice = new BigDecimal("4.99");
         productInfo.setUser(user1);
         when(productInfoRepository.findById(productInfoId)).thenReturn(Optional.of(productInfo));
-        assertThatThrownBy(() -> productInfoService.addStockQuantity(productInfoId, user2, newStockQuantity, lastPurchaseUnitPrice))
+        assertThatThrownBy(() -> productInfoService.editStockQuantity(productInfoId, user2, newStockQuantity, lastPurchaseUnitPrice))
                 .isInstanceOf(UnauthorizedActionException.class)
                 .hasMessageContaining("You are not authorized to update this product info.");
     }
 
     @Test
-    void testAddStockQuantity_negativeQuantity() {
+    void testEditStockQuantity_negativeQuantity() {
         UUID productInfoId = productInfo.getId();
         Integer newStockQuantity = -5;
         BigDecimal lastPurchaseUnitPrice = new BigDecimal("4.99");
         productInfo.setUser(user1);
         when(productInfoRepository.findById(productInfoId)).thenReturn(Optional.of(productInfo));
-        assertThatThrownBy(() -> productInfoService.addStockQuantity(productInfoId, user1, newStockQuantity, lastPurchaseUnitPrice))
-                .isInstanceOf(ConflictException.class)
-                .hasMessageContaining("New stock quantity must be non-negative.");
+        when(productInfoRepository.save(ArgumentMatchers.any(ProductInfo.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        ProductInfo result = productInfoService.editStockQuantity(productInfoId, user1, newStockQuantity, lastPurchaseUnitPrice);
+        assertThat(result.getStockQuantity()).isEqualTo(5);
     }
 
      @Test
-    void testAddStockQuantity_nullQuantity() {
+    void testEditStockQuantity_nullQuantity() {
         UUID productInfoId = productInfo.getId();
-        Integer newStockQuantity = null;
+        Integer newStockQuantity = -20;
         BigDecimal lastPurchaseUnitPrice = new BigDecimal("4.99");
         productInfo.setUser(user1);
         when(productInfoRepository.findById(productInfoId)).thenReturn(Optional.of(productInfo));
-        assertThatThrownBy(() -> productInfoService.addStockQuantity(productInfoId, user1, newStockQuantity, lastPurchaseUnitPrice))
-                .isInstanceOf(ConflictException.class)
-                .hasMessageContaining("New stock quantity must be non-negative.");
+        when(productInfoRepository.save(ArgumentMatchers.any(ProductInfo.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        ProductInfo result = productInfoService.editStockQuantity(productInfoId, user1, newStockQuantity, lastPurchaseUnitPrice);
+        assertThat(result.getStockQuantity()).isEqualTo(0);
     }
 
 }

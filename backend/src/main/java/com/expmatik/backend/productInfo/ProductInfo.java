@@ -65,6 +65,10 @@ public class ProductInfo extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @NotNull
+    @Column(name = "need_update", nullable = false)
+    private Boolean needUpdate;
+
     @Transient
     public BigDecimal getTotalStockValue() {
         return saleUnitPrice.multiply(BigDecimal.valueOf(stockQuantity));

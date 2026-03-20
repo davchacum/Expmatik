@@ -57,11 +57,11 @@ public class ProductInfoController {
         return ResponseEntity.ok(ProductInfoResponse.fromProductInfo(productInfo));
     }
 
-    @PatchMapping("/{productInfoId}/add-stock")
+    @PatchMapping("/{productInfoId}/edit-stock")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public ResponseEntity<?> addStockQuantity(@PathVariable UUID productInfoId, @RequestBody Integer newStockQuantity) {
+    public ResponseEntity<?> editStockQuantity(@PathVariable UUID productInfoId, @RequestBody Integer newStockQuantity) {
         User user = userService.getUserProfile();
-        ProductInfo updatedProductInfo = productInfoService.addStockQuantity(productInfoId, user, newStockQuantity, null);
+        ProductInfo updatedProductInfo = productInfoService.editStockQuantity(productInfoId, user, newStockQuantity, null);
         return ResponseEntity.ok(ProductInfoResponse.fromProductInfo(updatedProductInfo));
     }
 

@@ -17,9 +17,9 @@ INSERT INTO product (id, name, brand, description, is_perishable, barcode, is_cu
 ('00000000-0000-0000-0000-000000000003', 'Yogur Natural', 'Danone', 'Yogur natural sin azúcar', false, '20000003', false, null, 'https://example.com/images/yogur_natural.jpg'),
 ('00000000-0000-0000-0000-000000000004', 'ProductoPersonalizado', 'ProductoPersonalizado', 'Producto personalizado de prueba', false, '20000000', true, '00000000-0000-0000-0000-000000000001', '/uploads/images/fotoPrueba.jpg');
 
-INSERT INTO product_info (id,stock_quantity, vat_rate,sale_unit_price,last_purchase_unit_price,product_id,user_id) VALUES 
-('00000000-0000-0000-0000-000000000001', 100, 0.21, 2.50, 1.5, '00000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000001'),
-('00000000-0000-0000-0000-000000000002', 200, 0.21, 3.00, 2.2, '00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001');
+INSERT INTO product_info (id,stock_quantity, vat_rate,sale_unit_price,last_purchase_unit_price,need_update,product_id,user_id) VALUES 
+('00000000-0000-0000-0000-000000000001', 100, 0.21, 2.50, 1.5,false, '00000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000001'),
+('00000000-0000-0000-0000-000000000002', 200, 0.21, 3.00, 2.2,false, '00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001');
 
 INSERT INTO supplier (id, name) VALUES 
 ('00000000-0000-0000-0000-000000000001', 'Proveedor 1');

@@ -142,15 +142,15 @@ public class ProductInfoIntegrationTest {
                 .andExpect(status().isNotFound());
     }
 
-    // == Prueba de PATCH /api/product-info/{id}/add-stock == //
+    // == Prueba de PATCH /api/product-info/{id}/edit-stock == //
 
     @Test
     @WithUserDetails("admin@expmatik.com")
-    void testAddStockQuantity() throws Exception {
+    void testEditStockQuantity() throws Exception {
         UUID productInfoId = UUID.fromString("00000000-0000-0000-0000-000000000001");
         Integer newStockQuantity = 50;
 
-        mockMvc.perform(patch("/api/product-info/" + productInfoId + "/add-stock")
+        mockMvc.perform(patch("/api/product-info/" + productInfoId + "/edit-stock")
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(newStockQuantity)))
                 .andExpect(status().isOk())
@@ -159,33 +159,47 @@ public class ProductInfoIntegrationTest {
 
     @Test
     @WithUserDetails("admin@expmatik.com")
-    void testAddStockQuantity_NegativeStock() throws Exception {
+    void testEditStockQuantity_NegativeStock() throws Exception {
         UUID productInfoId = UUID.fromString("00000000-0000-0000-0000-000000000001");
         Integer newStockQuantity = -50;
 
-        mockMvc.perform(patch("/api/product-info/" + productInfoId + "/add-stock")
+        mockMvc.perform(patch("/api/product-info/" + productInfoId + "/edit-stock")
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(newStockQuantity)))
-                .andExpect(status().isConflict());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.stockQuantity").value(50));
     }
 
     @Test
     @WithUserDetails("admin@expmatik.com")
-    void testAddStockQuantity_NullStock() throws Exception {
+    void testEditStockQuantity_NegativeZeroStock() throws Exception {
+        UUID productInfoId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+        Integer newStockQuantity = -200;
+
+        mockMvc.perform(patch("/api/product-info/" + productInfoId + "/edit-stock")
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(newStockQuantity)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.stockQuantity").value(0));
+    }
+
+    @Test
+    @WithUserDetails("admin@expmatik.com")
+    void testEditStockQuantity_NullStock() throws Exception {
         UUID productInfoId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
-        mockMvc.perform(patch("/api/product-info/" + productInfoId + "/add-stock")
+        mockMvc.perform(patch("/api/product-info/" + productInfoId + "/edit-stock")
                 .contentType("application/json"))
                     .andExpect(status().isBadRequest());
     }
 
     @Test
     @WithUserDetails("admin2@expmatik.com")
-    void testAddStockQuantity_Forbidden() throws Exception {
+    void testEditStockQuantity_Forbidden() throws Exception {
         UUID productInfoId = UUID.fromString("00000000-0000-0000-0000-000000000001");
         Integer newStockQuantity = 50;
 
-        mockMvc.perform(patch("/api/product-info/" + productInfoId + "/add-stock")
+        mockMvc.perform(patch("/api/product-info/" + productInfoId + "/edit-stock")
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(newStockQuantity)))
                 .andExpect(status().isForbidden());

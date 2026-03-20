@@ -449,7 +449,7 @@ public class InvoiceServiceTest {
 
         assertThatThrownBy(() -> invoiceService.createInvoice(user, request))
             .isInstanceOf(ConflictException.class)
-            .hasMessage("Invoice number already exists");
+            .hasMessage("Invoice number: " + request.invoiceNumber() + " already exists");
     }
 
     // == findInvoiceById tests ==
@@ -871,7 +871,7 @@ public class InvoiceServiceTest {
 
         assertThatThrownBy(() -> invoiceService.updateInvoice(invoiceId, request, userId))
             .isInstanceOf(ConflictException.class)
-            .hasMessage("Invoice number already exists");
+            .hasMessage("Invoice number: " + request.invoiceNumber() + " already exists");
     }
 
     // == createInvoicesFromCSV tests ==

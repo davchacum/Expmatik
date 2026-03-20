@@ -426,7 +426,7 @@ public class BatchServiceTest {
         when(productInfoService.getOrCreateProductInfo(batch1.getProduct().getId(), user1, batch1.getUnitPrice())).thenReturn(productInfo);
         batchService.addStockQuantity(batch1, 5, user1);
 
-        verify(productInfoService, times(1)).addStockQuantity(productInfo.getId(), user1, 5, batch1.getUnitPrice());    
+        verify(productInfoService, times(1)).editStockQuantity(productInfo.getId(), user1, 5, batch1.getUnitPrice());    
     }
 
 }
