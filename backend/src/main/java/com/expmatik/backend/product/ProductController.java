@@ -156,4 +156,17 @@ public class ProductController {
         Boolean exists = productService.existsByBarcode(barcode, currentUser.getId());
         return ResponseEntity.ok(exists);
     }
+
+    @GetMapping("/without-info")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    public ResponseEntity<?> getProductsWithoutProductInfoForUser(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String brand,
+            @RequestParam(required = false) String barcode,
+            @ParameterObject Pageable pageable) {
+        User user = userService.getUserProfile();
+        Page<Product> productsWithoutInfo = productService.searchProductsWithoutProductInfoForUser(user.getId(), name, brand, barcode, pageable);
+        return ResponseEntity.ok(ProductResponse.fromProductPage(productsWithoutInfo));
+    }
+    
 }

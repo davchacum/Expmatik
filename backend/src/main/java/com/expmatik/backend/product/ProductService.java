@@ -296,4 +296,12 @@ public class ProductService {
         
         return BatchValidationResponse.of(valid, notFound);
     }
+
+    @Transactional(readOnly = true)
+    public Page<Product> searchProductsWithoutProductInfoForUser(UUID userId, String name, String brand, String barcode, Pageable pageable) {
+        String nameParam = (name != null && !name.isBlank()) ? name : null;
+        String brandParam = (brand != null && !brand.isBlank()) ? brand : null;
+        String barcodeParam = (barcode != null && !barcode.isBlank()) ? barcode : null;
+        return productRepository.searchProductsWithoutProductInfoForUser(userId,nameParam,brandParam,barcodeParam,pageable);
+    }
 }

@@ -39,4 +39,23 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
         @Param("barcode") String barcode, 
         Pageable pageable
     );
+
+    @Query("""
+        SELECT p FROM Product p
+        LEFT JOIN ProductInfo pi 
+            ON p.id = pi.product.id AND pi.user.id = :userId
+        WHERE 
+            (p.isCustom = false OR (p.isCustom = true AND p.createdBy.id = :userId))
+            AND pi.id IS NULL
+            AND (:name IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', CAST(:name AS string), '%')))
+            AND (:brand IS NULL OR LOWER(p.brand) LIKE LOWER(CONCAT('%', CAST(:brand AS string), '%')))
+            AND (:barcode IS NULL OR p.barcode = :barcode)
+    """)
+    Page<Product> searchProductsWithoutProductInfoForUser(
+        @Param("userId") UUID userId,
+        @Param("name") String name,
+        @Param("brand") String brand,
+        @Param("barcode") String barcode,
+        Pageable pageable
+    );
 }

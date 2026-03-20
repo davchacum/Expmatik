@@ -17,7 +17,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.expmatik.backend.exceptions.ConflictException;
 import com.expmatik.backend.exceptions.UnauthorizedActionException;
 import com.expmatik.backend.product.Product;
 import com.expmatik.backend.product.ProductService;

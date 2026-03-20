@@ -545,5 +545,124 @@ public class ProductIntegrationTest {
                 .andExpect(jsonPath("$").value(false));
     }
 
+    // == Test de /api/products/without-info == //
+
+    @Test
+    @WithUserDetails("admin@expmatik.com")
+    void testSearchProductsWithoutInfoByName() throws Exception {
+        String searchTerm = "Leche";
+        mockMvc.perform(get("/api/products/without-info")
+                .param("name", searchTerm))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(0));
+    }
+
+    @Test
+    @WithUserDetails("admin@expmatik.com")
+    void testSearchProductsWithoutInfoByBrand() throws Exception {
+        String searchTerm = "Bimbo";
+        mockMvc.perform(get("/api/products/without-info")
+                .param("brand", searchTerm))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].brand").value("Bimbo"));
+    }
+
+    @Test
+    @WithUserDetails("admin@expmatik.com")
+    void testSearchProductsWithoutInfoByNameAndBrand() throws Exception {
+        String nameSearchTerm = "Yogur";
+        String brandSearchTerm = "Danone";
+
+        mockMvc.perform(get("/api/products/without-info")
+                .param("name", nameSearchTerm)
+                .param("brand", brandSearchTerm))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].name").value("Yogur Natural"))
+                .andExpect(jsonPath("$.content[0].brand").value("Danone"));
+    }
+
+    @Test
+    @WithUserDetails("admin@expmatik.com")
+    void testSearchProductsWithoutInfo_NoMatches() throws Exception {
+        String searchTerm = "NonExistentProduct";
+
+        mockMvc.perform(get("/api/products/without-info")
+                .param("name", searchTerm))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(0))
+                .andExpect(jsonPath("$.totalElements").value(0));
+    }
+
+    @Test
+    @WithUserDetails("admin@expmatik.com")
+    void testSearchProductsWithoutInfo_EmptySearchTerm() throws Exception {
+        mockMvc.perform(get("/api/products/without-info")
+                .param("name", ""))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(2));
+    }
+
+    @Test
+    @WithUserDetails("admin@expmatik.com")
+    void testSearchProductsWithoutInfo_SpecialCharacters() throws Exception {
+        String searchTerm = "Leche Entera!";
+
+        mockMvc.perform(get("/api/products/without-info")
+                .param("name", searchTerm))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(0));
+    }
+
+    @Test
+    @WithUserDetails("admin@expmatik.com")
+    void testSearchProductsWithoutInfo_CaseInsensitive() throws Exception {
+        String searchTerm = "pan de molde";
+
+        mockMvc.perform(get("/api/products/without-info")
+                .param("name", searchTerm))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].name").value("Pan de Molde"));
+    }
+
+    @Test
+    @WithUserDetails("admin@expmatik.com")
+    void testSearchProductsWithoutInfo_PartialMatch() throws Exception {
+        String searchTerm = "Molde";
+
+        mockMvc.perform(get("/api/products/without-info")
+                .param("name", searchTerm))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].name").value("Pan de Molde"));
+    }
+
+    @Test
+    @WithUserDetails("admin@expmatik.com")
+    void testSearchProductsWithoutInfo_ByBarcode() throws Exception {
+        String searchTerm = "20000002";
+
+        mockMvc.perform(get("/api/products/without-info")
+                .param("barcode", searchTerm))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].name").value("Pan de Molde"));
+    }
+
+    @Test
+    @WithUserDetails("admin@expmatik.com")
+    @DisplayName("Test pagination parameters for products without info")
+    void testSearchProductsWithoutInfo_Pagination() throws Exception {
+        mockMvc.perform(get("/api/products/without-info")
+                .param("page", "0")
+                .param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.size").value(2))
+                .andExpect(jsonPath("$.number").value(0));
+    }
+
 
 }

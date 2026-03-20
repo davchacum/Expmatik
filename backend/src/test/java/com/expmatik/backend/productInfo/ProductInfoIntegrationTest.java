@@ -204,8 +204,5 @@ public class ProductInfoIntegrationTest {
                 .content(objectMapper.writeValueAsString(newStockQuantity)))
                 .andExpect(status().isForbidden());
     }
-    
-
-
 
 }
