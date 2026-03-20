@@ -2,11 +2,12 @@ package com.expmatik.backend.productInfo;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,6 +53,7 @@ public class ProductInfoService {
         if(optionalProductInfo.isPresent()) {
             return optionalProductInfo.get();
         }
+
         ProductInfo productInfo = createProductInfoForProduct(product, user, unitPrice);
         return productInfo;
     }
@@ -65,7 +67,8 @@ public class ProductInfoService {
         ProductInfo productInfo = new ProductInfo();
         productInfo.setStockQuantity(0);
         productInfo.setVatRate(vatRate);
-        productInfo.setSaleUnitPrice(unitPrice.multiply(vatRate.add(BigDecimal.ONE)).setScale(2, RoundingMode.CEILING));
+        BigDecimal saleUnitPrice = unitPrice.multiply(BigDecimal.ONE.add(vatRate)).setScale(2, RoundingMode.HALF_UP);
+        productInfo.setSaleUnitPrice(saleUnitPrice.multiply(new BigDecimal("1.2")).setScale(2, RoundingMode.HALF_UP));
         productInfo.setProduct(product);
         productInfo.setUser(user);
         productInfo.setNeedUpdate(true);   
@@ -82,7 +85,7 @@ public class ProductInfoService {
         existingInfo.setStockQuantity(updatedInfo.stockQuantity());
         existingInfo.setSaleUnitPrice(updatedInfo.saleUnitPrice());
         existingInfo.setVatRate(updatedInfo.vatRate());
-        existingInfo.setNeedUpdate(true);
+        existingInfo.setNeedUpdate(false);
         return save(existingInfo);
     }
 
@@ -104,7 +107,7 @@ public class ProductInfoService {
     }
 
     @Transactional(readOnly = true)
-    public List<ProductInfo> findAllByUserIdOrderByStockQuantityDesc(UUID userId) {
-        return productInfoRepository.findAllByUserIdOrderByStockQuantityDesc(userId);
+    public Page<ProductInfo> findAllByUserIdOrderByStockQuantityDesc(UUID userId, Pageable pageable) {
+        return productInfoRepository.findAllByUserIdOrderByStockQuantityDesc(userId, pageable);
     }
 }

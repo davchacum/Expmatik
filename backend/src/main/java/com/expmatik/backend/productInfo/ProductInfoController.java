@@ -2,6 +2,8 @@ package com.expmatik.backend.productInfo;
 
 import java.util.UUID;
 
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -36,9 +38,9 @@ public class ProductInfoController {
 
     @GetMapping()
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public ResponseEntity<?> getAllProductInfoForUser() {
+    public ResponseEntity<?> getAllProductInfoForUser(@ParameterObject Pageable pageable) {
         User user = userService.getUserProfile();
-        return ResponseEntity.ok(ProductInfoResponse.fromProductInfoList(productInfoService.findAllByUserIdOrderByStockQuantityDesc(user.getId())));
+        return ResponseEntity.ok(ProductInfoResponse.fromProductInfoPage(productInfoService.findAllByUserIdOrderByStockQuantityDesc(user.getId(), pageable)));
     }
 
     @PutMapping("/{productInfoId}")
