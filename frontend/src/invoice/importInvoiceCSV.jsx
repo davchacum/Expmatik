@@ -215,7 +215,13 @@ const ImportInvoiceCSV = () => {
                         <span
                           className={`badge ${inv.status === "PENDING" ? "badge-yellow" : inv.status === "RECEIVED" ? "badge-green" : inv.status === "CANCELED" ? "badge-red" : "badge-blue"}`}
                         >
-                          {inv.status}
+                          {inv.status === "PENDING"
+                            ? "PENDIENTE"
+                            : inv.status === "RECEIVED"
+                              ? "RECIBIDA"
+                              : inv.status === "CANCELED"
+                                ? "CANCELADA"
+                                : inv.status.toLowerCase()}
                         </span>
                       </td>
                       <td>{inv.invoiceDate}</td>
@@ -268,6 +274,15 @@ const ImportInvoiceCSV = () => {
             </div>
 
             <div className="form-footer">
+              <button
+                className="action-btn-red"
+                onClick={() => navigate("/invoices")}
+                disabled={loading}
+              >
+                {loading
+                  ? "Procesando..."
+                  : `Cancelar`}
+              </button>
               <button
                 className="action-btn-green"
                 onClick={handleFinalConfirm}

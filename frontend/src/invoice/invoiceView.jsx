@@ -354,15 +354,27 @@ const Invoices = () => {
                           handleStatusChange(inv.id, e.target.value)
                         }
                       >
-                        <option value="PENDING" className="badge">PENDIENTE</option>
-                        <option value="RECEIVED" className="badge badge-green">RECIBIDO</option>
-                        <option value="CANCELED" className="badge badge-red">CANCELADO</option>
+                        <option value="PENDING" className="badge">
+                          PENDIENTE
+                        </option>
+                        <option value="RECEIVED" className="badge badge-green">
+                          RECIBIDA
+                        </option>
+                        <option value="CANCELED" className="badge badge-red">
+                          CANCELADA
+                        </option>
                       </select>
                     ) : (
                       <span
                         className={`badge ${inv.status === "RECEIVED" ? "badge-green" : inv.status === "CANCELED" ? "badge-red" : "badge-blue"}`}
                       >
-                        {inv.status.toLowerCase()}
+                        {inv.status === "PENDING"
+                          ? "PENDIENTE"
+                          : inv.status === "RECEIVED"
+                            ? "RECIBIDA"
+                            : inv.status === "CANCELED"
+                              ? "CANCELADA"
+                              : inv.status.toLowerCase()}
                       </span>
                     )}
                   </td>
@@ -458,7 +470,13 @@ const Invoices = () => {
                   <span
                     className={`badge ${selectedInvoice.status === "PENDING" ? "badge-yellow" : selectedInvoice.status === "RECEIVED" ? "badge-green" : selectedInvoice.status === "CANCELED" ? "badge-red" : "badge-blue"}`}
                   >
-                    {selectedInvoice.status.toLowerCase()}
+                    {selectedInvoice.status === "PENDING"
+                      ? "PENDIENTE"
+                      : selectedInvoice.status === "RECEIVED"
+                        ? "RECIBIDA"
+                        : selectedInvoice.status === "CANCELED"
+                          ? "CANCELADA"
+                          : selectedInvoice.status.toLowerCase()}
                   </span>
                 </span>
               </div>
