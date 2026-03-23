@@ -76,7 +76,7 @@ public class ProductService {
     @Transactional(readOnly = true)
     public Optional<Product> findProductInOpenFoodFacts(String barcode) {
         ObjectMapper mapper = new ObjectMapper();
-        int maxAttempts = 1;
+        int maxAttempts = 3;
         int delay = 800;
 
         for (int i = 0; i < maxAttempts; i++) {

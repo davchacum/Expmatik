@@ -528,7 +528,7 @@ public class ProductIntegrationTest {
     @Test
     @WithUserDetails("admin@expmatik.com")
     void testValidateProduct_ExistingInExternalCatalog() throws Exception {
-        String barcode = "4716982022201";
+        String barcode = "7622300281182";
 
         mockMvc.perform(get("/api/products/validate-barcode/" + barcode))
                 .andExpect(status().isOk())
