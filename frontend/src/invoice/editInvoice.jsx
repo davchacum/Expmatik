@@ -129,6 +129,7 @@ const EditInvoice = () => {
   const handleAddBatch = async () => {
     setActionLoading(true);
     setError("");
+
     try {
       const response = await fetch(`/api/batches?invoiceId=${id}`, {
         method: "POST",
@@ -147,19 +148,35 @@ const EditInvoice = () => {
           expirationDate: "",
         });
         fetchInvoiceData();
-      } else {
-        let errorMsg =
-          "Error al añadir el lote. Verifique el código de barras.";
-        try {
-          const data = await response.json();
-          if (data && data.message) {
+        return;
+      }
+      let errorMsg = "Error al añadir el lote.";
+
+      try {
+        const data = await response.json();
+
+        if (data) {
+          if (data.errors) {
+            const fieldNames = {
+              unitPrice: "Precio unitario",
+              quantity: "Cantidad",
+              productBarcode: "Código de barras",
+              expirationDate: "Fecha de caducidad",
+            };
+
+            errorMsg = Object.entries(data.errors)
+              .map(([field, msg]) => `${fieldNames[field] || field}: ${msg}`)
+              .join("\n");
+          } else if (data.message) {
             errorMsg = data.message;
           }
-        } catch (err) {
-          console.error("Error al parsear la respuesta del backend:", err);
         }
-        setError(errorMsg);
+      } catch (err) {
+        console.error("Error al parsear la respuesta del backend:", err);
+        errorMsg = "Error inesperado del servidor.";
       }
+
+      setError(errorMsg);
     } catch (err) {
       setError("Error de red: " + err.message);
     } finally {
