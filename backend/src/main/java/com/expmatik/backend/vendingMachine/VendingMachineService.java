@@ -1,5 +1,6 @@
 package com.expmatik.backend.vendingMachine;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,41 +12,56 @@ import org.springframework.transaction.annotation.Transactional;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
 import com.expmatik.backend.user.User;
 import com.expmatik.backend.vendingMachine.DTOs.VendingMachineCreate;
+import com.expmatik.backend.vendingMachine.DTOs.VendingMachineResponseWithSlots;
 import com.expmatik.backend.vendingMachine.DTOs.VendingMachineUpdate;
+import com.expmatik.backend.vendingSlot.VendingSlot;
+import com.expmatik.backend.vendingSlot.VendingSlotService;
 
 @Service
 public class VendingMachineService {
 
     private final VendingMachineRepository vendingMachineRepository;
+    public final VendingSlotService vendingSlotService;
 
     @Autowired
-    public VendingMachineService(VendingMachineRepository vendingMachineRepository) {
+    public VendingMachineService(VendingMachineRepository vendingMachineRepository, VendingSlotService vendingSlotService) {
         this.vendingMachineRepository = vendingMachineRepository;
+        this.vendingSlotService = vendingSlotService;
     }
 
     @Transactional
-    public VendingMachine createVendingMachine(VendingMachineCreate vendingMachineCreate, User user) {
+    public VendingMachineResponseWithSlots createVendingMachine(VendingMachineCreate vendingMachineCreate, User user) {
         validateVendingMachineNameUniqueness(vendingMachineCreate.name(), user);
         VendingMachine vendingMachine = VendingMachineCreate.toEntity(vendingMachineCreate);
         vendingMachine.setUser(user);
-        return vendingMachineRepository.save(vendingMachine);
+        List<VendingSlot> createdSlots = vendingSlotService.createVendingSlotsForMachine(vendingMachineCreate.rowCount(), vendingMachineCreate.columnCount(), vendingMachine.getId());
+        vendingMachineRepository.save(vendingMachine);
+        return VendingMachineResponseWithSlots.fromVendingMachine(vendingMachine, createdSlots);
     }
 
     void validateVendingMachineOwnership(VendingMachine vendingMachine, User user) {
         if (!vendingMachine.getUser().getId().equals(user.getId())) {
-            throw new IllegalArgumentException("El usuario no es el propietario de la máquina expendedora.");
+            throw new IllegalArgumentException("The user is not the owner of the vending machine.");
         }
     }
 
     void validateVendingMachineNameUniqueness(String name, User user) {
         if (vendingMachineRepository.findByNameAndUserId(name, user.getId()).isPresent()) {
-            throw new IllegalArgumentException("Ya existe una máquina expendedora con el mismo nombre.");
+            throw new IllegalArgumentException("A vending machine with the same name already exists.");
         }
     }
 
     @Transactional(readOnly = true)
     public VendingMachine findVendingMachineById(UUID vendingMachineId) {
-        return vendingMachineRepository.findById(vendingMachineId).orElseThrow(() -> new ResourceNotFoundException("La máquina expendedora no existe."));
+        return vendingMachineRepository.findById(vendingMachineId).orElseThrow(() -> new ResourceNotFoundException("The vending machine does not exist."));
+    }
+
+    @Transactional(readOnly = true)
+    public VendingMachineResponseWithSlots getVendingMachineWithSlots(UUID vendingMachineId, User user) {
+        VendingMachine vendingMachine = findVendingMachineById(vendingMachineId);
+        validateVendingMachineOwnership(vendingMachine, user);
+        List<VendingSlot> vendingSlots = vendingSlotService.getVendingSlotsByUserIdAndMachineId(vendingMachineId, user);
+        return VendingMachineResponseWithSlots.fromVendingMachine(vendingMachine, vendingSlots);
     }
 
     @Transactional

@@ -13,6 +13,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,6 +32,7 @@ public class VendingSlot extends BaseEntity{
     private Integer maxCapacity;
 
     @NotNull
+    @Positive
     @Column(name = "current_stock",nullable = false)
     private Integer currentStock;
 
@@ -39,10 +41,12 @@ public class VendingSlot extends BaseEntity{
     private Boolean isBlocked;
 
     @NotNull
+    @Positive
     @Column(name = "row_number",nullable = false,updatable = false)
     private Integer rowNumber;
 
     @NotNull
+    @Positive
     @Column(name = "column_number",nullable = false,updatable = false)
     private Integer columnNumber;
     

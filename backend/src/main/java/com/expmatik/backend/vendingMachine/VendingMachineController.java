@@ -14,10 +14,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.expmatik.backend.user.Role;
 import com.expmatik.backend.user.User;
 import com.expmatik.backend.user.UserService;
 import com.expmatik.backend.vendingMachine.DTOs.VendingMachineCreate;
 import com.expmatik.backend.vendingMachine.DTOs.VendingMachineResponse;
+import com.expmatik.backend.vendingMachine.DTOs.VendingMachineResponseWithSlots;
 import com.expmatik.backend.vendingMachine.DTOs.VendingMachineUpdate;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -38,30 +40,41 @@ public class VendingMachineController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getVendingMachineById(@PathVariable UUID id) {
-        User user = userService.getUserProfile();
-        VendingMachine vendingMachine = vendingMachineService.findVendingMachineById(id);
-        vendingMachineService.validateVendingMachineOwnership(vendingMachine, user);
-        return ResponseEntity.ok(VendingMachineResponse.fromVendingMachine(vendingMachine));
+        User currentUser = userService.getUserProfile();
+        if(currentUser.getRole().equals(Role.ADMINISTRATOR)) {
+            return ResponseEntity.badRequest().body("You are not authorized to view this product.");
+        }
+        VendingMachineResponseWithSlots response = vendingMachineService.getVendingMachineWithSlots(id, currentUser);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping()
     public ResponseEntity<?> getAllVendingMachines(Pageable pageable) {
-        User user = userService.getUserProfile();
-        Page<VendingMachine> vendingMachinePage = vendingMachineService.listVendingMachines(user, pageable);
+        User currentUser = userService.getUserProfile();
+        if(currentUser.getRole().equals(Role.ADMINISTRATOR)) {
+            return ResponseEntity.badRequest().body("You are not authorized to view this product.");
+        }
+        Page<VendingMachine> vendingMachinePage = vendingMachineService.listVendingMachines(currentUser, pageable);
         return ResponseEntity.ok(VendingMachineResponse.fromVendingMachinePage(vendingMachinePage));
     }
 
     @PostMapping()
     public ResponseEntity<?> createVendingMachine(@RequestBody @Validated VendingMachineCreate vendingMachineCreate) {
-        User user = userService.getUserProfile();
-        VendingMachine vendingMachine = vendingMachineService.createVendingMachine(vendingMachineCreate, user);
-        return ResponseEntity.ok(VendingMachineResponse.fromVendingMachine(vendingMachine));
+        User currentUser = userService.getUserProfile();
+        if(currentUser.getRole().equals(Role.ADMINISTRATOR)) {
+            return ResponseEntity.badRequest().body("You are not authorized to view this product.");
+        }
+        VendingMachineResponseWithSlots response = vendingMachineService.createVendingMachine(vendingMachineCreate, currentUser);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateVendingMachine(@PathVariable UUID id, @RequestBody @Validated VendingMachineUpdate vendingMachineUpdate) {
-        User user = userService.getUserProfile();
-        VendingMachine vendingMachine = vendingMachineService.updateVendingMachine(id, vendingMachineUpdate, user);
+        User currentUser = userService.getUserProfile();
+        if(currentUser.getRole().equals(Role.ADMINISTRATOR)) {
+            return ResponseEntity.badRequest().body("You are not authorized to view this product.");
+        }
+        VendingMachine vendingMachine = vendingMachineService.updateVendingMachine(id, vendingMachineUpdate, currentUser);
         return ResponseEntity.ok(VendingMachineResponse.fromVendingMachine(vendingMachine));
     }
 }
