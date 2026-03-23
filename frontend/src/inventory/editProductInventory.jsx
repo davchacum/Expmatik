@@ -208,7 +208,6 @@ const EditProductInfo = () => {
                 className="dark-input"
                 value={formData.saleUnitPrice}
                 onChange={handleChange}
-                style={{ borderColor: "var(--primary-blue)" }}
               />
             </div>
 
