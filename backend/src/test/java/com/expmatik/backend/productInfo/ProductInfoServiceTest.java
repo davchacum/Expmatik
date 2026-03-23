@@ -146,11 +146,11 @@ public class ProductInfoServiceTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         ProductInfo result = productInfoService.getOrCreateProductInfo(productId, user1, unitPrice);
-
+        BigDecimal expectedPrice = unitPrice.multiply(new BigDecimal("1.20")).setScale(2, RoundingMode.HALF_UP);
         assertThat(result).isNotNull();
         assertThat(result.getProduct()).isEqualTo(productCustom);
         assertThat(result.getUser()).isEqualTo(user1);
-        assertThat(result.getSaleUnitPrice()).isEqualTo(unitPrice.multiply(new BigDecimal("1.21")).setScale(2,RoundingMode.CEILING));
+        assertThat(result.getSaleUnitPrice()).isEqualTo(expectedPrice.multiply(new BigDecimal("1.21")).setScale(2,RoundingMode.HALF_UP));
     }
 
     @Test
@@ -165,6 +165,7 @@ public class ProductInfoServiceTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         ProductInfo result = productInfoService.getOrCreateProductInfo(productId, user1, unitPrice);
+        BigDecimal expectedPrice = unitPrice.multiply(new BigDecimal("1.20")).setScale(2, RoundingMode.HALF_UP);
 
         assertThat(result).isNotNull();
         assertThat(result.getProduct()).isEqualTo(productNoCustom);
@@ -172,7 +173,7 @@ public class ProductInfoServiceTest {
         assertThat(result.getStockQuantity()).isEqualTo(0);
         assertThat(result.getVatRate()).isEqualTo(new BigDecimal("0.21"));
         assertThat(result.getSaleUnitPrice())
-            .isEqualTo(unitPrice.multiply(new BigDecimal("1.21")).setScale(2, RoundingMode.CEILING));
+            .isEqualTo(expectedPrice.multiply(new BigDecimal("1.21")).setScale(2, RoundingMode.HALF_UP));
     }
 
     @Test
@@ -186,6 +187,8 @@ public class ProductInfoServiceTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         ProductInfo result = productInfoService.getOrCreateProductInfo(productId, user1, null);
+            BigDecimal expectedPrice = BigDecimal.ONE.multiply(new BigDecimal("1.20")).setScale(2, RoundingMode.HALF_UP);
+
 
         assertThat(result).isNotNull();
         assertThat(result.getProduct()).isEqualTo(productNoCustom);
@@ -193,7 +196,7 @@ public class ProductInfoServiceTest {
         assertThat(result.getStockQuantity()).isEqualTo(0);
         assertThat(result.getVatRate()).isEqualTo(new BigDecimal("0.21"));
         assertThat(result.getSaleUnitPrice())
-            .isEqualTo(BigDecimal.ONE.multiply(new BigDecimal("1.21")).setScale(2, RoundingMode.CEILING));
+            .isEqualTo(expectedPrice.multiply(new BigDecimal("1.21")).setScale(2, RoundingMode.HALF_UP));
     }
 
     // ==================== updateProductInfo Tests ====================

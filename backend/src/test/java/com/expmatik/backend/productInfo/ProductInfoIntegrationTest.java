@@ -40,9 +40,9 @@ public class ProductInfoIntegrationTest {
         
         mockMvc.perform(get("/api/product-info"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].productId").value("00000000-0000-0000-0000-000000000001"))
-                .andExpect(jsonPath("$[1].productId").value("00000000-0000-0000-0000-000000000004"));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].productId").value("00000000-0000-0000-0000-000000000001"))
+                .andExpect(jsonPath("$.content[1].productId").value("00000000-0000-0000-0000-000000000004"));
     }
 
     @Test
@@ -50,7 +50,7 @@ public class ProductInfoIntegrationTest {
     void testGetAllProductInfoForUser_WithOtherUserNoResults() throws Exception {
         mockMvc.perform(get("/api/product-info"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isEmpty());
+                .andExpect(jsonPath("$.content").isEmpty());
     }
 
     // == Prueba de Update /api/product-info/{id} == //

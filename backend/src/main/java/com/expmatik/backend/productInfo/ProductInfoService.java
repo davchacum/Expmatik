@@ -67,8 +67,8 @@ public class ProductInfoService {
         ProductInfo productInfo = new ProductInfo();
         productInfo.setStockQuantity(0);
         productInfo.setVatRate(vatRate);
-        BigDecimal saleUnitPrice = unitPrice.multiply(BigDecimal.ONE.add(vatRate)).setScale(2, RoundingMode.HALF_UP);
-        productInfo.setSaleUnitPrice(saleUnitPrice.multiply(new BigDecimal("1.2")).setScale(2, RoundingMode.HALF_UP));
+        BigDecimal saleUnitPrice = unitPrice.multiply(new BigDecimal("1.2")).setScale(2, RoundingMode.HALF_UP);
+        productInfo.setSaleUnitPrice(saleUnitPrice.multiply(BigDecimal.ONE.add(vatRate)).setScale(2, RoundingMode.HALF_UP));
         productInfo.setProduct(product);
         productInfo.setUser(user);
         productInfo.setNeedUpdate(true);   

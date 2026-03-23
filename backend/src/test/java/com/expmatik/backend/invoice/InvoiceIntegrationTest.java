@@ -393,10 +393,10 @@ public class InvoiceIntegrationTest {
 
         mockMvc.perform(get("/api/product-info"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].productInfoId").value(productInfoId2.toString()))
-                .andExpect(jsonPath("$[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2))
-                .andExpect(jsonPath("$[0].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO2.doubleValue()));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].productInfoId").value(productInfoId2.toString()))
+                .andExpect(jsonPath("$.content[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2))
+                .andExpect(jsonPath("$.content[0].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO2.doubleValue()));
 
         
     }
@@ -436,10 +436,10 @@ public class InvoiceIntegrationTest {
 
         mockMvc.perform(get("/api/product-info"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].productInfoId").value(productInfoId2.toString()))
-                .andExpect(jsonPath("$[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2))
-                .andExpect(jsonPath("$[0].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO2.doubleValue()));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].productInfoId").value(productInfoId2.toString()))
+                .andExpect(jsonPath("$.content[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2))
+                .andExpect(jsonPath("$.content[0].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO2.doubleValue()));
     }
 
     @Test
@@ -593,10 +593,10 @@ public class InvoiceIntegrationTest {
 
         mockMvc.perform(get("/api/product-info"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].productInfoId").value(productInfoId2.toString()))
-                .andExpect(jsonPath("$[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2 + 10))
-                .andExpect(jsonPath("$[0].lastPurchaseUnitPrice").value(new BigDecimal("5").doubleValue()));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].productInfoId").value(productInfoId2.toString()))
+                .andExpect(jsonPath("$.content[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2 + 10))
+                .andExpect(jsonPath("$.content[0].lastPurchaseUnitPrice").value(new BigDecimal("5").doubleValue()));
     }
 
     @Test
@@ -773,13 +773,13 @@ public class InvoiceIntegrationTest {
 
         mockMvc.perform(get("/api/product-info"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].productInfoId").value(productInfoId2.toString()))
-                .andExpect(jsonPath("$[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2))
-                .andExpect(jsonPath("$[0].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO2))
-                .andExpect(jsonPath("$[1].productInfoId").value(productInfoId1.toString()))
-                .andExpect(jsonPath("$[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
-                .andExpect(jsonPath("$[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].productInfoId").value(productInfoId2.toString()))
+                .andExpect(jsonPath("$.content[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2))
+                .andExpect(jsonPath("$.content[0].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO2))
+                .andExpect(jsonPath("$.content[1].productInfoId").value(productInfoId1.toString()))
+                .andExpect(jsonPath("$.content[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
+                .andExpect(jsonPath("$.content[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
     }
 
     @Test
@@ -815,13 +815,13 @@ public class InvoiceIntegrationTest {
 
         mockMvc.perform(get("/api/product-info"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].productInfoId").value(productInfoId2.toString()))
-                .andExpect(jsonPath("$[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2))
-                .andExpect(jsonPath("$[0].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO2))
-                .andExpect(jsonPath("$[1].productInfoId").value(productInfoId1.toString()))
-                .andExpect(jsonPath("$[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
-                .andExpect(jsonPath("$[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].productInfoId").value(productInfoId2.toString()))
+                .andExpect(jsonPath("$.content[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2))
+                .andExpect(jsonPath("$.content[0].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO2))
+                .andExpect(jsonPath("$.content[1].productInfoId").value(productInfoId1.toString()))
+                .andExpect(jsonPath("$.content[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
+                .andExpect(jsonPath("$.content[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
     }
 
     @Test
@@ -857,13 +857,13 @@ public class InvoiceIntegrationTest {
 
         mockMvc.perform(get("/api/product-info"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].productInfoId").value(productInfoId2.toString()))
-                .andExpect(jsonPath("$[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2))
-                .andExpect(jsonPath("$[0].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO2))
-                .andExpect(jsonPath("$[1].productInfoId").value(productInfoId1.toString()))
-                .andExpect(jsonPath("$[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
-                .andExpect(jsonPath("$[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].productInfoId").value(productInfoId2.toString()))
+                .andExpect(jsonPath("$.content[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2))
+                .andExpect(jsonPath("$.content[0].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO2))
+                .andExpect(jsonPath("$.content[1].productInfoId").value(productInfoId1.toString()))
+                .andExpect(jsonPath("$.content[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
+                .andExpect(jsonPath("$.content[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
     }
 
     @Test
@@ -898,13 +898,13 @@ public class InvoiceIntegrationTest {
 
         mockMvc.perform(get("/api/product-info"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].productInfoId").value(productInfoId2.toString()))
-                .andExpect(jsonPath("$[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2))
-                .andExpect(jsonPath("$[0].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO2))
-                .andExpect(jsonPath("$[1].productInfoId").value(productInfoId1.toString()))
-                .andExpect(jsonPath("$[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
-                .andExpect(jsonPath("$[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].productInfoId").value(productInfoId2.toString()))
+                .andExpect(jsonPath("$.content[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2))
+                .andExpect(jsonPath("$.content[0].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO2))
+                .andExpect(jsonPath("$.content[1].productInfoId").value(productInfoId1.toString()))
+                .andExpect(jsonPath("$.content[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
+                .andExpect(jsonPath("$.content[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
     }
 
     @Test
@@ -939,13 +939,13 @@ public class InvoiceIntegrationTest {
 
         mockMvc.perform(get("/api/product-info"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].productInfoId").value(productInfoId2.toString()))
-                .andExpect(jsonPath("$[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2 + 50))
-                .andExpect(jsonPath("$[0].lastPurchaseUnitPrice").value(new BigDecimal("3").doubleValue()))
-                .andExpect(jsonPath("$[1].productInfoId").value(productInfoId1.toString()))
-                .andExpect(jsonPath("$[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1 + 100))
-                .andExpect(jsonPath("$[1].lastPurchaseUnitPrice").value(new BigDecimal("2").doubleValue()));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].productInfoId").value(productInfoId2.toString()))
+                .andExpect(jsonPath("$.content[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2 + 50))
+                .andExpect(jsonPath("$.content[0].lastPurchaseUnitPrice").value(new BigDecimal("3").doubleValue()))
+                .andExpect(jsonPath("$.content[1].productInfoId").value(productInfoId1.toString()))
+                .andExpect(jsonPath("$.content[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1 + 100))
+                .andExpect(jsonPath("$.content[1].lastPurchaseUnitPrice").value(new BigDecimal("2").doubleValue()));
     }
 
     @Test
@@ -1088,13 +1088,13 @@ public class InvoiceIntegrationTest {
 
         mockMvc.perform(get("/api/product-info"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].productInfoId").value(productInfoId2.toString()))
-                .andExpect(jsonPath("$[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2))
-                .andExpect(jsonPath("$[0].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO2))
-                .andExpect(jsonPath("$[1].productInfoId").value(productInfoId1.toString()))
-                .andExpect(jsonPath("$[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
-                .andExpect(jsonPath("$[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].productInfoId").value(productInfoId2.toString()))
+                .andExpect(jsonPath("$.content[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2))
+                .andExpect(jsonPath("$.content[0].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO2))
+                .andExpect(jsonPath("$.content[1].productInfoId").value(productInfoId1.toString()))
+                .andExpect(jsonPath("$.content[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
+                .andExpect(jsonPath("$.content[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
     }
 
     @Test
@@ -1116,13 +1116,13 @@ public class InvoiceIntegrationTest {
 
         mockMvc.perform(get("/api/product-info"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].productInfoId").value(productInfoId2.toString()))
-                .andExpect(jsonPath("$[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2 + 50))
-                .andExpect(jsonPath("$[0].lastPurchaseUnitPrice").value(new BigDecimal("3").doubleValue()))
-                .andExpect(jsonPath("$[1].productInfoId").value(productInfoId1.toString()))
-                .andExpect(jsonPath("$[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1 + 100))
-                .andExpect(jsonPath("$[1].lastPurchaseUnitPrice").value(new BigDecimal("2").doubleValue()));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].productInfoId").value(productInfoId2.toString()))
+                .andExpect(jsonPath("$.content[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2 + 50))
+                .andExpect(jsonPath("$.content[0].lastPurchaseUnitPrice").value(new BigDecimal("3").doubleValue()))
+                .andExpect(jsonPath("$.content[1].productInfoId").value(productInfoId1.toString()))
+                .andExpect(jsonPath("$.content[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1 + 100))
+                .andExpect(jsonPath("$.content[1].lastPurchaseUnitPrice").value(new BigDecimal("2").doubleValue()));
     }
 
     @Test
@@ -1144,13 +1144,13 @@ public class InvoiceIntegrationTest {
 
         mockMvc.perform(get("/api/product-info"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].productInfoId").value(productInfoId2.toString()))
-                .andExpect(jsonPath("$[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2))
-                .andExpect(jsonPath("$[0].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO2))
-                .andExpect(jsonPath("$[1].productInfoId").value(productInfoId1.toString()))
-                .andExpect(jsonPath("$[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
-                .andExpect(jsonPath("$[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].productInfoId").value(productInfoId2.toString()))
+                .andExpect(jsonPath("$.content[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2))
+                .andExpect(jsonPath("$.content[0].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO2))
+                .andExpect(jsonPath("$.content[1].productInfoId").value(productInfoId1.toString()))
+                .andExpect(jsonPath("$.content[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
+                .andExpect(jsonPath("$.content[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
     }
 
     @Test
@@ -1236,13 +1236,13 @@ public class InvoiceIntegrationTest {
 
         mockMvc.perform(get("/api/product-info"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].productInfoId").value(productInfoId2.toString()))
-                .andExpect(jsonPath("$[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2 ))
-                .andExpect(jsonPath("$[0].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO2))
-                .andExpect(jsonPath("$[1].productInfoId").value(productInfoId1.toString()))
-                .andExpect(jsonPath("$[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
-                .andExpect(jsonPath("$[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].productInfoId").value(productInfoId2.toString()))
+                .andExpect(jsonPath("$.content[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2 ))
+                .andExpect(jsonPath("$.content[0].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO2))
+                .andExpect(jsonPath("$.content[1].productInfoId").value(productInfoId1.toString()))
+                .andExpect(jsonPath("$.content[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
+                .andExpect(jsonPath("$.content[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
     }
 
     @Test
