@@ -32,8 +32,8 @@ public class VendingSlotController {
     @GetMapping("{machineId}")
     public ResponseEntity<?> getVendingSlotsByMachineId(@PathVariable UUID machineId) {
         User currentUser = userService.getUserProfile();
-        if(currentUser.getRole().equals(Role.ADMINISTRATOR)) {
-            return ResponseEntity.badRequest().body("You are not authorized to view this product.");
+        if(!currentUser.getRole().equals(Role.ADMINISTRATOR)) {
+            return ResponseEntity.badRequest().body("You are not authorized to view this machine.");
         }
         List<VendingSlot> vendingSlots = vendingSlotService.getVendingSlotsByUserIdAndMachineId(machineId, currentUser);
         return ResponseEntity.ok(VendingSlotResponse.fromVendingSlotList(vendingSlots));

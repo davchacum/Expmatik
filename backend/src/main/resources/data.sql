@@ -1,3 +1,5 @@
+DELETE FROM vending_slot;
+DELETE FROM vending_machine;
 DELETE FROM batch;
 DELETE FROM invoice;
 DELETE FROM supplier;

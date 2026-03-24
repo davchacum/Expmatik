@@ -32,11 +32,11 @@ public class VendingSlotService {
 
     @Transactional(readOnly = true)
     public List<VendingSlot> getVendingSlotsByUserIdAndMachineId(UUID machineId,User user) {
-        List<VendingSlot> vendingSlots = vendingSlotRepository.findAllByUserIdAndMachineId(machineId);
+        List<VendingSlot> vendingSlots = vendingSlotRepository.findAllByVendingMachineId(machineId);
         if(!vendingSlots.isEmpty() && !vendingSlots.get(0).getVendingMachine().getUser().getId().equals(user.getId())) {
             throw new UnauthorizedActionException("The user is not the owner of the vending machine.");
         }
-        return vendingSlotRepository.findAllByUserIdAndMachineId(machineId);
+        return vendingSlots;
     }
 
     @Transactional
@@ -45,23 +45,20 @@ public class VendingSlotService {
     }
 
     @Transactional
-    public List<VendingSlot> createVendingSlotsForMachine(Integer rowCount, Integer columnCount, UUID machineId) {
-        List<VendingSlot> createdSlots = new ArrayList<>();
+    public void createVendingSlotsForMachine(VendingMachine machine, Integer rowCount, Integer columnCount, Integer maxCapacityPerSlot) {
         for (int row = 1; row <= rowCount; row++) {
             for (int column = 1; column <= columnCount; column++) {
                 VendingSlot vendingSlot = new VendingSlot();
                 vendingSlot.setRowNumber(row);
                 vendingSlot.setColumnNumber(column);
-                vendingSlot.setMaxCapacity(0);
+                vendingSlot.setMaxCapacity(maxCapacityPerSlot);
                 vendingSlot.setCurrentStock(0);
-                vendingSlot.setIsBlocked(false);
-                vendingSlot.setVendingMachine(new VendingMachine());
-                vendingSlot.getVendingMachine().setId(machineId);
+                vendingSlot.setIsBlocked(true);
+                vendingSlot.setVendingMachine(machine);
+                vendingSlot.setExpirationBatch(new ArrayList<>());
                 vendingSlotRepository.save(vendingSlot);
-                createdSlots.add(vendingSlot);
             }
         }
-        return createdSlots;
     }
 
 

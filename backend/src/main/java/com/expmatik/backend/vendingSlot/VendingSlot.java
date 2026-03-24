@@ -6,14 +6,17 @@ import com.expmatik.backend.model.BaseEntity;
 import com.expmatik.backend.product.Product;
 import com.expmatik.backend.vendingMachine.VendingMachine;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,7 +35,7 @@ public class VendingSlot extends BaseEntity{
     private Integer maxCapacity;
 
     @NotNull
-    @Positive
+    @PositiveOrZero
     @Column(name = "current_stock",nullable = false)
     private Integer currentStock;
 
@@ -55,13 +58,11 @@ public class VendingSlot extends BaseEntity{
     @JoinColumn(name = "vending_machine_id", nullable = false)
     private VendingMachine vendingMachine;
 
-    @NotNull
-    @OneToMany
-    @JoinColumn(name = "vending_slot_id", nullable = false)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "vending_slot_id", nullable = true)
     private List<ExpirationBatch> expirationBatch;
 
-    @NotNull
     @ManyToOne
-    @JoinColumn(name = "product_id", nullable = false)
+    @JoinColumn(name = "product_id", nullable = true)
     private Product product;
 }

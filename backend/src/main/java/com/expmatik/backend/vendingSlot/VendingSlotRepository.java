@@ -12,6 +12,6 @@ public interface VendingSlotRepository extends JpaRepository<VendingSlot, UUID> 
     Optional<VendingSlot> findById(UUID id);
 
     @Query("SELECT v FROM VendingSlot v WHERE v.vendingMachine.id = :machineId")
-    List<VendingSlot> findAllByUserIdAndMachineId(UUID machineId);
+    List<VendingSlot> findAllByVendingMachineId(UUID machineId);
 
 }

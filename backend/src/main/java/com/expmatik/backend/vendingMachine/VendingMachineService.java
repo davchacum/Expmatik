@@ -1,6 +1,5 @@
 package com.expmatik.backend.vendingMachine;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,9 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
 import com.expmatik.backend.user.User;
 import com.expmatik.backend.vendingMachine.DTOs.VendingMachineCreate;
-import com.expmatik.backend.vendingMachine.DTOs.VendingMachineResponseWithSlots;
 import com.expmatik.backend.vendingMachine.DTOs.VendingMachineUpdate;
-import com.expmatik.backend.vendingSlot.VendingSlot;
 import com.expmatik.backend.vendingSlot.VendingSlotService;
 
 @Service
@@ -30,13 +27,13 @@ public class VendingMachineService {
     }
 
     @Transactional
-    public VendingMachineResponseWithSlots createVendingMachine(VendingMachineCreate vendingMachineCreate, User user) {
+    public VendingMachine createVendingMachine(VendingMachineCreate vendingMachineCreate, User user) {
         validateVendingMachineNameUniqueness(vendingMachineCreate.name(), user);
         VendingMachine vendingMachine = VendingMachineCreate.toEntity(vendingMachineCreate);
         vendingMachine.setUser(user);
-        List<VendingSlot> createdSlots = vendingSlotService.createVendingSlotsForMachine(vendingMachineCreate.rowCount(), vendingMachineCreate.columnCount(), vendingMachine.getId());
-        vendingMachineRepository.save(vendingMachine);
-        return VendingMachineResponseWithSlots.fromVendingMachine(vendingMachine, createdSlots);
+        vendingMachine = vendingMachineRepository.save(vendingMachine);
+        vendingSlotService.createVendingSlotsForMachine(vendingMachine,vendingMachineCreate.rowCount(), vendingMachineCreate.columnCount(),vendingMachineCreate.maxCapacityPerSlot());
+        return vendingMachine;
     }
 
     void validateVendingMachineOwnership(VendingMachine vendingMachine, User user) {
@@ -57,11 +54,11 @@ public class VendingMachineService {
     }
 
     @Transactional(readOnly = true)
-    public VendingMachineResponseWithSlots getVendingMachineWithSlots(UUID vendingMachineId, User user) {
+    public VendingMachine getVendingMachineById(UUID vendingMachineId, User user) {
         VendingMachine vendingMachine = findVendingMachineById(vendingMachineId);
         validateVendingMachineOwnership(vendingMachine, user);
-        List<VendingSlot> vendingSlots = vendingSlotService.getVendingSlotsByUserIdAndMachineId(vendingMachineId, user);
-        return VendingMachineResponseWithSlots.fromVendingMachine(vendingMachine, vendingSlots);
+        return vendingMachine;
+
     }
 
     @Transactional

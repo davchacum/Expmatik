@@ -1,13 +1,15 @@
 package com.expmatik.backend.vendingSlot.DTOs;
 
 import java.util.List;
+import java.util.UUID;
 
 import com.expmatik.backend.product.DTOs.ProductResponse;
-import com.expmatik.backend.vendingMachine.VendingMachine;
 import com.expmatik.backend.vendingSlot.ExpirationBatch;
 import com.expmatik.backend.vendingSlot.VendingSlot;
 
 public record VendingSlotResponse(
+
+    UUID id,
 
     Integer maxCapacity,
 
@@ -19,7 +21,7 @@ public record VendingSlotResponse(
 
     Integer columnNumber,
     
-    VendingMachine vendingMachine,
+    UUID vendingMachineId,
 
     List<ExpirationBatch> expirationBatch,
 
@@ -29,14 +31,15 @@ public record VendingSlotResponse(
 
     public static VendingSlotResponse fromVendingSlot(VendingSlot vendingSlot) {
         return new VendingSlotResponse(
+            vendingSlot.getId(),
             vendingSlot.getMaxCapacity(),
             vendingSlot.getCurrentStock(),
             vendingSlot.getIsBlocked(),
             vendingSlot.getRowNumber(),
             vendingSlot.getColumnNumber(),
-            vendingSlot.getVendingMachine(),
+            vendingSlot.getVendingMachine().getId(),
             vendingSlot.getExpirationBatch(),
-            ProductResponse.fromProduct(vendingSlot.getProduct())
+            vendingSlot.getProduct() != null ? ProductResponse.fromProduct(vendingSlot.getProduct()) : null
         );
     }
 

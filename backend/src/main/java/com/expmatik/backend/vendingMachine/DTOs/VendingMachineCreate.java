@@ -2,9 +2,11 @@ package com.expmatik.backend.vendingMachine.DTOs;
 
 import com.expmatik.backend.vendingMachine.VendingMachine;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
 public record VendingMachineCreate(
@@ -23,7 +25,11 @@ public record VendingMachineCreate(
 
     @NotNull
     @Positive
-    Integer rowCount
+    Integer rowCount,
+
+    @NotNull
+    @PositiveOrZero
+    Integer maxCapacityPerSlot
 ) {
 
     public static VendingMachine toEntity(VendingMachineCreate vendingMachineCreate) {
