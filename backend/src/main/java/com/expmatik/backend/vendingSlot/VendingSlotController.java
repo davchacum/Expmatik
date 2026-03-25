@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.expmatik.backend.user.Role;
 import com.expmatik.backend.user.User;
 import com.expmatik.backend.user.UserService;
+import com.expmatik.backend.validation.ValidBarcode;
 import com.expmatik.backend.vendingSlot.DTOs.VendingSlotResponse;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -37,6 +39,46 @@ public class VendingSlotController {
         }
         List<VendingSlot> vendingSlots = vendingSlotService.getVendingSlotsByUserIdAndMachineId(machineId, currentUser);
         return ResponseEntity.ok(VendingSlotResponse.fromVendingSlotList(vendingSlots));
+    }
+
+    @PatchMapping("{vendingSlotId}/assign-product/{barcode}")
+    public ResponseEntity<?> assignProductToVendingSlot(@PathVariable UUID vendingSlotId, @PathVariable @ValidBarcode String barcode) {
+        User currentUser = userService.getUserProfile();
+        if(!currentUser.getRole().equals(Role.ADMINISTRATOR)) {
+            return ResponseEntity.badRequest().body("You are not authorized to modify this machine.");
+        }
+        VendingSlot vendingSlot = vendingSlotService.assignProductToVendingSlot(vendingSlotId, barcode, currentUser);
+        return ResponseEntity.ok(VendingSlotResponse.fromVendingSlot(vendingSlot));
+    }
+
+    @PatchMapping("{vendingSlotId}/unassign-product")
+    public ResponseEntity<?> unassignProductFromVendingSlot(@PathVariable UUID vendingSlotId) {
+        User currentUser = userService.getUserProfile();
+        if(!currentUser.getRole().equals(Role.ADMINISTRATOR)) {
+            return ResponseEntity.badRequest().body("You are not authorized to modify this machine.");
+        }
+        VendingSlot vendingSlot = vendingSlotService.assignProductToVendingSlot(vendingSlotId, null, currentUser);
+        return ResponseEntity.ok(VendingSlotResponse.fromVendingSlot(vendingSlot));
+    }
+
+    @PatchMapping("{vendingSlotId}/block")
+    public ResponseEntity<?> blockVendingSlot(@PathVariable UUID vendingSlotId) {
+        User currentUser = userService.getUserProfile();
+        if(!currentUser.getRole().equals(Role.ADMINISTRATOR)) {
+            return ResponseEntity.badRequest().body("You are not authorized to modify this machine.");
+        }
+        VendingSlot vendingSlot = vendingSlotService.updateBlockStatus(vendingSlotId, true, currentUser);
+        return ResponseEntity.ok(VendingSlotResponse.fromVendingSlot(vendingSlot));
+    }
+
+    @PatchMapping("{vendingSlotId}/unblock")
+    public ResponseEntity<?> unblockVendingSlot(@PathVariable UUID vendingSlotId) {
+        User currentUser = userService.getUserProfile();
+        if(!currentUser.getRole().equals(Role.ADMINISTRATOR)) {
+            return ResponseEntity.badRequest().body("You are not authorized to modify this machine.");
+        }
+        VendingSlot vendingSlot = vendingSlotService.updateBlockStatus(vendingSlotId, false, currentUser);
+        return ResponseEntity.ok(VendingSlotResponse.fromVendingSlot(vendingSlot));
     }
 
 }

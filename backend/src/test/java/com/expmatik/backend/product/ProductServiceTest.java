@@ -592,4 +592,38 @@ public class ProductServiceTest {
         verify(productService).findProductInOpenFoodFacts("5555555555555");
     }
 
+
+    @Test
+    @DisplayName("findInternalProductByBarcode - returns product when found in database")
+    void testFindInternalProductByBarcodeFoundInDatabase() {
+        String barcode = "1111111111111";
+        UUID userId = user1.getId();
+
+        Product dbProduct = new Product();
+        dbProduct.setBarcode(barcode);
+
+        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
+                .thenReturn(Optional.of(dbProduct));
+
+        Product result = productService.findInternalProductByBarcode(barcode, userId);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getBarcode()).isEqualTo(barcode);
+    }
+
+    @Test
+    @DisplayName("findInternalProductByBarcode - throws ResourceNotFoundException when not found in database")
+    void testFindInternalProductByBarcodeNotFoundInDatabase() {
+        String barcode = "2222222222222";
+        UUID userId = user1.getId();
+
+        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> productService.findInternalProductByBarcode(barcode, userId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage("Product with barcode " + barcode + " not found in the database or in the external catalog.");
+    }
+
+
 }
