@@ -1,7 +1,6 @@
 package com.expmatik.backend.vendingSlot;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,26 +22,25 @@ public class VendingSlotService {
 
     private final ProductService productService;
 
-    public VendingSlotService(VendingSlotRepository vendingSlotRepository, ProductService productService) {
+    private final ExpirationBatchService expirationBatchService;
+
+    public VendingSlotService(VendingSlotRepository vendingSlotRepository, ProductService productService, ExpirationBatchService expirationBatchService) {
         this.vendingSlotRepository = vendingSlotRepository;
         this.productService = productService;
+        this.expirationBatchService = expirationBatchService;
     }
 
     @Transactional(readOnly = true)
     public VendingSlot getVendingSlotById(UUID id,User user) {
             VendingSlot vendingSlot = vendingSlotRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("The vending slot does not exist."));
-            if(!vendingSlot.getVendingMachine().getUser().getId().equals(user.getId())) {
-                throw new UnauthorizedActionException("The user is not the owner of the vending machine.");
-            }
+            checkUserAuthorization(vendingSlot, user);
             return vendingSlot; 
     }
 
     @Transactional(readOnly = true)
     public List<VendingSlot> getVendingSlotsByUserIdAndMachineId(UUID machineId,User user) {
         List<VendingSlot> vendingSlots = vendingSlotRepository.findAllByVendingMachineId(machineId);
-        if(!vendingSlots.isEmpty() && !vendingSlots.get(0).getVendingMachine().getUser().getId().equals(user.getId())) {
-            throw new UnauthorizedActionException("The user is not the owner of the vending machine.");
-        }
+        checkUserAuthorization(vendingSlots.get(0), user);
         return vendingSlots;
     }
 
@@ -62,7 +60,6 @@ public class VendingSlotService {
                 vendingSlot.setCurrentStock(0);
                 vendingSlot.setIsBlocked(true);
                 vendingSlot.setVendingMachine(machine);
-                vendingSlot.setExpirationBatch(new ArrayList<>());
                 vendingSlotRepository.save(vendingSlot);
             }
         }
@@ -71,12 +68,8 @@ public class VendingSlotService {
     @Transactional
     public VendingSlot assignProductToVendingSlot(UUID vendingSlotId, String barcode, User user) {
         VendingSlot vendingSlot = getVendingSlotById(vendingSlotId,user);
-        if(!vendingSlot.getVendingMachine().getUser().getId().equals(user.getId())) {
-            throw new UnauthorizedActionException("The user is not the owner of the vending machine.");
-        }
-        if(vendingSlot.getCurrentStock() > 0) {
-            throw new ConflictException("Cannot assign a product to a vending slot that is not empty.");
-        }
+        checkUserAuthorization(vendingSlot, user);
+        checkVendingSlotNotEmpty(vendingSlot);
         //Revisar que no tenga tarea de mantenimiento pendiente actualmente no implementado
         if(vendingSlot.getIsBlocked()) {
             throw new ConflictException("Cannot assign a product to a vending slot that is blocked for maintenance.");
@@ -93,12 +86,11 @@ public class VendingSlotService {
     @Transactional
     public VendingSlot updateBlockStatus(UUID vendingSlotId, Boolean isBlocked, User user) {
         VendingSlot vendingSlot = getVendingSlotById(vendingSlotId,user);
-        if(!vendingSlot.getVendingMachine().getUser().getId().equals(user.getId())) {
-            throw new UnauthorizedActionException("The user is not the owner of the vending machine.");
-        }
+        checkUserAuthorization(vendingSlot, user);
         if(vendingSlot.getIsBlocked().equals(Boolean.TRUE) && isBlocked.equals(Boolean.FALSE)) {
-            if(!vendingSlot.getExpirationBatch().isEmpty()) {
-                Boolean hasNonExpiredBatch = vendingSlot.getExpirationBatch().stream().anyMatch(batch -> batch.getExpirationDate().isAfter(LocalDate.now()));
+            List<ExpirationBatch> expirationBatches = expirationBatchService.getExpirationBatchesByVendingSlotId(vendingSlot.getId(), user);
+            if(!expirationBatches.isEmpty()) {
+                Boolean hasNonExpiredBatch = expirationBatches.stream().anyMatch(batch -> batch.getExpirationDate().isAfter(LocalDate.now()));
                 if(!hasNonExpiredBatch) {
                     throw new ConflictException("Cannot unblock a vending slot with expired products.");
                 }
@@ -108,7 +100,59 @@ public class VendingSlotService {
         //Revisar que no tenga tarea de mantenimiento pendiente actualmente no implementado
         vendingSlot.setIsBlocked(isBlocked);
         return vendingSlotRepository.save(vendingSlot);
+    }
 
+    @Transactional
+    public VendingSlot addStockToVendingSlot(UUID vendingSlotId, Integer quantity, LocalDate expirationDate, User user) {
+        VendingSlot vendingSlot = getVendingSlotById(vendingSlotId,user);
+        checkUserAuthorization(vendingSlot, user);
+        if(vendingSlot.getProduct() == null) {
+            throw new ConflictException("Cannot add stock to a vending slot that does not have an assigned product.");
+        }
+        checkVendingSlotNotBlocked(vendingSlot);
+        if(quantity <= 0) {
+            throw new ConflictException("Quantity must be greater than zero.");
+        }
+        if(vendingSlot.getCurrentStock() + quantity > vendingSlot.getMaxCapacity()) {
+            throw new ConflictException("Cannot add stock to a vending slot that exceeds its maximum capacity.");
+        }
+        if(expirationDate.isBefore(LocalDate.now())) {
+            throw new ConflictException("Cannot add stock with an expiration date in the past.");
+        }
+        expirationBatchService.pushExpirationBatch(vendingSlot, expirationDate, quantity, user);
+        
+        return vendingSlotRepository.save(vendingSlot);
+    }
+
+    //Funcion simple para probar el funcionamiento de la pila
+
+    @Transactional
+    public VendingSlot popStockFromVendingSlot(UUID vendingSlotId, User user) {
+        VendingSlot vendingSlot = getVendingSlotById(vendingSlotId,user);
+        checkUserAuthorization(vendingSlot, user);
+        expirationBatchService.popUnitExpirationBatch(vendingSlot, user);
+        
+        return vendingSlotRepository.save(vendingSlot);
+    }
+
+    
+
+    private void checkUserAuthorization(VendingSlot vendingSlot, User user) {
+        if (!vendingSlot.getVendingMachine().getUser().getId().equals(user.getId())) {
+            throw new UnauthorizedActionException("The user is not the owner of the vending machine.");
+        }
+    }
+
+    private void checkVendingSlotNotEmpty(VendingSlot vendingSlot) {
+        if (vendingSlot.getCurrentStock() > 0) {
+            throw new ConflictException("The vending slot is not empty.");
+        }
+    }
+
+    private void checkVendingSlotNotBlocked(VendingSlot vendingSlot) {
+        if (vendingSlot.getIsBlocked()) {
+            throw new ConflictException("The vending slot is blocked for maintenance.");
+        }
     }
 
 

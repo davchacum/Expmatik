@@ -23,8 +23,6 @@ public record VendingSlotResponse(
     
     UUID vendingMachineId,
 
-    List<ExpirationBatch> expirationBatch,
-
     ProductResponse product
 
 ) {
@@ -38,7 +36,6 @@ public record VendingSlotResponse(
             vendingSlot.getRowNumber(),
             vendingSlot.getColumnNumber(),
             vendingSlot.getVendingMachine().getId(),
-            vendingSlot.getExpirationBatch(),
             vendingSlot.getProduct() != null ? ProductResponse.fromProduct(vendingSlot.getProduct()) : null
         );
     }

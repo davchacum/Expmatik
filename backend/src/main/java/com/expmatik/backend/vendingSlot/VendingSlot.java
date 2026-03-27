@@ -12,6 +12,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -56,10 +57,6 @@ public class VendingSlot extends BaseEntity{
     @ManyToOne
     @JoinColumn(name = "vending_machine_id", nullable = false)
     private VendingMachine vendingMachine;
-
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "vending_slot_id", nullable = true)
-    private List<ExpirationBatch> expirationBatch;
 
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = true)
