@@ -52,13 +52,7 @@ public class BatchService {
         if(invoice.getStatus() != InvoiceStatus.PENDING) {
             throw new ConflictException("Cannot add batch to an invoice that is not pending.");
         }
-        Optional<Product> productOptional = productService.findByBarcodeOptional(userId, batch.productBarcode());
-        Product product;
-        if (productOptional.isEmpty()) {
-            product = productService.createProductOpenFoodFacts(batch.productBarcode(), userId);
-        }else {
-            product = productOptional.get();
-        }
+       Product product = productService.findInternalProductByBarcode(batch.productBarcode(), userId);
         if(product.getIsPerishable() == true && batch.expirationDate() == null) {
             throw new ConflictException("Expiration date for product " + product.getBarcode() + " is required for perishable products.");
         } else if(product.getIsPerishable() == false && batch.expirationDate() != null) {

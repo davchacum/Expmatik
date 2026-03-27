@@ -169,12 +169,15 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public Product findInternalProductByBarcode(String barcode, UUID userId) {
-        Optional<Product> productOpt = productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId);
+        Optional<Product> productOpt = findByBarcodeOptional(userId, barcode);
+        Product product;
         if (productOpt.isEmpty()) {
-            throw new ResourceNotFoundException("Product with barcode " + barcode + " not found in the database or in the external catalog.");
+            product = createProductOpenFoodFacts(barcode, userId);
+        }else {
+            product = productOpt.get();
         }
-        return productOpt.get();
-    }
+        return product;
+    } 
 
     @Transactional(readOnly = true)
     public Boolean existsByBarcode(String barcode,UUID userId) {
