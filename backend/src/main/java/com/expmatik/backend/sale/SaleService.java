@@ -1,7 +1,10 @@
 package com.expmatik.backend.sale;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -65,6 +68,17 @@ public class SaleService {
     @Transactional
     public void delete(UUID id) {
         saleRepository.deleteById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Sale> searchSales(UUID userId, String barcode, UUID machineId, UUID slotId, LocalDateTime startDate, LocalDateTime endDate, PaymentMethod paymentMethod, TransactionStatus status, Pageable pageable) {
+        String barcodeParam = (barcode != null && !barcode.isBlank()) ? barcode : null;
+        UUID machineIdParam = (machineId != null) ? machineId : null;
+        UUID slotIdParam = (slotId != null) ? slotId : null;
+        return saleRepository.searchAdvanced(userId, barcodeParam, machineIdParam, slotIdParam
+            , startDate, endDate
+            , paymentMethod, status
+            , pageable);
     }
 
 }

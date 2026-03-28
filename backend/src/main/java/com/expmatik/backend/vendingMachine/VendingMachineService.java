@@ -1,5 +1,6 @@
 package com.expmatik.backend.vendingMachine;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,6 +75,11 @@ public class VendingMachineService {
     @Transactional(readOnly = true)
     public Page<VendingMachine> listVendingMachines(User user, Pageable pageable) {
         return vendingMachineRepository.findAllByUserId(user.getId(), pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public List<VendingMachine> listAllVendingMachines(User user) {
+        return vendingMachineRepository.findAllByUserId(user.getId());
     }
 
 }

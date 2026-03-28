@@ -1,5 +1,6 @@
 package com.expmatik.backend.vendingMachine;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,5 +15,7 @@ public interface VendingMachineRepository extends JpaRepository<VendingMachine, 
     Optional<VendingMachine> findByNameAndUserId(String name, UUID userId);
 
     Page<VendingMachine> findAllByUserId(UUID userId, Pageable pageable);
+
+    List<VendingMachine> findAllByUserId(UUID userId);
 
 }
