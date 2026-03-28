@@ -1,18 +1,13 @@
 package com.expmatik.backend.vendingSlot;
 
-import java.util.List;
-
 import com.expmatik.backend.model.BaseEntity;
 import com.expmatik.backend.product.Product;
 import com.expmatik.backend.vendingMachine.VendingMachine;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OrderBy;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;

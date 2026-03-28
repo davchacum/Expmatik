@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.UUID;
 
 import com.expmatik.backend.product.DTOs.ProductResponse;
-import com.expmatik.backend.vendingSlot.ExpirationBatch;
 import com.expmatik.backend.vendingSlot.VendingSlot;
 
 public record VendingSlotResponse(
