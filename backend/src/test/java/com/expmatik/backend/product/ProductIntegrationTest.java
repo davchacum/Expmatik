@@ -420,6 +420,7 @@ public class ProductIntegrationTest {
     @WithUserDetails("admin@expmatik.com")
     void testCreateNonCustomProduct() throws Exception {
         String barcode = "4716982022201";
+        Thread.sleep(2000);
 
         mockMvc.perform(post("/api/products/non-custom")
                 .param("barcode", barcode))
@@ -436,6 +437,7 @@ public class ProductIntegrationTest {
     @WithUserDetails("admin@expmatik.com")
     void testCreateNonCustomProduct_UnknownBrand() throws Exception {
         String barcode = "5000112556780";
+        Thread.sleep(2000);
 
         mockMvc.perform(post("/api/products/non-custom")
                 .param("barcode", barcode))
@@ -494,6 +496,7 @@ public class ProductIntegrationTest {
     @WithUserDetails("admin@expmatik.com")
     void testGetProductFromOpenFoodFacts() throws Exception {
         String barcode = "4716982022201";
+        Thread.sleep(2000);
 
         mockMvc.perform(get("/api/products/openfoodfacts/" + barcode))
                 .andExpect(status().isOk())
@@ -529,6 +532,7 @@ public class ProductIntegrationTest {
     @WithUserDetails("admin@expmatik.com")
     void testValidateProduct_ExistingInExternalCatalog() throws Exception {
         String barcode = "7622300281182";
+        Thread.sleep(2000);
 
         mockMvc.perform(get("/api/products/validate-barcode/" + barcode))
                 .andExpect(status().isOk())
