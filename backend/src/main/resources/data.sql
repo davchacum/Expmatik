@@ -1,3 +1,4 @@
+DELETE FROM expiration_batch;
 DELETE FROM sale;
 DELETE FROM vending_slot;
 DELETE FROM vending_machine;

@@ -1,14 +1,20 @@
 package com.expmatik.backend.sale;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.expmatik.backend.exceptions.BadRequestException;
 import com.expmatik.backend.exceptions.ConflictException;
 import com.expmatik.backend.exceptions.ExpiredProductException;
 import com.expmatik.backend.exceptions.OutOfStockException;
@@ -35,13 +41,15 @@ public class SaleService {
     private final VendingSlotService vendingSlotService;
     private final ProductInfoService productInfoService;
     private final ExpirationBatchService expirationBatchService;
+    private final SaleCSVLector saleCSVLector;
 
-    public SaleService(SaleRepository saleRepository, ProductService productService, VendingSlotService vendingSlotService, ProductInfoService productInfoService, ExpirationBatchService expirationBatchService) {
+    public SaleService(SaleRepository saleRepository, ProductService productService, VendingSlotService vendingSlotService, ProductInfoService productInfoService, ExpirationBatchService expirationBatchService, SaleCSVLector saleCSVLector) {
         this.saleRepository = saleRepository;
         this.productService = productService;
         this.vendingSlotService = vendingSlotService;
         this.productInfoService = productInfoService;
         this.expirationBatchService = expirationBatchService;
+        this.saleCSVLector = saleCSVLector;
     }
 
     @Transactional
@@ -179,6 +187,50 @@ public class SaleService {
             , startDate, endDate
             , paymentMethod, status
             , pageable);
+    }
+
+    @Transactional
+    public List<SaleCreate> createSalesFromCSV(MultipartFile csvContent) {
+
+        if (csvContent == null || csvContent.isEmpty()) {
+            throw new BadRequestException("No file uploaded or file is empty.");
+        }
+
+        String originalFilename = csvContent.getOriginalFilename();
+
+        if (originalFilename == null || !originalFilename.toLowerCase(Locale.ROOT).endsWith(".csv")) {
+            throw new BadRequestException("The file must have a .csv extension.");
+        }
+
+        File tempCsv = null;
+
+        try {
+            tempCsv = File.createTempFile("sales-", ".csv");
+            csvContent.transferTo(tempCsv);
+
+            List<SaleCreate> sales = saleCSVLector.readCSV(tempCsv);
+
+            return sales;
+
+        } catch (IOException ex) {
+            throw new BadRequestException("Could not process file");
+        } finally {
+            if (tempCsv != null && tempCsv.exists()) {
+                tempCsv.delete();
+            }
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] exportSalesCSV(UUID userId, String barcode, UUID machineId, UUID slotId, LocalDateTime startDate, LocalDateTime endDate, PaymentMethod paymentMethod, TransactionStatus status) {
+        String barcodeParam = (barcode != null && !barcode.isBlank()) ? barcode : null;
+        UUID machineIdParam = (machineId != null) ? machineId : null;
+        UUID slotIdParam = (slotId != null) ? slotId : null;
+        List<Sale> sales = saleRepository.searchAdvanced(userId, barcodeParam, machineIdParam, slotIdParam
+            , startDate, endDate
+            , paymentMethod, status);
+        byte[] csvData = saleCSVLector.generateCSV(sales);
+        return csvData;
     }
 
 }

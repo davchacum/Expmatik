@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.annotation.Validated;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.expmatik.backend.sale.DTOs.SaleCreate;
 import com.expmatik.backend.sale.DTOs.SaleRealTimeCreate;
@@ -59,7 +61,7 @@ public class SaleController {
         checkUserAuthorization(currentUser);
         return ResponseEntity.ok(SaleResponse.fromSale(saleService.createSale(saleCreate, currentUser)));
     }
-    //Real time sale
+
     @PostMapping("/real-time")
     public ResponseEntity<?> realTimeSale(@RequestBody @Valid SaleRealTimeCreate request) throws AccessDeniedException {
         User currentUser = userService.getUserProfile();
@@ -80,5 +82,29 @@ public class SaleController {
         checkUserAuthorization(currentUser);
         return ResponseEntity.ok(saleService.searchSales(currentUser.getId(), barcode, machineId, slotId, startDate, endDate, paymentMethod, status, pageable));
     }
+
+    @PostMapping(value="/csv" , consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> createSalesFromCSV(@RequestParam("csv") MultipartFile csvContent) throws AccessDeniedException {
+        User currentUser = userService.getUserProfile();
+        checkUserAuthorization(currentUser);
+        return ResponseEntity.ok(saleService.createSalesFromCSV(csvContent));
+    }
+
+    @GetMapping("/export")
+    public ResponseEntity<?> exportSalesToCSV(@RequestParam(value = "barcode", required = false) String barcode, 
+        @RequestParam(required = false) UUID machineId, 
+        @RequestParam(required = false) UUID slotId, 
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate, 
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate, 
+        @RequestParam(required = false) PaymentMethod paymentMethod, 
+        @RequestParam(required = false) TransactionStatus status) throws AccessDeniedException {
+        User currentUser = userService.getUserProfile();
+        checkUserAuthorization(currentUser);
+        byte[] csvData = saleService.exportSalesCSV(currentUser.getId(), barcode, machineId, slotId, startDate, endDate, paymentMethod, status);
+        return ResponseEntity.ok()
+            .header("Content-Disposition", "attachment; filename=\"sales.csv\"")
+            .header("Content-Type", "text/csv")
+            .body(csvData);
+        }
 
 }
