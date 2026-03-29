@@ -57,6 +57,9 @@ public class Sale extends BaseEntity {
     @ManyToOne
     @JoinColumn(name="vending_slot_id",nullable = false)
     private VendingSlot vendingSlot;
+    
+    @Column(name="failure_reason")
+    private String failureReason;
 
 
 }

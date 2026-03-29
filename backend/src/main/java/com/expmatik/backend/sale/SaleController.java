@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.expmatik.backend.sale.DTOs.SaleCreate;
+import com.expmatik.backend.sale.DTOs.SaleRealTimeCreate;
 import com.expmatik.backend.sale.DTOs.SaleResponse;
 import com.expmatik.backend.user.Role;
 import com.expmatik.backend.user.User;
@@ -41,7 +42,7 @@ public class SaleController {
 
     private void checkUserAuthorization(User currentUser) throws AccessDeniedException {
         if(!currentUser.getRole().equals(Role.ADMINISTRATOR)) {
-            throw new AccessDeniedException("You are not authorized to modify this machine.");
+            throw new AccessDeniedException("You are not authorized to perform this action.");
         }
     }
 
@@ -57,6 +58,13 @@ public class SaleController {
         User currentUser = userService.getUserProfile();
         checkUserAuthorization(currentUser);
         return ResponseEntity.ok(SaleResponse.fromSale(saleService.createSale(saleCreate, currentUser)));
+    }
+    //Real time sale
+    @PostMapping("/real-time")
+    public ResponseEntity<?> realTimeSale(@RequestBody @Valid SaleRealTimeCreate request) throws AccessDeniedException {
+        User currentUser = userService.getUserProfile();
+        checkUserAuthorization(currentUser);
+        return ResponseEntity.ok(SaleResponse.fromSale(saleService.realTimeSale(request.vendingSlotId(), request.paymentMethod(), currentUser)));
     }
 
     @GetMapping

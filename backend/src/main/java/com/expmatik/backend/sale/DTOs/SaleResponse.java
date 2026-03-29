@@ -15,6 +15,7 @@ public record SaleResponse(
     BigDecimal totalAmount,
     PaymentMethod paymentMethod,
     TransactionStatus status,
+    String failureReason,
 
     UUID productId,
     String barcode,
@@ -36,6 +37,7 @@ public record SaleResponse(
             sale.getTotalAmount(),
             sale.getPaymentMethod(),
             sale.getStatus(),
+            sale.getFailureReason(),
             sale.getProduct().getId(),
             sale.getProduct().getBarcode(),
             sale.getProduct().getName(),

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.expmatik.backend.exceptions.ConflictException;
+import com.expmatik.backend.exceptions.ExpiredProductException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
 import com.expmatik.backend.exceptions.SlotBlockedException;
 import com.expmatik.backend.exceptions.UnauthorizedActionException;
@@ -118,7 +119,7 @@ public class VendingSlotService {
             throw new ConflictException("Cannot add stock to a vending slot that exceeds its maximum capacity.");
         }
         if(expirationDate.isBefore(LocalDate.now())) {
-            throw new ConflictException("Cannot add stock with an expiration date in the past.");
+            throw new ExpiredProductException("Cannot add stock with an expiration date in the past.");
         }
         expirationBatchService.pushExpirationBatch(vendingSlot, expirationDate, quantity, user);
         
