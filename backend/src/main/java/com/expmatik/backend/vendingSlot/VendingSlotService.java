@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.expmatik.backend.exceptions.ConflictException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
+import com.expmatik.backend.exceptions.SlotBlockedException;
 import com.expmatik.backend.exceptions.UnauthorizedActionException;
 import com.expmatik.backend.product.Product;
 import com.expmatik.backend.product.ProductService;
@@ -134,29 +135,23 @@ public class VendingSlotService {
         
         return vendingSlotRepository.save(vendingSlot);
     }
-
-    
-
-    private void checkUserAuthorization(VendingSlot vendingSlot, User user) {
+ 
+    public void checkUserAuthorization(VendingSlot vendingSlot, User user) {
         if (!vendingSlot.getVendingMachine().getUser().getId().equals(user.getId())) {
             throw new UnauthorizedActionException("The user is not the owner of the vending machine.");
         }
     }
 
-    private void checkVendingSlotNotEmpty(VendingSlot vendingSlot) {
+    public void checkVendingSlotNotEmpty(VendingSlot vendingSlot) {
         if (vendingSlot.getCurrentStock() > 0) {
             throw new ConflictException("The vending slot is not empty.");
         }
     }
 
-    private void checkVendingSlotNotBlocked(VendingSlot vendingSlot) {
+    public void checkVendingSlotNotBlocked(VendingSlot vendingSlot) {
         if (vendingSlot.getIsBlocked()) {
-            throw new ConflictException("The vending slot is blocked for maintenance.");
+            throw new SlotBlockedException("The vending slot is blocked for maintenance.");
         }
     }
-
-
-
-
 
 }

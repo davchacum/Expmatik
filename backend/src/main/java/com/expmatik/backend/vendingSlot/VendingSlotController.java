@@ -103,7 +103,7 @@ public class VendingSlotController {
 
     private void checkUserAuthorization(User currentUser) throws AccessDeniedException {
         if(!currentUser.getRole().equals(Role.ADMINISTRATOR)) {
-            throw new AccessDeniedException("You are not authorized to modify this machine.");
+            throw new AccessDeniedException("You are not authorized to perform this action.");
         }
     }
     

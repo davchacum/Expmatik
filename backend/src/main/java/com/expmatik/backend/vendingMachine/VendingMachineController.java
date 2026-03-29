@@ -61,7 +61,7 @@ public class VendingMachineController {
     public ResponseEntity<?> createVendingMachine(@RequestBody @Validated VendingMachineCreate vendingMachineCreate) {
         User currentUser = userService.getUserProfile();
         if(!currentUser.getRole().equals(Role.ADMINISTRATOR)) {
-            return ResponseEntity.badRequest().body("You are not authorized to view this machine.");
+            return ResponseEntity.badRequest().body("You are not authorized to create a machine.");
         }
         VendingMachine response = vendingMachineService.createVendingMachine(vendingMachineCreate, currentUser);
         return ResponseEntity.ok(VendingMachineResponse.fromVendingMachine(response));
@@ -71,7 +71,7 @@ public class VendingMachineController {
     public ResponseEntity<?> updateVendingMachine(@PathVariable UUID id, @RequestBody @Validated VendingMachineUpdate vendingMachineUpdate) {
         User currentUser = userService.getUserProfile();
         if(!currentUser.getRole().equals(Role.ADMINISTRATOR)) {
-            return ResponseEntity.badRequest().body("You are not authorized to view this machine.");
+            return ResponseEntity.badRequest().body("You are not authorized to update this machine.");
         }
         VendingMachine vendingMachine = vendingMachineService.updateVendingMachine(id, vendingMachineUpdate, currentUser);
         return ResponseEntity.ok(VendingMachineResponse.fromVendingMachine(vendingMachine));
