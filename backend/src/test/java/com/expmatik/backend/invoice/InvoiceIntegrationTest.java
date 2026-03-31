@@ -445,7 +445,7 @@ public class InvoiceIntegrationTest {
     @Test
     @WithUserDetails("admin@expmatik.com")
     void testCreateInvoiceAndCreateNonCustomProduct() throws Exception {
-
+        Thread.sleep(2000);
         BatchCreate batchCreate = new BatchCreate(
             LocalDate.now().plusDays(10),
             new BigDecimal("5"),
@@ -489,7 +489,7 @@ public class InvoiceIntegrationTest {
     @Test
     @WithUserDetails("admin@expmatik.com")
     void testCreateInvoiceAndCreateNonCustomProduct_InvoiceStatusReceived() throws Exception {
-
+        Thread.sleep(2000);
         BatchCreate batchCreate = new BatchCreate(
             LocalDate.now().plusDays(10),
             new BigDecimal("5"),

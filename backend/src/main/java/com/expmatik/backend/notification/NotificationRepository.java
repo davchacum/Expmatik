@@ -14,7 +14,7 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
         SELECT n FROM Notification n
         WHERE n.user.id = :userId
         AND (:isRead IS NULL OR n.isRead = :isRead)
-        AND (:notificationType IS NULL OR n.notificationType = :notificationType)
+        AND (:notificationType IS NULL OR n.type = :notificationType)
         AND (n.createdAt >= COALESCE(:startDate, n.createdAt))
         AND (n.createdAt <= COALESCE(:endDate, n.createdAt))
     """)
