@@ -4,12 +4,12 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import com.expmatik.backend.batch.DTOs.BatchCreate;
 import com.expmatik.backend.exceptions.ConflictException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
-import com.expmatik.backend.exceptions.UnauthorizedActionException;
 import com.expmatik.backend.invoice.Invoice;
 import com.expmatik.backend.invoice.InvoiceRepository;
 import com.expmatik.backend.invoice.InvoiceStatus;
@@ -47,7 +47,7 @@ public class BatchService {
         Invoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Invoice not found with id: " + invoiceId));
         if (!invoice.getUser().getId().equals(userId)) {
-            throw new UnauthorizedActionException("You don't have permission to edit this invoice.");
+            throw new AccessDeniedException("You don't have permission to edit this invoice.");
         }
         if(invoice.getStatus() != InvoiceStatus.PENDING) {
             throw new ConflictException("Cannot add batch to an invoice that is not pending.");
@@ -73,7 +73,7 @@ public class BatchService {
         Batch existingBatch = batchRepository.findById(batchId)
                 .orElseThrow(() -> new ResourceNotFoundException("Batch not found with id: " + batchId));
         if (!existingBatch.getInvoice().getUser().getId().equals(userId)) {
-            throw new UnauthorizedActionException("You don't have permission to edit this invoice.");
+            throw new AccessDeniedException("You don't have permission to edit this invoice.");
         }
         if(existingBatch.getInvoice().getStatus() != InvoiceStatus.PENDING) {
             throw new ConflictException("Cannot edit batch from an invoice that is not pending.");
@@ -104,7 +104,7 @@ public class BatchService {
         Batch existingBatch = batchRepository.findById(batchId)
                 .orElseThrow(() -> new ResourceNotFoundException("Batch not found with id: " + batchId));
         if (!existingBatch.getInvoice().getUser().getId().equals(userId)) {
-            throw new UnauthorizedActionException("You don't have permission to edit this invoice.");
+            throw new AccessDeniedException("You don't have permission to edit this invoice.");
         }
         if(existingBatch.getInvoice().getStatus() != InvoiceStatus.PENDING) {
             throw new ConflictException("Cannot delete batch from an invoice that is not pending.");

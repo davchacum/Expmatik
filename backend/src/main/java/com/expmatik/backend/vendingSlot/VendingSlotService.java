@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,7 +12,6 @@ import com.expmatik.backend.exceptions.ConflictException;
 import com.expmatik.backend.exceptions.ExpiredProductException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
 import com.expmatik.backend.exceptions.SlotBlockedException;
-import com.expmatik.backend.exceptions.UnauthorizedActionException;
 import com.expmatik.backend.product.Product;
 import com.expmatik.backend.product.ProductService;
 import com.expmatik.backend.user.User;
@@ -139,7 +139,7 @@ public class VendingSlotService {
  
     public void checkUserAuthorization(VendingSlot vendingSlot, User user) {
         if (!vendingSlot.getVendingMachine().getUser().getId().equals(user.getId())) {
-            throw new UnauthorizedActionException("The user is not the owner of the vending machine.");
+            throw new AccessDeniedException("The user is not the owner of the vending machine.");
         }
     }
 

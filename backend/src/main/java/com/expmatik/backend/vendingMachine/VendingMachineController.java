@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,41 +39,33 @@ public class VendingMachineController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> getVendingMachineById(@PathVariable UUID id) {
         User currentUser = userService.getUserProfile();
-        if(!currentUser.getRole().equals(Role.ADMINISTRATOR)) {
-            return ResponseEntity.badRequest().body("You are not authorized to view this machine.");
-        }
         VendingMachine response = vendingMachineService.getVendingMachineById(id, currentUser);
         return ResponseEntity.ok(VendingMachineResponse.fromVendingMachine(response));
     }
 
     @GetMapping()
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> getAllVendingMachines(Pageable pageable) {
         User currentUser = userService.getUserProfile();
-        if(!currentUser.getRole().equals(Role.ADMINISTRATOR)) {
-            return ResponseEntity.badRequest().body("You are not authorized to view this machine.");
-        }
         Page<VendingMachine> vendingMachinePage = vendingMachineService.listVendingMachines(currentUser, pageable);
         return ResponseEntity.ok(VendingMachineResponse.fromVendingMachinePage(vendingMachinePage));
     }
 
     @PostMapping()
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> createVendingMachine(@RequestBody @Validated VendingMachineCreate vendingMachineCreate) {
         User currentUser = userService.getUserProfile();
-        if(!currentUser.getRole().equals(Role.ADMINISTRATOR)) {
-            return ResponseEntity.badRequest().body("You are not authorized to create a machine.");
-        }
         VendingMachine response = vendingMachineService.createVendingMachine(vendingMachineCreate, currentUser);
         return ResponseEntity.ok(VendingMachineResponse.fromVendingMachine(response));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> updateVendingMachine(@PathVariable UUID id, @RequestBody @Validated VendingMachineUpdate vendingMachineUpdate) {
         User currentUser = userService.getUserProfile();
-        if(!currentUser.getRole().equals(Role.ADMINISTRATOR)) {
-            return ResponseEntity.badRequest().body("You are not authorized to update this machine.");
-        }
         VendingMachine vendingMachine = vendingMachineService.updateVendingMachine(id, vendingMachineUpdate, currentUser);
         return ResponseEntity.ok(VendingMachineResponse.fromVendingMachine(vendingMachine));
     }

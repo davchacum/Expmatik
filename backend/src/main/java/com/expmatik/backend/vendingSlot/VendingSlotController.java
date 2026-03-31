@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,73 +39,66 @@ public class VendingSlotController {
     }
 
     @GetMapping("{machineId}")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> getVendingSlotsByMachineId(@PathVariable UUID machineId) throws AccessDeniedException {
         User currentUser = userService.getUserProfile();
-        checkUserAuthorization(currentUser);
         List<VendingSlot> vendingSlots = vendingSlotService.getVendingSlotsByUserIdAndMachineId(machineId, currentUser);
         return ResponseEntity.ok(VendingSlotResponse.fromVendingSlotList(vendingSlots));
     }
 
     @PatchMapping("{vendingSlotId}/assign-product/{barcode}")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> assignProductToVendingSlot(@PathVariable UUID vendingSlotId, @PathVariable @ValidBarcode String barcode) throws AccessDeniedException {
         User currentUser = userService.getUserProfile();
-        checkUserAuthorization(currentUser);
         VendingSlot vendingSlot = vendingSlotService.assignProductToVendingSlot(vendingSlotId, barcode, currentUser);
         return ResponseEntity.ok(VendingSlotResponse.fromVendingSlot(vendingSlot));
     }
 
     @PatchMapping("{vendingSlotId}/unassign-product")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> unassignProductFromVendingSlot(@PathVariable UUID vendingSlotId) throws AccessDeniedException {
         User currentUser = userService.getUserProfile();
-        checkUserAuthorization(currentUser);
         VendingSlot vendingSlot = vendingSlotService.assignProductToVendingSlot(vendingSlotId, null, currentUser);
         return ResponseEntity.ok(VendingSlotResponse.fromVendingSlot(vendingSlot));
     }
 
     @PatchMapping("{vendingSlotId}/block")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> blockVendingSlot(@PathVariable UUID vendingSlotId) throws AccessDeniedException {
         User currentUser = userService.getUserProfile();
-        checkUserAuthorization(currentUser);
         VendingSlot vendingSlot = vendingSlotService.updateBlockStatus(vendingSlotId, true, currentUser);
         return ResponseEntity.ok(VendingSlotResponse.fromVendingSlot(vendingSlot));
     }
 
     @PatchMapping("{vendingSlotId}/unblock")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> unblockVendingSlot(@PathVariable UUID vendingSlotId) throws AccessDeniedException {
         User currentUser = userService.getUserProfile();
-        checkUserAuthorization(currentUser);
         VendingSlot vendingSlot = vendingSlotService.updateBlockStatus(vendingSlotId, false, currentUser);
         return ResponseEntity.ok(VendingSlotResponse.fromVendingSlot(vendingSlot));
     }
 
     @PatchMapping("{vendingSlotId}/increment-stock")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> addStockToVendingSlot(@PathVariable UUID vendingSlotId,  @RequestParam(required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)  LocalDate expirationDate, @RequestParam(required = true) Integer quantity) throws AccessDeniedException {
         User currentUser = userService.getUserProfile();
-        checkUserAuthorization(currentUser);
         VendingSlot vendingSlot = vendingSlotService.addStockToVendingSlot(vendingSlotId, quantity, expirationDate, currentUser);
         return ResponseEntity.ok(VendingSlotResponse.fromVendingSlot(vendingSlot));
     }
 
     @PatchMapping("{vendingSlotId}/decrement-stock")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> removeStockFromVendingSlot(@PathVariable UUID vendingSlotId) throws AccessDeniedException {
         User currentUser = userService.getUserProfile();
-        checkUserAuthorization(currentUser);
         VendingSlot vendingSlot = vendingSlotService.popStockFromVendingSlot(vendingSlotId, currentUser);
         return ResponseEntity.ok(VendingSlotResponse.fromVendingSlot(vendingSlot));
     }
 
     @GetMapping("{vendingSlotId}/expiration-batches")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> getExpirationBatchesByVendingSlotId(@PathVariable UUID vendingSlotId) throws AccessDeniedException {
         User currentUser = userService.getUserProfile();
-        checkUserAuthorization(currentUser);
         List<ExpirationBatch> expirationBatches = expirationBatchService.getExpirationBatchesByVendingSlotId(vendingSlotId, currentUser);
         return ResponseEntity.ok(expirationBatches);
     }
-
-    private void checkUserAuthorization(User currentUser) throws AccessDeniedException {
-        if(!currentUser.getRole().equals(Role.ADMINISTRATOR)) {
-            throw new AccessDeniedException("You are not authorized to perform this action.");
-        }
-    }
-    
 }

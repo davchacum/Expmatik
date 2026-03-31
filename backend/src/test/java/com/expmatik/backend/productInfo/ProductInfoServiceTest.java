@@ -16,8 +16,8 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 
-import com.expmatik.backend.exceptions.UnauthorizedActionException;
 import com.expmatik.backend.product.Product;
 import com.expmatik.backend.product.ProductService;
 import com.expmatik.backend.productInfo.DTOs.ProductInfoUpdate;
@@ -130,7 +130,7 @@ public class ProductInfoServiceTest {
         when(productService.findById(productId)).thenReturn(productCustom);
 
         assertThatThrownBy(() -> productInfoService.getOrCreateProductInfo(productId, user2, unitPrice))
-                .isInstanceOf(UnauthorizedActionException.class)
+                .isInstanceOf(AccessDeniedException.class)
                 .hasMessageContaining("You are not authorized to view this product info.");
     }
 
@@ -222,7 +222,7 @@ public class ProductInfoServiceTest {
         productInfo.setUser(user1);
         when(productInfoRepository.findById(productInfoId)).thenReturn(Optional.of(productInfo));
         assertThatThrownBy(() -> productInfoService.updateProductInfo(productInfoId, user2, updatedInfo))
-                .isInstanceOf(UnauthorizedActionException.class)
+                .isInstanceOf(AccessDeniedException.class)
                 .hasMessageContaining("You are not authorized to update this product info.");
     }
 
@@ -262,7 +262,7 @@ public class ProductInfoServiceTest {
         productInfo.setUser(user1);
         when(productInfoRepository.findById(productInfoId)).thenReturn(Optional.of(productInfo));
         assertThatThrownBy(() -> productInfoService.editStockQuantity(productInfoId, user2, newStockQuantity, lastPurchaseUnitPrice))
-                .isInstanceOf(UnauthorizedActionException.class)
+                .isInstanceOf(AccessDeniedException.class)
                 .hasMessageContaining("You are not authorized to update this product info.");
     }
 

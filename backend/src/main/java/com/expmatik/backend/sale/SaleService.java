@@ -10,6 +10,7 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,7 +21,6 @@ import com.expmatik.backend.exceptions.ExpiredProductException;
 import com.expmatik.backend.exceptions.OutOfStockException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
 import com.expmatik.backend.exceptions.SlotBlockedException;
-import com.expmatik.backend.exceptions.UnauthorizedActionException;
 import com.expmatik.backend.product.Product;
 import com.expmatik.backend.product.ProductService;
 import com.expmatik.backend.productInfo.ProductInfo;
@@ -59,7 +59,7 @@ public class SaleService {
 
     private void checkUserAuthorization(Sale sale,User user) {
         if(sale.getVendingSlot().getVendingMachine().getUser().getId() != user.getId()) {
-            throw new UnauthorizedActionException("You are not authorized to perform this action.");
+            throw new AccessDeniedException("You are not authorized to perform this action.");
         }
     }
 

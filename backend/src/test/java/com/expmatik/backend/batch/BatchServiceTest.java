@@ -20,11 +20,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 
 import com.expmatik.backend.batch.DTOs.BatchCreate;
 import com.expmatik.backend.exceptions.ConflictException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
-import com.expmatik.backend.exceptions.UnauthorizedActionException;
 import com.expmatik.backend.invoice.Invoice;
 import com.expmatik.backend.invoice.InvoiceRepository;
 import com.expmatik.backend.invoice.InvoiceStatus;
@@ -221,15 +221,15 @@ public class BatchServiceTest {
     }
 
     @Test
-    @DisplayName("Create batch with invoice belonging to another user should throw UnauthorizedActionException")
-    void testCreateBatch_InvoiceBelongsToAnotherUser_ShouldThrowUnauthorizedActionException() {
+    @DisplayName("Create batch with invoice belonging to another user should throw AccessDeniedException")
+    void testCreateBatch_InvoiceBelongsToAnotherUser_ShouldThrowAccessDeniedException() {
 
         BatchCreate batchCreate = new BatchCreate(batch1);
 
         when(invoiceRepository.findById(invoice2.getId())).thenReturn(Optional.of(invoice2));
 
         assertThatThrownBy(() -> batchService.createBatch(user1.getId(), batchCreate, invoice2.getId()))
-            .isInstanceOf(UnauthorizedActionException.class)
+            .isInstanceOf(AccessDeniedException.class)
             .hasMessageContaining("You don't have permission to edit this invoice.");
     }
 
@@ -334,14 +334,14 @@ public class BatchServiceTest {
     }
 
     @Test
-    @DisplayName("Update batch with invoice belonging to another user should throw UnauthorizedActionException")
-    void testUpdateBatch_InvoiceBelongsToAnotherUser_ShouldThrowUnauthorizedActionException() {
+    @DisplayName("Update batch with invoice belonging to another user should throw AccessDeniedException")
+    void testUpdateBatch_InvoiceBelongsToAnotherUser_ShouldThrowAccessDeniedException() {
         BatchCreate batchCreate = new BatchCreate(batch3);
 
         when(batchRepository.findById(batch3.getId())).thenReturn(Optional.of(batch3));
 
         assertThatThrownBy(() -> batchService.updateBatch(user1.getId(), batch3.getId(), batchCreate))
-            .isInstanceOf(UnauthorizedActionException.class)
+            .isInstanceOf(AccessDeniedException.class)
             .hasMessageContaining("You don't have permission to edit this invoice.");
     }
 
@@ -369,13 +369,13 @@ public class BatchServiceTest {
     }
 
     @Test
-    @DisplayName("Delete batch with invoice belonging to another user should throw UnauthorizedActionException")
-    void testDeleteBatch_InvoiceBelongsToAnotherUser_ShouldThrowUnauthorizedActionException() {
+    @DisplayName("Delete batch with invoice belonging to another user should throw AccessDeniedException")
+    void testDeleteBatch_InvoiceBelongsToAnotherUser_ShouldThrowAccessDeniedException() {
 
         when(batchRepository.findById(batch3.getId())).thenReturn(Optional.of(batch3));
 
         assertThatThrownBy(() -> batchService.deleteBatch(user1.getId(), batch3.getId()))
-            .isInstanceOf(UnauthorizedActionException.class)
+            .isInstanceOf(AccessDeniedException.class)
             .hasMessageContaining("You don't have permission to edit this invoice.");
     }
 

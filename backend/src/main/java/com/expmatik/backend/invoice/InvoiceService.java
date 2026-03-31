@@ -11,6 +11,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,7 +21,6 @@ import com.expmatik.backend.batch.BatchService;
 import com.expmatik.backend.exceptions.BadRequestException;
 import com.expmatik.backend.exceptions.ConflictException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
-import com.expmatik.backend.exceptions.UnauthorizedActionException;
 import com.expmatik.backend.invoice.DTOs.InvoiceRequest;
 import com.expmatik.backend.invoice.DTOs.InvoiceRequestUpdate;
 import com.expmatik.backend.user.User;
@@ -89,7 +89,7 @@ public class InvoiceService {
     public Invoice findInvoiceById(UUID id,UUID userId) {
         Invoice invoice = invoiceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Invoice not found"));
         if (!invoice.getUser().getId().equals(userId)) {
-            throw new UnauthorizedActionException("Unauthorized access to invoice");
+            throw new AccessDeniedException("Unauthorized access to invoice");
         }
         return invoice;
     }
@@ -98,7 +98,7 @@ public class InvoiceService {
     public Invoice findInvoiceByInvoiceNumber(String invoiceNumber, UUID userId) {
         Invoice invoice = invoiceRepository.findByInvoiceNumber(invoiceNumber).orElseThrow(() -> new ResourceNotFoundException("Invoice not found"));
         if (!invoice.getUser().getId().equals(userId)) {
-            throw new UnauthorizedActionException("Unauthorized access to invoice");
+            throw new AccessDeniedException("Unauthorized access to invoice");
         }
         return invoice;
     }
@@ -107,7 +107,7 @@ public class InvoiceService {
     public Invoice updateInvoiceStatus(UUID id, InvoiceStatus status, UUID userId) {
         Invoice invoice = invoiceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Invoice not found"));
         if (!invoice.getUser().getId().equals(userId)) {
-            throw new UnauthorizedActionException("Unauthorized access to invoice");
+            throw new AccessDeniedException("Unauthorized access to invoice");
         }
         if(invoice.getStatus() != InvoiceStatus.PENDING) {
             throw new ConflictException("Only pending invoices can be updated");
@@ -167,7 +167,7 @@ public class InvoiceService {
     public Invoice updateInvoice(UUID id, InvoiceRequestUpdate invoiceRequest, UUID userId) {
         Invoice existingInvoice = invoiceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Invoice not found"));
         if (!existingInvoice.getUser().getId().equals(userId)) {
-            throw new UnauthorizedActionException("Unauthorized access to invoice");
+            throw new AccessDeniedException("Unauthorized access to invoice");
         }
         if(existingInvoice.getStatus() != InvoiceStatus.PENDING) {
             throw new ConflictException("Only pending invoices can be updated");

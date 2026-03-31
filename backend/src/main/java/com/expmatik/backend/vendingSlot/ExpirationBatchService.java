@@ -5,11 +5,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.expmatik.backend.exceptions.ConflictException;
-import com.expmatik.backend.exceptions.UnauthorizedActionException;
 import com.expmatik.backend.user.User;
 
 
@@ -26,7 +26,7 @@ public class ExpirationBatchService {
     public List<ExpirationBatch> getExpirationBatchesByVendingSlotId(UUID vendingSlotId,User user) {
         List<ExpirationBatch> expirationBatches = expirationBatchRepository.findAllByVendingSlotIdOrderByExpirationDateAsc(vendingSlotId);
         if(!expirationBatches.isEmpty() && expirationBatches.get(0).getVendingSlot().getVendingMachine().getUser().getId() != user.getId()) {
-            throw new UnauthorizedActionException("You are not authorized to view the expiration batches of this vending slot.");
+            throw new AccessDeniedException("You are not authorized to view the expiration batches of this vending slot.");
         }
         return expirationBatches;
     }   

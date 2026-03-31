@@ -8,11 +8,11 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
-import com.expmatik.backend.exceptions.UnauthorizedActionException;
 import com.expmatik.backend.product.Product;
 import com.expmatik.backend.product.ProductService;
 import com.expmatik.backend.productInfo.DTOs.ProductInfoUpdate;
@@ -47,7 +47,7 @@ public class ProductInfoService {
 
         Product product = productService.findById(productId);
         if(product.getIsCustom() && !product.getCreatedBy().getId().equals(user.getId())) {
-            throw new UnauthorizedActionException("You are not authorized to view this product info.");
+            throw new AccessDeniedException("You are not authorized to view this product info.");
         }
         Optional<ProductInfo> optionalProductInfo = productInfoRepository.findByProductIdAndUserId(productId, user.getId());
         if(optionalProductInfo.isPresent()) {
@@ -80,7 +80,7 @@ public class ProductInfoService {
 
         ProductInfo existingInfo = findById(productInfoId);
         if(!existingInfo.getUser().getId().equals(user.getId())) {
-            throw new UnauthorizedActionException("You are not authorized to update this product info.");
+            throw new AccessDeniedException("You are not authorized to update this product info.");
         }
         existingInfo.setStockQuantity(updatedInfo.stockQuantity());
         existingInfo.setSaleUnitPrice(updatedInfo.saleUnitPrice());
@@ -93,7 +93,7 @@ public class ProductInfoService {
     public ProductInfo editStockQuantity(UUID productInfoId, User user, Integer newStockQuantity, BigDecimal lastPurchaseUnitPrice) {
         ProductInfo existingInfo = findById(productInfoId);
         if(!existingInfo.getUser().getId().equals(user.getId())) {
-            throw new UnauthorizedActionException("You are not authorized to update this product info.");
+            throw new AccessDeniedException("You are not authorized to update this product info.");
         }
         Integer updatedStockQuantity = existingInfo.getStockQuantity() + newStockQuantity;
         if(updatedStockQuantity < 0) {

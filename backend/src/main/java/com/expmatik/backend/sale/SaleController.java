@@ -9,6 +9,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -42,34 +43,28 @@ public class SaleController {
         this.userService = userService;
     }
 
-    private void checkUserAuthorization(User currentUser) throws AccessDeniedException {
-        if(!currentUser.getRole().equals(Role.ADMINISTRATOR)) {
-            throw new AccessDeniedException("You are not authorized to perform this action.");
-        }
-    }
-
     @GetMapping("{id}")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> getSaleById(UUID id) throws AccessDeniedException {
         User currentUser = userService.getUserProfile();
-        checkUserAuthorization(currentUser);
         return ResponseEntity.ok(SaleResponse.fromSale(saleService.getSaleById(id, currentUser)));
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> createSale(@RequestBody @Valid SaleCreate saleCreate) throws AccessDeniedException {
         User currentUser = userService.getUserProfile();
-        checkUserAuthorization(currentUser);
         return ResponseEntity.ok(SaleResponse.fromSale(saleService.createSale(saleCreate, currentUser)));
     }
 
     @PostMapping("/real-time")
     public ResponseEntity<?> realTimeSale(@RequestBody @Valid SaleRealTimeCreate request) throws AccessDeniedException {
         User currentUser = userService.getUserProfile();
-        checkUserAuthorization(currentUser);
         return ResponseEntity.ok(SaleResponse.fromSale(saleService.realTimeSale(request.vendingSlotId(), request.paymentMethod(), currentUser)));
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> searchSales(@RequestParam(value = "barcode", required = false) String barcode, 
         @RequestParam(required = false) UUID machineId, 
         @RequestParam(required = false) UUID slotId, 
@@ -79,18 +74,17 @@ public class SaleController {
         @RequestParam(required = false) TransactionStatus status, 
         @ParameterObject Pageable pageable) throws AccessDeniedException {
         User currentUser = userService.getUserProfile();
-        checkUserAuthorization(currentUser);
         return ResponseEntity.ok(saleService.searchSales(currentUser.getId(), barcode, machineId, slotId, startDate, endDate, paymentMethod, status, pageable));
     }
 
     @PostMapping(value="/csv" , consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> createSalesFromCSV(@RequestParam("csv") MultipartFile csvContent) throws AccessDeniedException {
-        User currentUser = userService.getUserProfile();
-        checkUserAuthorization(currentUser);
         return ResponseEntity.ok(saleService.createSalesFromCSV(csvContent));
     }
 
     @GetMapping("/export")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> exportSalesToCSV(@RequestParam(value = "barcode", required = false) String barcode, 
         @RequestParam(required = false) UUID machineId, 
         @RequestParam(required = false) UUID slotId, 
@@ -99,7 +93,6 @@ public class SaleController {
         @RequestParam(required = false) PaymentMethod paymentMethod, 
         @RequestParam(required = false) TransactionStatus status) throws AccessDeniedException {
         User currentUser = userService.getUserProfile();
-        checkUserAuthorization(currentUser);
         byte[] csvData = saleService.exportSalesCSV(currentUser.getId(), barcode, machineId, slotId, startDate, endDate, paymentMethod, status);
         return ResponseEntity.ok()
             .header("Content-Disposition", "attachment; filename=\"sales.csv\"")

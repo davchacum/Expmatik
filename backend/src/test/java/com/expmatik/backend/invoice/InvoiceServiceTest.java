@@ -28,6 +28,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.expmatik.backend.batch.Batch;
@@ -36,7 +37,6 @@ import com.expmatik.backend.batch.DTOs.BatchCreate;
 import com.expmatik.backend.exceptions.BadRequestException;
 import com.expmatik.backend.exceptions.ConflictException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
-import com.expmatik.backend.exceptions.UnauthorizedActionException;
 import com.expmatik.backend.invoice.DTOs.InvoiceRequest;
 import com.expmatik.backend.invoice.DTOs.InvoiceRequestUpdate;
 import com.expmatik.backend.product.Product;
@@ -482,7 +482,7 @@ public class InvoiceServiceTest {
     }
 
     @Test
-    @DisplayName("findInvoiceById should throw UnauthorizedActionException if invoice belongs to another user")
+    @DisplayName("findInvoiceById should throw AccessDeniedException if invoice belongs to another user")
     void testFindInvoiceById_Unauthorized() {
         UUID invoiceId = invoice1.getId();
         UUID userId = user2.getId();
@@ -490,7 +490,7 @@ public class InvoiceServiceTest {
         when(invoiceRepository.findById(invoiceId)).thenReturn(Optional.of(invoice1));
 
         assertThatThrownBy(() -> invoiceService.findInvoiceById(invoiceId, userId))
-            .isInstanceOf(UnauthorizedActionException.class)
+            .isInstanceOf(AccessDeniedException.class)
             .hasMessage("Unauthorized access to invoice");
     }
 
@@ -524,7 +524,7 @@ public class InvoiceServiceTest {
     }
 
     @Test
-    @DisplayName("findInvoiceByInvoiceNumber should throw UnauthorizedActionException if invoice belongs to another user")
+    @DisplayName("findInvoiceByInvoiceNumber should throw AccessDeniedException if invoice belongs to another user")
     void testFindInvoiceByInvoiceNumber_Unauthorized() {
         String invoiceNumber = invoice1.getInvoiceNumber();
         UUID userId = user2.getId();
@@ -532,7 +532,7 @@ public class InvoiceServiceTest {
         when(invoiceRepository.findByInvoiceNumber(invoiceNumber)).thenReturn(Optional.of(invoice1));
 
         assertThatThrownBy(() -> invoiceService.findInvoiceByInvoiceNumber(invoiceNumber, userId))
-            .isInstanceOf(UnauthorizedActionException.class)
+            .isInstanceOf(AccessDeniedException.class)
             .hasMessage("Unauthorized access to invoice");
     }
 
@@ -592,7 +592,7 @@ public class InvoiceServiceTest {
 
 
     @Test
-    @DisplayName("updateInvoiceStatus should throw UnauthorizedActionException if invoice belongs to another user")
+    @DisplayName("updateInvoiceStatus should throw AccessDeniedException if invoice belongs to another user")
     void testUpdateInvoiceStatus_Unauthorized() {
         UUID invoiceId = invoice1.getId();
         InvoiceStatus newStatus = InvoiceStatus.CANCELED;
@@ -601,7 +601,7 @@ public class InvoiceServiceTest {
         when(invoiceRepository.findById(invoiceId)).thenReturn(Optional.of(invoice1));
 
         assertThatThrownBy(() -> invoiceService.updateInvoiceStatus(invoiceId, newStatus, userId))
-            .isInstanceOf(UnauthorizedActionException.class)
+            .isInstanceOf(AccessDeniedException.class)
             .hasMessage("Unauthorized access to invoice");
     }
 
@@ -682,7 +682,7 @@ public class InvoiceServiceTest {
     }
 
     @Test
-    @DisplayName("deleteInvoice should throw UnauthorizedActionException if invoice belongs to another user")
+    @DisplayName("deleteInvoice should throw AccessDeniedException if invoice belongs to another user")
     void testDeleteInvoice_Unauthorized() {
         UUID invoiceId = invoice1.getId();
         UUID userId = user2.getId();
@@ -690,12 +690,12 @@ public class InvoiceServiceTest {
         when(invoiceRepository.findById(invoiceId)).thenReturn(Optional.of(invoice1));
 
         assertThatThrownBy(() -> invoiceService.deleteInvoice(invoiceId, userId))
-            .isInstanceOf(UnauthorizedActionException.class)
+            .isInstanceOf(AccessDeniedException.class)
             .hasMessage("Unauthorized access to invoice");
     }
 
     @Test
-    @DisplayName("deleteInvoice should throw UnauthorizedActionException if invoice is not pending")
+    @DisplayName("deleteInvoice should throw AccessDeniedException if invoice is not pending")
     void testDeleteInvoice_NotPending() {
         UUID invoiceId = invoice1.getId();
         UUID userId = user1.getId();
@@ -797,7 +797,7 @@ public class InvoiceServiceTest {
     }
 
     @Test
-    @DisplayName("updateInvoice should throw UnauthorizedActionException if invoice belongs to another user")
+    @DisplayName("updateInvoice should throw AccessDeniedException if invoice belongs to another user")
     void testUpdateInvoice_Unauthorized() {
         UUID invoiceId = invoice1.getId();
         UUID userId = user2.getId();
@@ -811,7 +811,7 @@ public class InvoiceServiceTest {
         when(invoiceRepository.findById(invoiceId)).thenReturn(Optional.of(invoice1));
 
         assertThatThrownBy(() -> invoiceService.updateInvoice(invoiceId, request, userId))
-            .isInstanceOf(UnauthorizedActionException.class)
+            .isInstanceOf(AccessDeniedException.class)
             .hasMessage("Unauthorized access to invoice");
     }
 
