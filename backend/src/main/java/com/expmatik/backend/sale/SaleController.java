@@ -22,7 +22,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.expmatik.backend.sale.DTOs.SaleCreate;
 import com.expmatik.backend.sale.DTOs.SaleRealTimeCreate;
 import com.expmatik.backend.sale.DTOs.SaleResponse;
-import com.expmatik.backend.user.Role;
 import com.expmatik.backend.user.User;
 import com.expmatik.backend.user.UserService;
 

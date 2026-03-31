@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.expmatik.backend.user.Role;
 import com.expmatik.backend.user.User;
 import com.expmatik.backend.user.UserService;
 import com.expmatik.backend.vendingMachine.DTOs.VendingMachineCreate;

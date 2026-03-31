@@ -1,7 +1,6 @@
 package com.expmatik.backend.notification;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 import com.expmatik.backend.model.BaseEntity;
 import com.expmatik.backend.user.User;
@@ -25,8 +24,8 @@ import lombok.Setter;
 public class Notification extends BaseEntity {
 
     @NotNull
-    @Size(max = 255)
-    @Column(name = "message", nullable = false, length = 255)
+    @Size(max = 500)
+    @Column(name = "message", nullable = false, length = 500)
     private String message;
 
     @NotNull
@@ -38,13 +37,9 @@ public class Notification extends BaseEntity {
     private NotificationType type;
 
     @NotNull
-    @Column(name = "reference_id", nullable = false)
-    private UUID referenceId;
-
-    @NotNull
     @Size(max = 255)
-    @Column(name = "entity_reference", nullable = false, length = 255)
-    private String entityReference;
+    @Column(name = "link", nullable = false, length = 255)
+    private String link;
 
     @NotNull
     @Column(name = "is_read", nullable = false)
