@@ -12,6 +12,8 @@ import com.expmatik.backend.exceptions.ConflictException;
 import com.expmatik.backend.exceptions.ExpiredProductException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
 import com.expmatik.backend.exceptions.SlotBlockedException;
+import com.expmatik.backend.notification.NotificationService;
+import com.expmatik.backend.notification.NotificationType;
 import com.expmatik.backend.product.Product;
 import com.expmatik.backend.product.ProductService;
 import com.expmatik.backend.user.User;
@@ -26,10 +28,13 @@ public class VendingSlotService {
 
     private final ExpirationBatchService expirationBatchService;
 
-    public VendingSlotService(VendingSlotRepository vendingSlotRepository, ProductService productService, ExpirationBatchService expirationBatchService) {
+    private final NotificationService notificationService;
+
+    public VendingSlotService(VendingSlotRepository vendingSlotRepository, ProductService productService, ExpirationBatchService expirationBatchService, NotificationService notificationService) {
         this.vendingSlotRepository = vendingSlotRepository;
         this.productService = productService;
         this.expirationBatchService = expirationBatchService;
+        this.notificationService = notificationService;
     }
 
     @Transactional(readOnly = true)
@@ -111,7 +116,9 @@ public class VendingSlotService {
         if(vendingSlot.getProduct() == null) {
             throw new ConflictException("Cannot add stock to a vending slot that does not have an assigned product.");
         }
-        checkVendingSlotNotBlocked(vendingSlot);
+        if (vendingSlot.getIsBlocked()) {
+            throw new SlotBlockedException("The vending slot is blocked for maintenance.");
+        }
         if(quantity <= 0) {
             throw new ConflictException("Quantity must be greater than zero.");
         }
@@ -133,7 +140,15 @@ public class VendingSlotService {
         VendingSlot vendingSlot = getVendingSlotById(vendingSlotId,user);
         checkUserAuthorization(vendingSlot, user);
         expirationBatchService.popUnitExpirationBatch(vendingSlot, user);
-        
+        if(vendingSlot.getCurrentStock() == 3) {
+            String message = "El stock del producto " + vendingSlot.getProduct().getName() + " en la ranura (" + vendingSlot.getRowNumber() + "," + vendingSlot.getColumnNumber() + ") de la máquina expendedora " + vendingSlot.getVendingMachine().getName() + " le quedan 3 unidades. Por favor, recargue el producto lo antes posible para evitar quedarse sin stock.";
+            String link ="Unknown";
+            notificationService.createNotification(NotificationType.PRODUCT_LOW_STOCK,message, link, user);
+        }else if(vendingSlot.getCurrentStock() == 0) {
+            String message = "El stock del producto " + vendingSlot.getProduct().getName() + " en la ranura (" + vendingSlot.getRowNumber() + "," + vendingSlot.getColumnNumber() + ") de la máquina expendedora " + vendingSlot.getVendingMachine().getName() + " se ha agotado. Por favor, recargue el producto lo antes posible para evitar perder ventas.";
+            String link ="Unknown";
+            notificationService.createNotification(NotificationType.PRODUCT_OUT_OF_STOCK,message, link, user);
+        }
         return vendingSlotRepository.save(vendingSlot);
     }
  
@@ -146,12 +161,6 @@ public class VendingSlotService {
     public void checkVendingSlotNotEmpty(VendingSlot vendingSlot) {
         if (vendingSlot.getCurrentStock() > 0) {
             throw new ConflictException("The vending slot is not empty.");
-        }
-    }
-
-    public void checkVendingSlotNotBlocked(VendingSlot vendingSlot) {
-        if (vendingSlot.getIsBlocked()) {
-            throw new SlotBlockedException("The vending slot is blocked for maintenance.");
         }
     }
 

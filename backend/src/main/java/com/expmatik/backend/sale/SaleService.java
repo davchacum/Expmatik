@@ -2,7 +2,6 @@ package com.expmatik.backend.sale;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
@@ -21,14 +20,14 @@ import com.expmatik.backend.exceptions.ExpiredProductException;
 import com.expmatik.backend.exceptions.OutOfStockException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
 import com.expmatik.backend.exceptions.SlotBlockedException;
+import com.expmatik.backend.notification.NotificationService;
+import com.expmatik.backend.notification.NotificationType;
 import com.expmatik.backend.product.Product;
 import com.expmatik.backend.product.ProductService;
 import com.expmatik.backend.productInfo.ProductInfo;
 import com.expmatik.backend.productInfo.ProductInfoService;
 import com.expmatik.backend.sale.DTOs.SaleCreate;
 import com.expmatik.backend.user.User;
-import com.expmatik.backend.vendingSlot.ExpirationBatch;
-import com.expmatik.backend.vendingSlot.ExpirationBatchService;
 import com.expmatik.backend.vendingSlot.VendingSlot;
 import com.expmatik.backend.vendingSlot.VendingSlotService;
 
@@ -40,16 +39,16 @@ public class SaleService {
     private final ProductService productService;
     private final VendingSlotService vendingSlotService;
     private final ProductInfoService productInfoService;
-    private final ExpirationBatchService expirationBatchService;
     private final SaleCSVLector saleCSVLector;
+    private final NotificationService notificationService;
 
-    public SaleService(SaleRepository saleRepository, ProductService productService, VendingSlotService vendingSlotService, ProductInfoService productInfoService, ExpirationBatchService expirationBatchService, SaleCSVLector saleCSVLector) {
+    public SaleService(SaleRepository saleRepository, ProductService productService, VendingSlotService vendingSlotService, ProductInfoService productInfoService, SaleCSVLector saleCSVLector, NotificationService notificationService) {
         this.saleRepository = saleRepository;
         this.productService = productService;
         this.vendingSlotService = vendingSlotService;
         this.productInfoService = productInfoService;
-        this.expirationBatchService = expirationBatchService;
         this.saleCSVLector = saleCSVLector;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -110,18 +109,22 @@ public class SaleService {
             ProductInfo productInfo = getAndValidateProductInfo(product, user);
 
             sale.setTotalAmount(productInfo.getSaleUnitPrice());
-            validateVendingSlotSuccess(vendingSlot);
-            getAndValidateExpirationBatch(vendingSlotId, user);
+            
             sale.setStatus(TransactionStatus.SUCCESS);
 
         } catch (OutOfStockException | SlotBlockedException | ExpiredProductException e) {
 
             sale.setStatus(TransactionStatus.FAILED);
             sale.setFailureReason(e.getMessage());
+            //Mensaje español que especifique maquina y ranura y el pq de la falla, para que el usuario lo entienda claramente y pueda solucionarlo
+            String message = "La venta ha fallado porque " + e.getMessage() + " en la máquina expendedora " + vendingSlotId.toString() + ". Por favor, revise el estado de la máquina y el producto para solucionar el problema.";
+            String link = "Unknown";
+            notificationService.createNotification(NotificationType.SALE_FAILURE, message, link, user);
+            
             System.out.println("Sale failed: " + e.getMessage());
         }
         if(sale.getStatus() == TransactionStatus.SUCCESS) {
-            expirationBatchService.popUnitExpirationBatch(sale.getVendingSlot(), user);
+            vendingSlotService.popStockFromVendingSlot(vendingSlotId, user);
             vendingSlotService.saveVendingSlot(sale.getVendingSlot());
         }
 
@@ -141,18 +144,6 @@ public class SaleService {
         }
     }
 
-    private ExpirationBatch getAndValidateExpirationBatch(UUID vendingSlotId, User user) {
-        ExpirationBatch batch = expirationBatchService
-            .getExpirationBatchesByVendingSlotId(vendingSlotId, user)
-            .get(0);
-
-        if (batch.getExpirationDate() != null && batch.getExpirationDate().isBefore(LocalDate.now())) {
-            throw new ExpiredProductException("Cannot register sale because the product is expired.");
-        }
-
-        return batch;
-    }
-
     private ProductInfo getAndValidateProductInfo(Product product, User user) {
         ProductInfo productInfo = productInfoService
                 .getOrCreateProductInfo(product.getId(), user, null);
@@ -166,12 +157,6 @@ public class SaleService {
         return productInfo;
     }
 
-    private void validateVendingSlotSuccess(VendingSlot vendingSlot) {
-        vendingSlotService.checkVendingSlotNotBlocked(vendingSlot);
-        if (vendingSlot.getCurrentStock() <= 0) {
-            throw new OutOfStockException("Cannot register sale because the vending slot is out of stock.");
-        }
-    }
 
     @Transactional
     public void delete(UUID id) {

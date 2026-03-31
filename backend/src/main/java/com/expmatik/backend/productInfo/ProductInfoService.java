@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
+import com.expmatik.backend.notification.NotificationService;
+import com.expmatik.backend.notification.NotificationType;
 import com.expmatik.backend.product.Product;
 import com.expmatik.backend.product.ProductService;
 import com.expmatik.backend.productInfo.DTOs.ProductInfoUpdate;
@@ -23,12 +25,14 @@ public class ProductInfoService {
 
     private final ProductInfoRepository productInfoRepository;
     private final ProductService productService;
+    private final NotificationService notificationService;
 
 
     @Autowired
-    public ProductInfoService(ProductInfoRepository productInfoRepository, ProductService productService) {
+    public ProductInfoService(ProductInfoRepository productInfoRepository, ProductService productService, NotificationService notificationService) {
         this.productInfoRepository = productInfoRepository;
         this.productService = productService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -86,6 +90,15 @@ public class ProductInfoService {
         existingInfo.setSaleUnitPrice(updatedInfo.saleUnitPrice());
         existingInfo.setVatRate(updatedInfo.vatRate());
         existingInfo.setNeedUpdate(false);
+        if(existingInfo.getStockQuantity() <= 20 && updatedInfo.stockQuantity() > 0) {
+            String message = "El producto " + existingInfo.getProduct().getName() + " tiene pocas unidades en stock. Quedan " + updatedInfo.stockQuantity() + " unidades. Por favor, considere reponerlo pronto comprandolo con una factura.";
+            String link = "Unknown";
+            notificationService.createNotification(NotificationType.INVENTORY_STOCK_LOW, message, link, existingInfo.getUser());
+        }else if(existingInfo.getStockQuantity() == 0) {
+            String message = "El producto " + existingInfo.getProduct().getName() + " se ha quedado sin stock. Por favor, considere reponerlo lo antes posible comprandolo con una factura.";
+            String link = "Unknown";
+            notificationService.createNotification(NotificationType.INVENTORY_OUT_OF_STOCK, message, link, existingInfo.getUser());
+        }
         return save(existingInfo);
     }
 
