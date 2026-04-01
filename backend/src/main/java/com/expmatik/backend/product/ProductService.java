@@ -170,13 +170,10 @@ public class ProductService {
     @Transactional(readOnly = true)
     public Product findInternalProductByBarcode(String barcode, UUID userId) {
         Optional<Product> productOpt = findByBarcodeOptional(userId, barcode);
-        Product product;
-        if (productOpt.isEmpty()) {
-            product = createProductOpenFoodFacts(barcode, userId);
-        }else {
-            product = productOpt.get();
+        if(productOpt.isEmpty()) {
+            throw new ResourceNotFoundException("No product found in the internal catalog with barcode: " + barcode);
         }
-        return product;
+        return productOpt.get();
     } 
 
     @Transactional(readOnly = true)

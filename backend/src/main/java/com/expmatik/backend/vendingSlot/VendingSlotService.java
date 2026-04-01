@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.expmatik.backend.exceptions.ConflictException;
 import com.expmatik.backend.exceptions.ExpiredProductException;
+import com.expmatik.backend.exceptions.OutOfStockException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
 import com.expmatik.backend.exceptions.SlotBlockedException;
 import com.expmatik.backend.notification.NotificationService;
@@ -47,6 +48,9 @@ public class VendingSlotService {
     @Transactional(readOnly = true)
     public List<VendingSlot> getVendingSlotsByUserIdAndMachineId(UUID machineId,User user) {
         List<VendingSlot> vendingSlots = vendingSlotRepository.findAllByVendingMachineId(machineId);
+        if (vendingSlots.isEmpty()) {
+            throw new ResourceNotFoundException("The vending machine does not exist.");
+        }
         checkUserAuthorization(vendingSlots.get(0), user);
         return vendingSlots;
     }
@@ -67,7 +71,7 @@ public class VendingSlotService {
                 vendingSlot.setCurrentStock(0);
                 vendingSlot.setIsBlocked(true);
                 vendingSlot.setVendingMachine(machine);
-                vendingSlotRepository.save(vendingSlot);
+                saveVendingSlot(vendingSlot);
             }
         }
     }
@@ -81,13 +85,13 @@ public class VendingSlotService {
         if(vendingSlot.getIsBlocked()) {
             throw new ConflictException("Cannot assign a product to a vending slot that is blocked for maintenance.");
         }
-        if(barcode.equals(null)){
+        if(barcode==null){
             vendingSlot.setProduct(null);
         }else{
             Product product = productService.findInternalProductByBarcode(barcode, user.getId());
             vendingSlot.setProduct(product);
         }
-        return vendingSlotRepository.save(vendingSlot);
+        return saveVendingSlot(vendingSlot);
     }
 
     @Transactional
@@ -106,7 +110,7 @@ public class VendingSlotService {
         }
         //Revisar que no tenga tarea de mantenimiento pendiente actualmente no implementado
         vendingSlot.setIsBlocked(isBlocked);
-        return vendingSlotRepository.save(vendingSlot);
+        return saveVendingSlot(vendingSlot);
     }
 
     @Transactional
@@ -119,9 +123,6 @@ public class VendingSlotService {
         if (vendingSlot.getIsBlocked()) {
             throw new SlotBlockedException("The vending slot is blocked for maintenance.");
         }
-        if(quantity <= 0) {
-            throw new ConflictException("Quantity must be greater than zero.");
-        }
         if(vendingSlot.getCurrentStock() + quantity > vendingSlot.getMaxCapacity()) {
             throw new ConflictException("Cannot add stock to a vending slot that exceeds its maximum capacity.");
         }
@@ -130,7 +131,7 @@ public class VendingSlotService {
         }
         expirationBatchService.pushExpirationBatch(vendingSlot, expirationDate, quantity, user);
         
-        return vendingSlotRepository.save(vendingSlot);
+        return saveVendingSlot(vendingSlot);
     }
 
     //Funcion simple para probar el funcionamiento de la pila
@@ -142,7 +143,16 @@ public class VendingSlotService {
         if (vendingSlot.getProduct() == null) {
             throw new ConflictException("Cannot register sale because the vending slot does not have a product assigned.");
         }
+
+        if(vendingSlot.getCurrentStock() <= 0) {
+            throw new OutOfStockException("Cannot remove stock from the vending slot because it is empty.");
+        }
+        
         expirationBatchService.popUnitExpirationBatch(vendingSlot, user);
+
+        if (vendingSlot.getIsBlocked()) {
+            throw new SlotBlockedException("The vending slot is blocked for maintenance.");
+        }
         if(vendingSlot.getCurrentStock() == 3) {
             String message = "El stock del producto " + vendingSlot.getProduct().getName() + " en la ranura (" + vendingSlot.getRowNumber() + "," + vendingSlot.getColumnNumber() + ") de la máquina expendedora " + vendingSlot.getVendingMachine().getName() + " le quedan 3 unidades. Por favor, recargue el producto lo antes posible para evitar quedarse sin stock.";
             String link ="Unknown";
@@ -152,7 +162,7 @@ public class VendingSlotService {
             String link ="Unknown";
             notificationService.createNotification(NotificationType.PRODUCT_OUT_OF_STOCK,message, link, user);
         }
-        return vendingSlotRepository.save(vendingSlot);
+        return saveVendingSlot(vendingSlot);
     }
  
     public void checkUserAuthorization(VendingSlot vendingSlot, User user) {

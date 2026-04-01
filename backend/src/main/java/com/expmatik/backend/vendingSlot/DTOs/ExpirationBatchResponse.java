@@ -1,6 +1,7 @@
 package com.expmatik.backend.vendingSlot.DTOs;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 import com.expmatik.backend.vendingSlot.ExpirationBatch;
@@ -23,6 +24,10 @@ public record ExpirationBatchResponse(
             batch.getQuantity(),
             batch.getVendingSlot().getId()
         );
+    }
+
+    public static List<ExpirationBatchResponse> fromExpirationBatchList(List<ExpirationBatch> batches) {
+        return batches.stream().map(ExpirationBatchResponse::fromExpirationBatch).toList();
     }
 
 }

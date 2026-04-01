@@ -9,10 +9,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.expmatik.backend.exceptions.ConflictException;
 import com.expmatik.backend.exceptions.ExpiredProductException;
 import com.expmatik.backend.exceptions.OutOfStockException;
-import com.expmatik.backend.exceptions.SlotBlockedException;
 import com.expmatik.backend.user.User;
 
 
@@ -34,14 +32,9 @@ public class ExpirationBatchService {
         return expirationBatches;
     }   
 
+    @Transactional
     public void pushExpirationBatch(VendingSlot vendingSlot, LocalDate expirationDate, Integer quantity, User user) {
-    if (vendingSlot.getCurrentStock() + quantity > vendingSlot.getMaxCapacity()) {
-                throw new ConflictException("Cannot add stock to the vending slot because it exceeds the maximum capacity.");
-            }
-        List<ExpirationBatch> expirationBatches = getExpirationBatchesByVendingSlotId(vendingSlot.getId(), user);
-        Optional<ExpirationBatch> existingBatch = expirationBatches.stream()
-                .filter(batch -> batch.getExpirationDate().equals(expirationDate))
-                .findFirst();
+        Optional<ExpirationBatch> existingBatch = expirationBatchRepository.findFirstByVendingSlotIdAndExpirationDate(vendingSlot.getId(), expirationDate);
         if (existingBatch.isPresent()) {
             existingBatch.get().setQuantity(existingBatch.get().getQuantity() + quantity);
             vendingSlot.setCurrentStock(vendingSlot.getCurrentStock() + quantity);
@@ -57,14 +50,13 @@ public class ExpirationBatchService {
         vendingSlot.setCurrentStock(vendingSlot.getCurrentStock() + quantity);
     }
 
+    @Transactional
     public void popUnitExpirationBatch(VendingSlot vendingSlot, User user) {
-        if(vendingSlot.getCurrentStock() <= 0) {
-            throw new OutOfStockException("Cannot remove stock from the vending slot because it is empty.");
-        }
+        
         List<ExpirationBatch> expirationBatches = getExpirationBatchesByVendingSlotId(vendingSlot.getId(), user);
         ExpirationBatch existingBatch = expirationBatches.get(0);
 
-        if (existingBatch.getExpirationDate() != null && existingBatch.getExpirationDate().isBefore(LocalDate.now())) {
+        if (existingBatch.getExpirationDate().isBefore(LocalDate.now())) {
             throw new ExpiredProductException("Cannot register sale because the product is expired.");
         }
 
@@ -72,9 +64,6 @@ public class ExpirationBatchService {
             throw new OutOfStockException("Cannot remove stock from the vending slot because there is no stock with the specified expiration date.");
         }
 
-        if (vendingSlot.getIsBlocked()) {
-            throw new SlotBlockedException("The vending slot is blocked for maintenance.");
-        }
         existingBatch.setQuantity(existingBatch.getQuantity() - 1);
         if(existingBatch.getQuantity() <= 0) {
             expirationBatchRepository.delete(existingBatch);

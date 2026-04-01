@@ -2,6 +2,7 @@ package com.expmatik.backend.vendingSlot;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,5 +14,7 @@ public interface ExpirationBatchRepository extends JpaRepository<ExpirationBatch
     List<ExpirationBatch> findAllByVendingSlotIdOrderByExpirationDateAsc(UUID slotId);
 
     List<ExpirationBatch> findAllByExpirationDate(LocalDate expirationDate);
+
+    Optional<ExpirationBatch> findFirstByVendingSlotIdAndExpirationDate(UUID vendingSlotId, LocalDate expirationDate);
 
 }

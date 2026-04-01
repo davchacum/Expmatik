@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.expmatik.backend.user.User;
 import com.expmatik.backend.user.UserService;
 import com.expmatik.backend.validation.ValidBarcode;
+import com.expmatik.backend.vendingSlot.DTOs.ExpirationBatchResponse;
 import com.expmatik.backend.vendingSlot.DTOs.VendingSlotResponse;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -37,7 +38,7 @@ public class VendingSlotController {
         this.expirationBatchService = expirationBatchService;
     }
 
-    @GetMapping("{machineId}")
+    @GetMapping("/vending-machines/{machineId}")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> getVendingSlotsByMachineId(@PathVariable UUID machineId) throws AccessDeniedException {
         User currentUser = userService.getUserProfile();
@@ -45,35 +46,19 @@ public class VendingSlotController {
         return ResponseEntity.ok(VendingSlotResponse.fromVendingSlotList(vendingSlots));
     }
 
-    @PatchMapping("{vendingSlotId}/assign-product/{barcode}")
+    @PatchMapping("{vendingSlotId}/assign-or-unassign-product")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public ResponseEntity<?> assignProductToVendingSlot(@PathVariable UUID vendingSlotId, @PathVariable @ValidBarcode String barcode) throws AccessDeniedException {
+    public ResponseEntity<?> assignOrUnassignProductToVendingSlot(@PathVariable UUID vendingSlotId, @RequestParam(required = false) @ValidBarcode String barcode) throws AccessDeniedException {
         User currentUser = userService.getUserProfile();
         VendingSlot vendingSlot = vendingSlotService.assignProductToVendingSlot(vendingSlotId, barcode, currentUser);
         return ResponseEntity.ok(VendingSlotResponse.fromVendingSlot(vendingSlot));
     }
 
-    @PatchMapping("{vendingSlotId}/unassign-product")
+    @PatchMapping("{vendingSlotId}/block-or-unblock")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public ResponseEntity<?> unassignProductFromVendingSlot(@PathVariable UUID vendingSlotId) throws AccessDeniedException {
+    public ResponseEntity<?> blockOrUnblockVendingSlot(@PathVariable UUID vendingSlotId, @RequestParam(required = true) Boolean blocked) throws AccessDeniedException {
         User currentUser = userService.getUserProfile();
-        VendingSlot vendingSlot = vendingSlotService.assignProductToVendingSlot(vendingSlotId, null, currentUser);
-        return ResponseEntity.ok(VendingSlotResponse.fromVendingSlot(vendingSlot));
-    }
-
-    @PatchMapping("{vendingSlotId}/block")
-    @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public ResponseEntity<?> blockVendingSlot(@PathVariable UUID vendingSlotId) throws AccessDeniedException {
-        User currentUser = userService.getUserProfile();
-        VendingSlot vendingSlot = vendingSlotService.updateBlockStatus(vendingSlotId, true, currentUser);
-        return ResponseEntity.ok(VendingSlotResponse.fromVendingSlot(vendingSlot));
-    }
-
-    @PatchMapping("{vendingSlotId}/unblock")
-    @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public ResponseEntity<?> unblockVendingSlot(@PathVariable UUID vendingSlotId) throws AccessDeniedException {
-        User currentUser = userService.getUserProfile();
-        VendingSlot vendingSlot = vendingSlotService.updateBlockStatus(vendingSlotId, false, currentUser);
+        VendingSlot vendingSlot = vendingSlotService.updateBlockStatus(vendingSlotId, blocked, currentUser);
         return ResponseEntity.ok(VendingSlotResponse.fromVendingSlot(vendingSlot));
     }
 
@@ -97,7 +82,12 @@ public class VendingSlotController {
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> getExpirationBatchesByVendingSlotId(@PathVariable UUID vendingSlotId) throws AccessDeniedException {
         User currentUser = userService.getUserProfile();
+        vendingSlotService.getVendingSlotById(vendingSlotId, currentUser);
         List<ExpirationBatch> expirationBatches = expirationBatchService.getExpirationBatchesByVendingSlotId(vendingSlotId, currentUser);
-        return ResponseEntity.ok(expirationBatches);
+        if(expirationBatches.isEmpty()) {
+            return ResponseEntity.ok(expirationBatches);
+        }else {
+            return ResponseEntity.ok(ExpirationBatchResponse.fromExpirationBatchList(expirationBatches));
+        }
     }
 }
