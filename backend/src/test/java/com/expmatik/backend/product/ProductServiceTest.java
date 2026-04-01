@@ -594,21 +594,9 @@ public class ProductServiceTest {
 
     // ==================== findInternalProductByBarcode Tests ====================
 
-    //     @Transactional(readOnly = true)
-    // public Product findInternalProductByBarcode(String barcode, UUID userId) {
-    //     Optional<Product> productOpt = findByBarcodeOptional(userId, barcode);
-    //     Product product;
-    //     if (productOpt.isEmpty()) {
-    //         product = createProductOpenFoodFacts(barcode, userId);
-    //     }else {
-    //         product = productOpt.get();
-    //     }
-    //     return product;
-    // } 
-
     @Test
-    @DisplayName("findInternalProductByBarcode - returns existing product without calling API")
-    void testFindInternalProductByBarcodeReturnsExisting() throws IOException {
+    @DisplayName("findInternalProductByBarcode - returns product when found")
+    void testFindInternalProductByBarcodeSuccess() {
         String barcode = "1111111111111";
         UUID userId = user1.getId();
 
@@ -620,51 +608,22 @@ public class ProductServiceTest {
 
         Product result = productService.findInternalProductByBarcode(barcode, userId);
 
-        assertThat(result).isEqualTo(existingProduct);
-        verify(productService, never()).findProductInOpenFoodFacts(any());
+        assertThat(result).isNotNull();
+        assertThat(result.getBarcode()).isEqualTo(barcode);
     }
 
     @Test
-    @DisplayName("findInternalProductByBarcode - creates product from API when not found in DB")
-    void testFindInternalProductByBarcodeCreatesFromAPI() throws IOException {
+    @DisplayName("findInternalProductByBarcode - throws ResourceNotFoundException when not found")
+    void testFindInternalProductByBarcodeNotFound() {
         String barcode = "2222222222222";
         UUID userId = user1.getId();
 
-        Product apiProduct = new Product();
-        apiProduct.setBarcode(barcode);
-        apiProduct.setName("Producto API");
-        apiProduct.setBrand("Marca API");
-        apiProduct.setImageUrl("https://api.example.com/image.png");
-        apiProduct.setIsCustom(false);
-
         when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
                 .thenReturn(Optional.empty());
-        doReturn(Optional.of(apiProduct)).when(productService).findProductInOpenFoodFacts(barcode);
-        when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        Product result = productService.findInternalProductByBarcode(barcode, userId);
-
-        assertThat(result.getBarcode()).isEqualTo(barcode);
-        assertThat(result.getName()).isEqualTo("Producto API");
-
-        verify(productRepository).save(any(Product.class));
-    }
-
-    @Test
-    @DisplayName("findInternalProductByBarcode - throws ResourceNotFoundException when not found in DB or API")
-    void testFindInternalProductByBarcodeNotFoundAnywhere() throws IOException {
-        String barcode = "3333333333333";
-        UUID userId = user1.getId();
-
-        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
-                .thenReturn(Optional.empty());
-        doReturn(Optional.empty()).when(productService).findProductInOpenFoodFacts(barcode);
 
         assertThatThrownBy(() -> productService.findInternalProductByBarcode(barcode, userId))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("Product with barcode " + barcode + " not found in Open Food Facts external catalog. Consider creating it as a custom product.");
-
-        verify(productRepository, never()).save(any(Product.class));
+                .hasMessage("No product found in the internal catalog with barcode: " + barcode);
     }
 
 

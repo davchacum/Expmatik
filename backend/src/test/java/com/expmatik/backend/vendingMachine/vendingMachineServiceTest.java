@@ -27,7 +27,7 @@ import com.expmatik.backend.vendingMachine.DTOs.VendingMachineUpdate;
 import com.expmatik.backend.vendingSlot.VendingSlotService;
 
 @ExtendWith(MockitoExtension.class)
-public class vendingMachineServiceTest {
+public class VendingMachineServiceTest {
 
     @Mock
     private VendingMachineRepository vendingMachineRepository;
@@ -165,16 +165,6 @@ public class vendingMachineServiceTest {
     }
 
     // == Test cases for updateVendingMachine ==
-
-    // @Transactional
-    // public VendingMachine updateVendingMachine(UUID vendingMachineId, VendingMachineUpdate vendingMachineUpdate, User user) {
-    //     VendingMachine vendingMachine = findVendingMachineById(vendingMachineId);
-    //     validateVendingMachineOwnership(vendingMachine, user);
-    //     validateVendingMachineNameUniqueness(vendingMachineUpdate.name(), user);
-    //     vendingMachine.setLocation(vendingMachineUpdate.location());
-    //     vendingMachine.setName(vendingMachineUpdate.name());
-    //     return vendingMachineRepository.save(vendingMachine);
-    // }
 
     @Test
     @DisplayName("updateVendingMachine - success")

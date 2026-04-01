@@ -25,7 +25,7 @@ import jakarta.transaction.Transactional;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-public class vendingMachineIntegrationTest {
+public class VendingMachineIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -135,7 +135,7 @@ public class vendingMachineIntegrationTest {
         String json = result.getResponse().getContentAsString();
         UUID newVendingMachineId =UUID.fromString((JsonPath.read(json,"$.id")));
 
-        mockMvc.perform(get("/api/vending-slots/"+newVendingMachineId))
+        mockMvc.perform(get("/api/vending-slots/vending-machines/"+newVendingMachineId))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$").isArray())
             .andExpect(jsonPath("$.length()").value(6));
