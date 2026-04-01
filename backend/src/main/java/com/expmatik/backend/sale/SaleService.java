@@ -101,8 +101,6 @@ public class SaleService {
             VendingSlot vendingSlot = getAndValidateVendingSlot(vendingSlotId, user);
             sale.setVendingSlot(vendingSlot);
 
-            validateStockAndProduct(vendingSlot);  
-
             Product product = vendingSlot.getProduct();
             sale.setProduct(product);
 
@@ -116,7 +114,6 @@ public class SaleService {
 
             sale.setStatus(TransactionStatus.FAILED);
             sale.setFailureReason(e.getMessage());
-            //Mensaje español que especifique maquina y ranura y el pq de la falla, para que el usuario lo entienda claramente y pueda solucionarlo
             String message = "La venta ha fallado porque " + e.getMessage() + " en la máquina expendedora " + vendingSlotId.toString() + ". Por favor, revise el estado de la máquina y el producto para solucionar el problema.";
             String link = "Unknown";
             notificationService.createNotification(NotificationType.SALE_FAILURE, message, link, user);
@@ -133,15 +130,7 @@ public class SaleService {
 
     private VendingSlot getAndValidateVendingSlot(UUID vendingSlotId, User user) {
         VendingSlot vendingSlot = vendingSlotService.getVendingSlotById(vendingSlotId, user);
-        vendingSlotService.checkUserAuthorization(vendingSlot, user);
         return vendingSlot;
-    }
-
-    private void validateStockAndProduct(VendingSlot vendingSlot) {
-
-        if (vendingSlot.getProduct() == null) {
-            throw new ConflictException("Cannot register sale because the vending slot does not have a product assigned.");
-        }
     }
 
     private ProductInfo getAndValidateProductInfo(Product product, User user) {

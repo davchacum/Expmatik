@@ -139,6 +139,9 @@ public class VendingSlotService {
     public VendingSlot popStockFromVendingSlot(UUID vendingSlotId, User user) {
         VendingSlot vendingSlot = getVendingSlotById(vendingSlotId,user);
         checkUserAuthorization(vendingSlot, user);
+        if (vendingSlot.getProduct() == null) {
+            throw new ConflictException("Cannot register sale because the vending slot does not have a product assigned.");
+        }
         expirationBatchService.popUnitExpirationBatch(vendingSlot, user);
         if(vendingSlot.getCurrentStock() == 3) {
             String message = "El stock del producto " + vendingSlot.getProduct().getName() + " en la ranura (" + vendingSlot.getRowNumber() + "," + vendingSlot.getColumnNumber() + ") de la máquina expendedora " + vendingSlot.getVendingMachine().getName() + " le quedan 3 unidades. Por favor, recargue el producto lo antes posible para evitar quedarse sin stock.";
