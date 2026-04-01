@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 
+import com.expmatik.backend.notification.NotificationService;
 import com.expmatik.backend.product.Product;
 import com.expmatik.backend.product.ProductService;
 import com.expmatik.backend.productInfo.DTOs.ProductInfoUpdate;
@@ -31,6 +32,9 @@ public class ProductInfoServiceTest {
 
     @Mock
     ProductService productService;
+
+    @Mock
+    NotificationService notificationService;
 
     @InjectMocks
     ProductInfoService productInfoService;
@@ -204,6 +208,7 @@ public class ProductInfoServiceTest {
     @Test
     void testUpdateProductInfo_Success() {
         UUID productInfoId = productInfo.getId();
+        productInfo.setProduct(productCustom);
         ProductInfoUpdate updatedInfo = new ProductInfoUpdate(20, new BigDecimal("6.99"), new BigDecimal("0.10"));
         productInfo.setUser(user1);
         when(productInfoRepository.findById(productInfoId)).thenReturn(Optional.of(productInfo));

@@ -92,7 +92,7 @@ public class BatchIntegrationTest {
     @Test
     @WithUserDetails("admin@expmatik.com")
     void testCreateBatchWithOpenFoodFactsProduct() throws Exception {
-
+        Thread.sleep(2000);
         BatchCreate batchCreate = new BatchCreate(
             LocalDate.now().plusDays(10),
             new BigDecimal("5.99"),
@@ -303,7 +303,7 @@ public class BatchIntegrationTest {
     @Test
     @WithUserDetails("admin@expmatik.com")
     void testUpdateBatchWithOpenFoodFactsProduct() throws Exception {
-
+        Thread.sleep(2000);
         BatchCreate batchUpdate = new BatchCreate(
             LocalDate.now().plusDays(10),
             new BigDecimal("5.99"),

@@ -1,14 +1,15 @@
 package com.expmatik.backend.vendingMachine;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.expmatik.backend.exceptions.ConflictException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
 import com.expmatik.backend.user.User;
 import com.expmatik.backend.vendingMachine.DTOs.VendingMachineCreate;
@@ -39,13 +40,13 @@ public class VendingMachineService {
 
     void validateVendingMachineOwnership(VendingMachine vendingMachine, User user) {
         if (!vendingMachine.getUser().getId().equals(user.getId())) {
-            throw new IllegalArgumentException("The user is not the owner of the vending machine.");
+            throw new AccessDeniedException("The user is not the owner of the vending machine.");
         }
     }
 
     void validateVendingMachineNameUniqueness(String name, User user) {
         if (vendingMachineRepository.findByNameAndUserId(name, user.getId()).isPresent()) {
-            throw new IllegalArgumentException("A vending machine with the same name already exists.");
+            throw new ConflictException("A vending machine with the same name already exists.");
         }
     }
 
@@ -75,11 +76,6 @@ public class VendingMachineService {
     @Transactional(readOnly = true)
     public Page<VendingMachine> listVendingMachines(User user, Pageable pageable) {
         return vendingMachineRepository.findAllByUserId(user.getId(), pageable);
-    }
-
-    @Transactional(readOnly = true)
-    public List<VendingMachine> listAllVendingMachines(User user) {
-        return vendingMachineRepository.findAllByUserId(user.getId());
     }
 
 }
