@@ -1,6 +1,7 @@
 package com.expmatik.backend.vendingMachine;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
@@ -86,12 +87,9 @@ public class VendingMachineServiceTest {
         when(vendingMachineRepository.findByNameAndUserId("Machine 1", user.getId()))
                 .thenReturn(Optional.of(new VendingMachine()));
 
-        try {
+        assertThrows(ConflictException.class, () -> {
             vendingMachineService.createVendingMachine(dto, user);
-        } catch (Exception ex) {
-            assertThat(ex).isInstanceOf(ConflictException.class);
-            assertThat(ex.getMessage()).isEqualTo("A vending machine with the same name already exists.");
-        }
+        });
 
         verify(vendingMachineRepository).findByNameAndUserId("Machine 1", user.getId());
         verify(vendingMachineRepository).findByNameAndUserId(eq("Machine 1"), eq(user.getId()));
@@ -128,12 +126,9 @@ public class VendingMachineServiceTest {
         when(vendingMachineRepository.findById(vendingMachineId))
                 .thenReturn(Optional.empty());
 
-        try {
+        assertThrows(ResourceNotFoundException.class, () -> {
             vendingMachineService.getVendingMachineById(vendingMachineId, user);
-        } catch (Exception ex) {
-            assertThat(ex).isInstanceOf(ResourceNotFoundException.class);
-            assertThat(ex.getMessage()).isEqualTo("The vending machine does not exist.");
-        }
+        });
 
         verify(vendingMachineRepository).findById(vendingMachineId);
     }
@@ -154,12 +149,9 @@ public class VendingMachineServiceTest {
         when(vendingMachineRepository.findById(vendingMachine.getId()))
                 .thenReturn(Optional.of(vendingMachine));
 
-        try {
+        assertThrows(AccessDeniedException.class, () -> {
             vendingMachineService.getVendingMachineById(vendingMachine.getId(), user);
-        } catch (Exception ex) {
-            assertThat(ex).isInstanceOf(AccessDeniedException.class);
-            assertThat(ex.getMessage()).isEqualTo("The user is not the owner of the vending machine.");
-        }
+        });
 
         verify(vendingMachineRepository).findById(vendingMachine.getId());
     }
@@ -222,12 +214,9 @@ public class VendingMachineServiceTest {
         when(vendingMachineRepository.findByNameAndUserId("Existing Name", user.getId()))
                 .thenReturn(Optional.of(new VendingMachine()));
 
-        try {
+        assertThrows(ConflictException.class, () -> {
             vendingMachineService.updateVendingMachine(vendingMachine.getId(), dto, user);
-        } catch (Exception ex) {
-            assertThat(ex).isInstanceOf(ConflictException.class);
-            assertThat(ex.getMessage()).isEqualTo("A vending machine with the same name already exists.");
-        }
+        });
 
         verify(vendingMachineRepository).findById(vendingMachine.getId());
         verify(vendingMachineRepository).findByNameAndUserId("Existing Name", user.getId());
@@ -247,12 +236,9 @@ public class VendingMachineServiceTest {
         when(vendingMachineRepository.findById(vendingMachineId))
                 .thenReturn(Optional.empty());
 
-        try {
+        assertThrows(ResourceNotFoundException.class, () -> {
             vendingMachineService.updateVendingMachine(vendingMachineId, dto, user);
-        } catch (Exception ex) {
-            assertThat(ex).isInstanceOf(ResourceNotFoundException.class);
-            assertThat(ex.getMessage()).isEqualTo("The vending machine does not exist.");
-        }
+        });
 
         verify(vendingMachineRepository).findById(vendingMachineId);
     }

@@ -98,16 +98,20 @@ public class SaleService {
         sale.setSaleDate(LocalDateTime.now());
 
         try {
-            VendingSlot vendingSlot = getAndValidateVendingSlot(vendingSlotId, user);
+            VendingSlot vendingSlot = vendingSlotService.getVendingSlotById(vendingSlotId, user);
             sale.setVendingSlot(vendingSlot);
 
             Product product = vendingSlot.getProduct();
+            if (product == null) {
+                throw new ConflictException("Cannot register sale because there is no product assigned to the vending slot.");
+            }
             sale.setProduct(product);
 
             ProductInfo productInfo = getAndValidateProductInfo(product, user);
 
             sale.setTotalAmount(productInfo.getSaleUnitPrice());
             
+            vendingSlotService.popStockFromVendingSlot(vendingSlotId, user);
             sale.setStatus(TransactionStatus.SUCCESS);
 
         } catch (OutOfStockException | SlotBlockedException | ExpiredProductException e) {
@@ -120,17 +124,8 @@ public class SaleService {
             
             System.out.println("Sale failed: " + e.getMessage());
         }
-        if(sale.getStatus() == TransactionStatus.SUCCESS) {
-            vendingSlotService.popStockFromVendingSlot(vendingSlotId, user);
-            vendingSlotService.saveVendingSlot(sale.getVendingSlot());
-        }
 
         return save(sale);
-    }
-
-    private VendingSlot getAndValidateVendingSlot(UUID vendingSlotId, User user) {
-        VendingSlot vendingSlot = vendingSlotService.getVendingSlotById(vendingSlotId, user);
-        return vendingSlot;
     }
 
     private ProductInfo getAndValidateProductInfo(Product product, User user) {
@@ -144,12 +139,6 @@ public class SaleService {
         }
 
         return productInfo;
-    }
-
-
-    @Transactional
-    public void delete(UUID id) {
-        saleRepository.deleteById(id);
     }
 
     @Transactional(readOnly = true)
