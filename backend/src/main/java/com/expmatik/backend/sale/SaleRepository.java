@@ -18,8 +18,9 @@ public interface SaleRepository extends JpaRepository<Sale, UUID> {
     @Query("SELECT s FROM Sale s WHERE " +
         "(s.vendingSlot.vendingMachine.user.id = :userId) " +
         "AND (:barcode IS NULL OR LOWER(s.product.barcode) LIKE LOWER(CONCAT('%', CAST(:barcode AS string), '%'))) " +
-        "AND (:machineId IS NULL OR s.vendingSlot.vendingMachine.id = :machineId) " +
-        "AND (:slotId IS NULL OR s.vendingSlot.id = :slotId) " +
+        "AND (:machineName IS NULL OR LOWER(s.vendingSlot.vendingMachine.name) LIKE LOWER(CONCAT('%', CAST(:machineName AS string), '%'))) " +
+        "AND (:rowNumber IS NULL OR s.vendingSlot.rowNumber = :rowNumber) " +
+        "AND (:columnNumber IS NULL OR s.vendingSlot.columnNumber = :columnNumber) " +
         "AND (:paymentMethod IS NULL OR s.paymentMethod = :paymentMethod) " +
         "AND (:status IS NULL OR s.status = :status) " +
         "AND (s.saleDate >= COALESCE(:startDate, s.saleDate)) " +
@@ -28,8 +29,9 @@ public interface SaleRepository extends JpaRepository<Sale, UUID> {
     List<Sale> searchAdvanced(
         @Param("userId") UUID userId,
         @Param("barcode") String barcode,
-        @Param("machineId") UUID machineId,
-        @Param("slotId") UUID slotId,
+        @Param("machineName") String machineName,
+        @Param("rowNumber") Integer rowNumber,
+        @Param("columnNumber") Integer columnNumber,
         @Param("startDate") LocalDateTime startDate,
         @Param("endDate") LocalDateTime endDate,
         @Param("paymentMethod") PaymentMethod paymentMethod,
@@ -39,8 +41,9 @@ public interface SaleRepository extends JpaRepository<Sale, UUID> {
     @Query("SELECT s FROM Sale s WHERE " +
         "(s.vendingSlot.vendingMachine.user.id = :userId) " +
         "AND (:barcode IS NULL OR LOWER(s.product.barcode) LIKE LOWER(CONCAT('%', CAST(:barcode AS string), '%'))) " +
-        "AND (:machineId IS NULL OR s.vendingSlot.vendingMachine.id = :machineId) " +
-        "AND (:slotId IS NULL OR s.vendingSlot.id = :slotId) " +
+        "AND (:machineName IS NULL OR LOWER(s.vendingSlot.vendingMachine.name) LIKE LOWER(CONCAT('%', CAST(:machineName AS string), '%'))) " +
+        "AND (:rowNumber IS NULL OR s.vendingSlot.rowNumber = :rowNumber) " +
+        "AND (:columnNumber IS NULL OR s.vendingSlot.columnNumber = :columnNumber) " +
         "AND (:paymentMethod IS NULL OR s.paymentMethod = :paymentMethod) " +
         "AND (:status IS NULL OR s.status = :status) " +
         "AND (s.saleDate >= COALESCE(:startDate, s.saleDate)) " +
@@ -49,8 +52,9 @@ public interface SaleRepository extends JpaRepository<Sale, UUID> {
     Page<Sale> searchAdvanced(
         @Param("userId") UUID userId,
         @Param("barcode") String barcode,
-        @Param("machineId") UUID machineId,
-        @Param("slotId") UUID slotId,
+        @Param("machineName") String machineName,
+        @Param("rowNumber") Integer rowNumber,
+        @Param("columnNumber") Integer columnNumber,
         @Param("startDate") LocalDateTime startDate,
         @Param("endDate") LocalDateTime endDate,
         @Param("paymentMethod") PaymentMethod paymentMethod,

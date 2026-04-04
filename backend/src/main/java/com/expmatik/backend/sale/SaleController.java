@@ -66,15 +66,16 @@ public class SaleController {
     @GetMapping
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> searchSales(@RequestParam(value = "barcode", required = false) String barcode, 
-        @RequestParam(required = false) UUID machineId, 
-        @RequestParam(required = false) UUID slotId, 
+        @RequestParam(required = false) String machineName, 
+        @RequestParam(required = false) Integer rowNumber,
+        @RequestParam(required = false) Integer columnNumber, 
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate, 
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate, 
         @RequestParam(required = false) PaymentMethod paymentMethod, 
         @RequestParam(required = false) TransactionStatus status, 
         @ParameterObject Pageable pageable) throws AccessDeniedException {
         User currentUser = userService.getUserProfile();
-        return ResponseEntity.ok(saleService.searchSales(currentUser.getId(), barcode, machineId, slotId, startDate, endDate, paymentMethod, status, pageable));
+        return ResponseEntity.ok(saleService.searchSales(currentUser.getId(), barcode, machineName, rowNumber, columnNumber, startDate, endDate, paymentMethod, status, pageable));
     }
 
     @PostMapping(value="/csv" , consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -86,14 +87,15 @@ public class SaleController {
     @GetMapping("/export")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> exportSalesToCSV(@RequestParam(value = "barcode", required = false) String barcode, 
-        @RequestParam(required = false) UUID machineId, 
-        @RequestParam(required = false) UUID slotId, 
+        @RequestParam(required = false) String machineName, 
+        @RequestParam(required = false) Integer rowNumber, 
+        @RequestParam(required = false) Integer columnNumber, 
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate, 
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate, 
         @RequestParam(required = false) PaymentMethod paymentMethod, 
         @RequestParam(required = false) TransactionStatus status) throws AccessDeniedException {
         User currentUser = userService.getUserProfile();
-        byte[] csvData = saleService.exportSalesCSV(currentUser.getId(), barcode, machineId, slotId, startDate, endDate, paymentMethod, status);
+        byte[] csvData = saleService.exportSalesCSV(currentUser.getId(), barcode, machineName, rowNumber, columnNumber, startDate, endDate, paymentMethod, status);
         return ResponseEntity.ok()
             .header("Content-Disposition", "attachment; filename=\"sales.csv\"")
             .header("Content-Type", "text/csv")

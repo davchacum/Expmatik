@@ -366,11 +366,12 @@ public class SaleServiceTest {
 
     @Test
     @DisplayName("searchSales - all parameters provided should call repository with same values")
-    void testSearchSales_AllParams() {
+    void testSearchSales_AllParams_ReturnsExpectedPage() {
         UUID userId = UUID.randomUUID();
         String barcode = "123456";
-        UUID machineId = UUID.randomUUID();
-        UUID slotId = UUID.randomUUID();
+        String machineName = "Máquina 1";
+        Integer rowNumber = 1;
+        Integer columnNumber = 1;
         LocalDateTime startDate = LocalDateTime.now().minusDays(1);
         LocalDateTime endDate = LocalDateTime.now();
         PaymentMethod paymentMethod = PaymentMethod.CASH;
@@ -380,14 +381,14 @@ public class SaleServiceTest {
         Page<Sale> expectedPage = Page.empty();
 
         when(saleRepository.searchAdvanced(
-                userId, barcode, machineId, slotId,
+                userId, barcode, machineName, rowNumber, columnNumber,
                 startDate, endDate,
                 paymentMethod, status,
                 pageable
         )).thenReturn(expectedPage);
 
         Page<Sale> result = saleService.searchSales(
-                userId, barcode, machineId, slotId,
+                userId, barcode, machineName, rowNumber, columnNumber,
                 startDate, endDate,
                 paymentMethod, status,
                 pageable
@@ -396,7 +397,7 @@ public class SaleServiceTest {
         assertThat(result).isEqualTo(expectedPage);
 
         verify(saleRepository).searchAdvanced(
-                userId, barcode, machineId, slotId,
+                userId, barcode, machineName, rowNumber, columnNumber,
                 startDate, endDate,
                 paymentMethod, status,
                 pageable
@@ -411,21 +412,21 @@ public class SaleServiceTest {
         Pageable pageable = PageRequest.of(0, 10);
 
         when(saleRepository.searchAdvanced(
-                eq(userId), isNull(), isNull(), isNull(),
+                eq(userId), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(),
                 isNull(), isNull(),
                 eq(pageable)
         )).thenReturn(Page.empty());
 
         saleService.searchSales(
-                userId, barcode, null, null,
+                userId, barcode, null, null,null,
                 null, null,
                 null, null,
                 pageable
         );
 
         verify(saleRepository).searchAdvanced(
-                eq(userId), isNull(), isNull(), isNull(),
+                eq(userId), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(),
                 isNull(), isNull(),
                 eq(pageable)
@@ -434,26 +435,83 @@ public class SaleServiceTest {
 
     @Test
     @DisplayName("searchSales - null barcode should remain null")
-    void testSearchSales_NullBarcode() {
+    void testSearchSales_NullBarcode_ReturnsExpectedPage() {
         UUID userId = UUID.randomUUID();
         Pageable pageable = PageRequest.of(0, 10);
 
         when(saleRepository.searchAdvanced(
-                eq(userId), isNull(), any(), any(),
+                eq(userId), isNull(), any(), any(),any(),
                 any(), any(),
                 any(), any(),
                 eq(pageable)
         )).thenReturn(Page.empty());
 
         saleService.searchSales(
-                userId, null, null, null,
+                userId, null, null, null,null,
                 null, null,
                 null, null,
                 pageable
         );
 
         verify(saleRepository).searchAdvanced(
-                eq(userId), isNull(), isNull(), isNull(),
+                eq(userId), isNull(), isNull(), isNull(),isNull(),
+                isNull(), isNull(),
+                isNull(), isNull(),
+                eq(pageable)
+        );
+    }
+
+        @Test
+    @DisplayName("searchSales - blank machine name should be converted to null")
+    void testSearchSales_BlankMachineName_ShouldPassNull() {
+        UUID userId = UUID.randomUUID();
+        String machineName = "   ";
+        Pageable pageable = PageRequest.of(0, 10);
+
+        when(saleRepository.searchAdvanced(
+                eq(userId), isNull(), isNull(), isNull(), isNull(),
+                isNull(), isNull(),
+                isNull(), isNull(),
+                eq(pageable)
+        )).thenReturn(Page.empty());
+
+        saleService.searchSales(
+                userId, null, machineName, null,null,
+                null, null,
+                null, null,
+                pageable
+        );
+
+        verify(saleRepository).searchAdvanced(
+                eq(userId), isNull(), isNull(), isNull(), isNull(),
+                isNull(), isNull(),
+                isNull(), isNull(),
+                eq(pageable)
+        );
+    }
+
+    @Test
+    @DisplayName("searchSales - null machine name should remain null")
+    void testSearchSales_NullMachineName_ReturnsExpectedPage() {
+        UUID userId = UUID.randomUUID();
+        Pageable pageable = PageRequest.of(0, 10);
+
+        when(saleRepository.searchAdvanced(
+                eq(userId), any(), isNull(), any(),any(),
+                any(), any(),
+                any(), any(),
+                eq(pageable)
+        )).thenReturn(Page.empty());
+
+        saleService.searchSales(
+                userId, null, null, null,null,
+                null, null,
+                null, null,
+                pageable
+        );
+
+        verify(saleRepository).searchAdvanced(
+                eq(userId), isNull(), isNull(), isNull(),isNull(),
                 isNull(), isNull(),
                 isNull(), isNull(),
                 eq(pageable)
@@ -462,27 +520,27 @@ public class SaleServiceTest {
 
     @Test
     @DisplayName("searchSales - partial filters should pass only provided values")
-    void testSearchSales_PartialFilters() {
+    void testSearchSales_PartialFilters_ReturnsExpectedPage() {
         UUID userId = UUID.randomUUID();
         String barcode = "ABC123";
         Pageable pageable = PageRequest.of(0, 10);
 
         when(saleRepository.searchAdvanced(
-                eq(userId), eq(barcode), isNull(), isNull(),
+                eq(userId), eq(barcode), isNull(), isNull(),isNull(),
                 isNull(), isNull(),
                 isNull(), isNull(),
                 eq(pageable)
         )).thenReturn(Page.empty());
 
         saleService.searchSales(
-                userId, barcode, null, null,
+                userId, barcode, null, null,null,
                 null, null,
                 null, null,
                 pageable
         );
 
         verify(saleRepository).searchAdvanced(
-                eq(userId), eq(barcode), isNull(), isNull(),
+                eq(userId), eq(barcode), isNull(), isNull(),isNull(),
                 isNull(), isNull(),
                 isNull(), isNull(),
                 eq(pageable)

@@ -141,11 +141,10 @@ public class SaleService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Sale> searchSales(UUID userId, String barcode, UUID machineId, UUID slotId, LocalDateTime startDate, LocalDateTime endDate, PaymentMethod paymentMethod, TransactionStatus status, Pageable pageable) {
+    public Page<Sale> searchSales(UUID userId, String barcode, String machineName, Integer rowNumber, Integer columnNumber, LocalDateTime startDate, LocalDateTime endDate, PaymentMethod paymentMethod, TransactionStatus status, Pageable pageable) {
         String barcodeParam = (barcode != null && !barcode.isBlank()) ? barcode : null;
-        UUID machineIdParam = (machineId != null) ? machineId : null;
-        UUID slotIdParam = (slotId != null) ? slotId : null;
-        return saleRepository.searchAdvanced(userId, barcodeParam, machineIdParam, slotIdParam
+        String machineNameParam = (machineName != null && !machineName.isBlank()) ? machineName : null;
+        return saleRepository.searchAdvanced(userId, barcodeParam, machineNameParam, rowNumber, columnNumber
             , startDate, endDate
             , paymentMethod, status
             , pageable);
@@ -184,11 +183,10 @@ public class SaleService {
     }
 
     @Transactional(readOnly = true)
-    public byte[] exportSalesCSV(UUID userId, String barcode, UUID machineId, UUID slotId, LocalDateTime startDate, LocalDateTime endDate, PaymentMethod paymentMethod, TransactionStatus status) {
+    public byte[] exportSalesCSV(UUID userId, String barcode, String machineName, Integer rowNumber, Integer columnNumber, LocalDateTime startDate, LocalDateTime endDate, PaymentMethod paymentMethod, TransactionStatus status) {
         String barcodeParam = (barcode != null && !barcode.isBlank()) ? barcode : null;
-        UUID machineIdParam = (machineId != null) ? machineId : null;
-        UUID slotIdParam = (slotId != null) ? slotId : null;
-        List<Sale> sales = saleRepository.searchAdvanced(userId, barcodeParam, machineIdParam, slotIdParam
+        String machineNameParam = (machineName != null && !machineName.isBlank()) ? machineName : null;
+        List<Sale> sales = saleRepository.searchAdvanced(userId, barcodeParam, machineNameParam, rowNumber, columnNumber
             , startDate, endDate
             , paymentMethod, status);
         byte[] csvData = saleCSVLector.generateCSV(sales);
