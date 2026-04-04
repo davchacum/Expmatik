@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -293,6 +294,13 @@ public class SaleIntegrationTest {
             .andExpect(jsonPath("$.barcode").value("20000001"))
             .andExpect(jsonPath("$.status").value("FAILED"))
             .andExpect(jsonPath("$.failureReason").value("Cannot remove stock from the vending slot because it is empty."));
+        
+        mockMvc.perform(get("/api/notifications"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content").isArray())
+            .andExpect(jsonPath("$.content[0].type").value("FAILURE_SALE"))
+            .andExpect(jsonPath("$.content[0].isRead").value(false))
+            .andExpect(jsonPath("$.content[0].createdAt").value(Matchers.startsWith(LocalDate.now().toString())));
     }
 
     @Test
@@ -316,6 +324,13 @@ public class SaleIntegrationTest {
             .andExpect(jsonPath("$.barcode").value("20000001"))
             .andExpect(jsonPath("$.status").value("FAILED"))
             .andExpect(jsonPath("$.failureReason").value("The vending slot is blocked for maintenance."));
+        
+        mockMvc.perform(get("/api/notifications"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content").isArray())
+            .andExpect(jsonPath("$.content[0].type").value("FAILURE_SALE"))
+            .andExpect(jsonPath("$.content[0].isRead").value(false))
+            .andExpect(jsonPath("$.content[0].createdAt").value(Matchers.startsWith(LocalDate.now().toString())));
     }
 
     @Test
@@ -373,6 +388,13 @@ public class SaleIntegrationTest {
             .andExpect(jsonPath("$.barcode").value("20000001"))
             .andExpect(jsonPath("$.status").value("FAILED"))
             .andExpect(jsonPath("$.failureReason").value("Cannot register sale because the product is expired."));
+        
+        mockMvc.perform(get("/api/notifications"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content").isArray())
+            .andExpect(jsonPath("$.content[0].type").value("FAILURE_SALE"))
+            .andExpect(jsonPath("$.content[0].isRead").value(false))
+            .andExpect(jsonPath("$.content[0].createdAt").value(Matchers.startsWith(LocalDate.now().toString())));
     }
 
     // == Get /api/sales ==

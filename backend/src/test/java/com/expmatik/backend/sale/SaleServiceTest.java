@@ -300,7 +300,7 @@ public class SaleServiceTest {
 
         verify(vendingSlotService).popStockFromVendingSlot(vendingSlotId, user);
         verify(notificationService).createNotification(
-            eq(NotificationType.SALE_FAILURE),
+            eq(NotificationType.FAILURE_SALE),
             contains(errorMessage),
             eq("Unknown"),
             eq(user)
@@ -328,7 +328,7 @@ public class SaleServiceTest {
         assertThat(result.getTotalAmount()).isEqualTo(productInfo.getSaleUnitPrice());
         verify(vendingSlotService).popStockFromVendingSlot(vendingSlotId, user);
         verify(notificationService).createNotification(
-            eq(NotificationType.SALE_FAILURE),
+            eq(NotificationType.FAILURE_SALE),
             contains(errorMessage),
             eq("Unknown"),
             eq(user)
@@ -359,7 +359,7 @@ public class SaleServiceTest {
 
         verify(vendingSlotService).popStockFromVendingSlot(vendingSlotId, user);
         verify(notificationService).createNotification(
-            eq(NotificationType.SALE_FAILURE),
+            eq(NotificationType.FAILURE_SALE),
             contains(errorMessage),
             eq("Unknown"),
             eq(user)

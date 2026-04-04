@@ -119,7 +119,7 @@ public class SaleService {
             sale.setFailureReason(e.getMessage());
             String message = "La venta ha fallado porque " + e.getMessage() + " en la máquina expendedora " + vendingSlotId.toString() + ". Por favor, revise el estado de la máquina y el producto para solucionar el problema.";
             String link = "Unknown";
-            notificationService.createNotification(NotificationType.SALE_FAILURE, message, link, user);
+            notificationService.createNotification(NotificationType.FAILURE_SALE, message, link, user);
             
             System.out.println("Sale failed: " + e.getMessage());
         }
