@@ -90,16 +90,24 @@ public class ProductInfoService {
         existingInfo.setSaleUnitPrice(updatedInfo.saleUnitPrice());
         existingInfo.setVatRate(updatedInfo.vatRate());
         existingInfo.setNeedUpdate(false);
-        if(existingInfo.getStockQuantity() <= 20 && updatedInfo.stockQuantity() > 0) {
-            String message = "El producto " + existingInfo.getProduct().getName() + " tiene pocas unidades en stock. Quedan " + updatedInfo.stockQuantity() + " unidades. Por favor, considere reponerlo pronto comprandolo con una factura.";
-            String link = "Unknown";
-            notificationService.createNotification(NotificationType.INVENTORY_STOCK_LOW, message, link, existingInfo.getUser());
+        if(existingInfo.getStockQuantity() <= 20 && existingInfo.getStockQuantity() > 0) {
+            generateLowStockNotification(existingInfo);
         }else if(existingInfo.getStockQuantity() == 0) {
-            String message = "El producto " + existingInfo.getProduct().getName() + " se ha quedado sin stock. Por favor, considere reponerlo lo antes posible comprandolo con una factura.";
-            String link = "Unknown";
-            notificationService.createNotification(NotificationType.INVENTORY_OUT_OF_STOCK, message, link, existingInfo.getUser());
+            generateOutOfStockNotification(existingInfo);
         }
         return save(existingInfo);
+    }
+
+    private void generateLowStockNotification(ProductInfo productInfo) {
+        String message = "El producto " + productInfo.getProduct().getName() + " tiene pocas unidades en stock. Quedan " + productInfo.getStockQuantity() + " unidades. Por favor, considere reponerlo pronto comprandolo con una factura.";
+        String link = "Unknown";
+        notificationService.createNotification(NotificationType.INVENTORY_STOCK_LOW, message, link, productInfo.getUser());
+    }
+
+    private void generateOutOfStockNotification(ProductInfo productInfo) {
+        String message = "El producto " + productInfo.getProduct().getName() + " se ha quedado sin stock. Por favor, considere reponerlo lo antes posible comprandolo con una factura.";
+        String link = "Unknown";
+        notificationService.createNotification(NotificationType.INVENTORY_OUT_OF_STOCK, message, link, productInfo.getUser());
     }
 
     @Transactional
@@ -115,6 +123,11 @@ public class ProductInfoService {
         existingInfo.setStockQuantity(updatedStockQuantity);
         if(lastPurchaseUnitPrice != null) {
             existingInfo.setLastPurchaseUnitPrice(lastPurchaseUnitPrice);
+        }
+        if(updatedStockQuantity <= 20 && updatedStockQuantity > 0) {
+            generateLowStockNotification(existingInfo);
+        }else if(updatedStockQuantity == 0) {
+            generateOutOfStockNotification(existingInfo);
         }
         return save(existingInfo);
     }

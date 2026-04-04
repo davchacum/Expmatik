@@ -2,6 +2,7 @@ package com.expmatik.backend.productInfo;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -15,10 +16,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 
 import com.expmatik.backend.notification.NotificationService;
+import com.expmatik.backend.notification.NotificationType;
 import com.expmatik.backend.product.Product;
 import com.expmatik.backend.product.ProductService;
 import com.expmatik.backend.productInfo.DTOs.ProductInfoUpdate;
@@ -209,6 +212,28 @@ public class ProductInfoServiceTest {
     void testUpdateProductInfo_Success() {
         UUID productInfoId = productInfo.getId();
         productInfo.setProduct(productCustom);
+        ProductInfoUpdate updatedInfo = new ProductInfoUpdate(21, new BigDecimal("6.99"), new BigDecimal("0.10"));
+        productInfo.setUser(user1);
+        when(productInfoRepository.findById(productInfoId)).thenReturn(Optional.of(productInfo));
+        when(productInfoRepository.save(ArgumentMatchers.any(ProductInfo.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        ProductInfo result = productInfoService.updateProductInfo(productInfoId, user1, updatedInfo);
+        assertThat(result.getStockQuantity()).isEqualTo(21);
+        assertThat(result.getSaleUnitPrice()).isEqualTo(new BigDecimal("6.99"));
+        assertThat(result.getVatRate()).isEqualTo(new BigDecimal("0.10"));
+
+        verify(notificationService, Mockito.never()).createNotification(
+            ArgumentMatchers.any(NotificationType.class),
+            ArgumentMatchers.anyString(),
+            ArgumentMatchers.anyString(),
+            ArgumentMatchers.any(User.class)
+        );
+    }
+
+    @Test
+    void testUpdateProductInfo_SuccessAndCreateNotificationInventoryStockLow() {
+        UUID productInfoId = productInfo.getId();
+        productInfo.setProduct(productCustom);
         ProductInfoUpdate updatedInfo = new ProductInfoUpdate(20, new BigDecimal("6.99"), new BigDecimal("0.10"));
         productInfo.setUser(user1);
         when(productInfoRepository.findById(productInfoId)).thenReturn(Optional.of(productInfo));
@@ -218,6 +243,35 @@ public class ProductInfoServiceTest {
         assertThat(result.getStockQuantity()).isEqualTo(20);
         assertThat(result.getSaleUnitPrice()).isEqualTo(new BigDecimal("6.99"));
         assertThat(result.getVatRate()).isEqualTo(new BigDecimal("0.10"));
+
+        verify(notificationService).createNotification(
+            ArgumentMatchers.eq(NotificationType.INVENTORY_STOCK_LOW),
+            ArgumentMatchers.contains("tiene pocas unidades en stock"),
+            ArgumentMatchers.anyString(),
+            ArgumentMatchers.eq(user1)
+        );
+    }
+
+    @Test
+    void testUpdateProductInfo_SuccessAndCreateNotificationInventoryOutOfStock() {
+        UUID productInfoId = productInfo.getId();
+        productInfo.setProduct(productCustom);
+        ProductInfoUpdate updatedInfo = new ProductInfoUpdate(0, new BigDecimal("6.99"), new BigDecimal("0.10"));
+        productInfo.setUser(user1);
+        when(productInfoRepository.findById(productInfoId)).thenReturn(Optional.of(productInfo));
+        when(productInfoRepository.save(ArgumentMatchers.any(ProductInfo.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        ProductInfo result = productInfoService.updateProductInfo(productInfoId, user1, updatedInfo);
+        assertThat(result.getStockQuantity()).isEqualTo(0);
+        assertThat(result.getSaleUnitPrice()).isEqualTo(new BigDecimal("6.99"));
+        assertThat(result.getVatRate()).isEqualTo(new BigDecimal("0.10"));
+
+        verify(notificationService).createNotification(
+            ArgumentMatchers.eq(NotificationType.INVENTORY_OUT_OF_STOCK),
+            ArgumentMatchers.contains("sin stock"),
+            ArgumentMatchers.anyString(),
+            ArgumentMatchers.eq(user1)
+        );
     }
 
     @Test
@@ -233,17 +287,73 @@ public class ProductInfoServiceTest {
 
     // ==================== editStockQuantity Tests ====================
 
-    @Test
+        @Test
     void testEditStockQuantity_Success() {
+        UUID productInfoId = productInfo.getId();
+        Integer newStockQuantity = 21;
+        BigDecimal lastPurchaseUnitPrice = new BigDecimal("4.99");
+        productInfo.setUser(user1);
+        productCustom.setName("Custom Product");
+        productInfo.setProduct(productCustom);
+
+        when(productInfoRepository.findById(productInfoId)).thenReturn(Optional.of(productInfo));
+        when(productInfoRepository.save(ArgumentMatchers.any(ProductInfo.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        ProductInfo result = productInfoService.editStockQuantity(productInfoId, user1, newStockQuantity, lastPurchaseUnitPrice);
+        assertThat(result.getStockQuantity()).isEqualTo(31);
+
+        verify(notificationService, Mockito.never()).createNotification(
+            ArgumentMatchers.any(NotificationType.class),
+            ArgumentMatchers.anyString(),
+            ArgumentMatchers.anyString(),
+            ArgumentMatchers.any(User.class)
+        );
+    }
+
+    @Test
+    void testEditStockQuantity_SuccessAndCreateNotificationInventoryStockLow() {
         UUID productInfoId = productInfo.getId();
         Integer newStockQuantity = 5;
         BigDecimal lastPurchaseUnitPrice = new BigDecimal("4.99");
         productInfo.setUser(user1);
+        productCustom.setName("Custom Product");
+        productInfo.setProduct(productCustom);
+
         when(productInfoRepository.findById(productInfoId)).thenReturn(Optional.of(productInfo));
         when(productInfoRepository.save(ArgumentMatchers.any(ProductInfo.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
         ProductInfo result = productInfoService.editStockQuantity(productInfoId, user1, newStockQuantity, lastPurchaseUnitPrice);
         assertThat(result.getStockQuantity()).isEqualTo(15);
+
+        verify(notificationService).createNotification(
+            ArgumentMatchers.eq(NotificationType.INVENTORY_STOCK_LOW),
+            ArgumentMatchers.contains("tiene pocas unidades en stock"),
+            ArgumentMatchers.anyString(),
+            ArgumentMatchers.eq(user1)
+        );
+    }
+
+    @Test
+    void testEditStockQuantity_SuccessAndCreateNotificationInventoryOutOfStock() {
+        UUID productInfoId = productInfo.getId();
+        Integer newStockQuantity = -15;
+        BigDecimal lastPurchaseUnitPrice = new BigDecimal("4.99");
+        productInfo.setUser(user1);
+        productCustom.setName("Custom Product");
+        productInfo.setProduct(productCustom);
+
+        when(productInfoRepository.findById(productInfoId)).thenReturn(Optional.of(productInfo));
+        when(productInfoRepository.save(ArgumentMatchers.any(ProductInfo.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        ProductInfo result = productInfoService.editStockQuantity(productInfoId, user1, newStockQuantity, lastPurchaseUnitPrice);
+        assertThat(result.getStockQuantity()).isEqualTo(0);
+
+        verify(notificationService).createNotification(
+            ArgumentMatchers.eq(NotificationType.INVENTORY_OUT_OF_STOCK),
+            ArgumentMatchers.contains("se ha quedado sin stock"),
+            ArgumentMatchers.anyString(),
+            ArgumentMatchers.eq(user1)
+        );
     }
 
     @Test
@@ -252,6 +362,8 @@ public class ProductInfoServiceTest {
         Integer newStockQuantity = 5;
         BigDecimal lastPurchaseUnitPrice = null;
         productInfo.setUser(user1);
+        productCustom.setName("Custom Product");
+        productInfo.setProduct(productCustom);
         when(productInfoRepository.findById(productInfoId)).thenReturn(Optional.of(productInfo));
         when(productInfoRepository.save(ArgumentMatchers.any(ProductInfo.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -265,6 +377,8 @@ public class ProductInfoServiceTest {
         Integer newStockQuantity = 5;
         BigDecimal lastPurchaseUnitPrice = new BigDecimal("4.99");
         productInfo.setUser(user1);
+        productCustom.setName("Custom Product");
+        productInfo.setProduct(productCustom);
         when(productInfoRepository.findById(productInfoId)).thenReturn(Optional.of(productInfo));
         assertThatThrownBy(() -> productInfoService.editStockQuantity(productInfoId, user2, newStockQuantity, lastPurchaseUnitPrice))
                 .isInstanceOf(AccessDeniedException.class)
@@ -277,6 +391,8 @@ public class ProductInfoServiceTest {
         Integer newStockQuantity = -5;
         BigDecimal lastPurchaseUnitPrice = new BigDecimal("4.99");
         productInfo.setUser(user1);
+        productCustom.setName("Custom Product");
+        productInfo.setProduct(productCustom);
         when(productInfoRepository.findById(productInfoId)).thenReturn(Optional.of(productInfo));
         when(productInfoRepository.save(ArgumentMatchers.any(ProductInfo.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -290,6 +406,8 @@ public class ProductInfoServiceTest {
         Integer newStockQuantity = -20;
         BigDecimal lastPurchaseUnitPrice = new BigDecimal("4.99");
         productInfo.setUser(user1);
+        productCustom.setName("Custom Product");
+        productInfo.setProduct(productCustom);
         when(productInfoRepository.findById(productInfoId)).thenReturn(Optional.of(productInfo));
         when(productInfoRepository.save(ArgumentMatchers.any(ProductInfo.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));

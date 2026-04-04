@@ -7,8 +7,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.UUID;
 
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -72,6 +74,54 @@ public class ProductInfoIntegrationTest {
                 .andExpect(jsonPath("$.stockQuantity").value(199))
                 .andExpect(jsonPath("$.saleUnitPrice").value(10))
                 .andExpect(jsonPath("$.vatRate").value(0.15));
+    }
+
+    @Test
+    @WithUserDetails("admin@expmatik.com")
+    void testUpdateProductInfoAndCreateNotificationInventoryStockLow() throws Exception {
+
+        UUID productInfoId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+
+        ProductInfoUpdate updateRequest = new ProductInfoUpdate(5, new BigDecimal("10"), new BigDecimal("0.15"));
+        String jsonRequest = objectMapper.writeValueAsString(updateRequest);
+        mockMvc.perform(put("/api/product-info/" + productInfoId)
+                .contentType("application/json")
+                .content(jsonRequest))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.stockQuantity").value(5))
+                .andExpect(jsonPath("$.saleUnitPrice").value(10))
+                .andExpect(jsonPath("$.vatRate").value(0.15));
+
+        mockMvc.perform(get("/api/notifications"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].type").value("INVENTORY_STOCK_LOW"))
+                .andExpect(jsonPath("$.content[0].isRead").value(false))
+                .andExpect(jsonPath("$.content[0].createdAt").value(Matchers.startsWith(LocalDate.now().toString())));
+    }
+
+    @Test
+    @WithUserDetails("admin@expmatik.com")
+    void testUpdateProductInfoAndCreateNotificationInventoryOutOfStock() throws Exception {
+
+        UUID productInfoId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+
+        ProductInfoUpdate updateRequest = new ProductInfoUpdate(0, new BigDecimal("10"), new BigDecimal("0.15"));
+        String jsonRequest = objectMapper.writeValueAsString(updateRequest);
+        mockMvc.perform(put("/api/product-info/" + productInfoId)
+                .contentType("application/json")
+                .content(jsonRequest))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.stockQuantity").value(0))
+                .andExpect(jsonPath("$.saleUnitPrice").value(10))
+                .andExpect(jsonPath("$.vatRate").value(0.15));
+
+        mockMvc.perform(get("/api/notifications"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].type").value("INVENTORY_OUT_OF_STOCK"))
+                .andExpect(jsonPath("$.content[0].isRead").value(false))
+                .andExpect(jsonPath("$.content[0].createdAt").value(Matchers.startsWith(LocalDate.now().toString())));
     }
 
     @Test
