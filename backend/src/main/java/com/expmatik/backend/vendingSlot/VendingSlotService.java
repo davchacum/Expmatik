@@ -60,6 +60,14 @@ public class VendingSlotService {
         return vendingSlotRepository.save(vendingSlot);
     }
 
+    @Transactional(readOnly = true)
+    public VendingSlot getVendingSlotByMachineNameAndRowAndColumn(String machineName, Integer row, Integer column, User user) {
+        VendingSlot vendingSlot = vendingSlotRepository.findByVendingMachineNameAndRowAndColumn(machineName, row, column)
+                .orElseThrow(() -> new ResourceNotFoundException("The vending slot does not exist."));
+        checkUserAuthorization(vendingSlot, user);
+        return vendingSlot;
+    }
+
     @Transactional
     public void createVendingSlotsForMachine(VendingMachine machine, Integer rowCount, Integer columnCount, Integer maxCapacityPerSlot) {
         for (int row = 1; row <= rowCount; row++) {
@@ -133,8 +141,6 @@ public class VendingSlotService {
         
         return saveVendingSlot(vendingSlot);
     }
-
-    //Funcion simple para probar el funcionamiento de la pila
 
     @Transactional
     public VendingSlot popStockFromVendingSlot(UUID vendingSlotId, User user) {

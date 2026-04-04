@@ -67,9 +67,7 @@ public class VendingMachineService {
     public VendingMachine updateVendingMachine(UUID vendingMachineId, VendingMachineUpdate vendingMachineUpdate, User user) {
         VendingMachine vendingMachine = findVendingMachineById(vendingMachineId);
         validateVendingMachineOwnership(vendingMachine, user);
-        validateVendingMachineNameUniqueness(vendingMachineUpdate.name(), user);
         vendingMachine.setLocation(vendingMachineUpdate.location());
-        vendingMachine.setName(vendingMachineUpdate.name());
         return vendingMachineRepository.save(vendingMachine);
     }
 

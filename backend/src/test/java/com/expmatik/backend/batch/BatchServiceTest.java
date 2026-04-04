@@ -168,7 +168,7 @@ public class BatchServiceTest {
         BatchCreate batchCreate = new BatchCreate(batch1);
 
         when(invoiceRepository.findById(invoice1.getId())).thenReturn(Optional.of(invoice1));
-        when(productService.findInternalProductByBarcode("1234567890123",user1.getId())).thenReturn(productCustom);
+        when(productService.getOrCreateProductByBarcode("1234567890123", user1.getId())).thenReturn(productCustom);
         when(batchRepository.save(any(Batch.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Batch createdBatch = batchService.createBatch(user1.getId(), batchCreate, invoice1.getId());
@@ -179,7 +179,6 @@ public class BatchServiceTest {
     }
 
     @Test
-    //Invoice Id not found
     @DisplayName("Create batch with non-existing invoice should throw ResourceNotFoundException")
     void testCreateBatch_NonExistingInvoice_ShouldThrowResourceNotFoundException() {
 
@@ -199,7 +198,7 @@ public class BatchServiceTest {
         BatchCreate batchCreate = new BatchCreate(null, batch2.getUnitPrice(), batch2.getQuantity(), batch2.getProduct().getBarcode());
 
         when(invoiceRepository.findById(invoice1.getId())).thenReturn(Optional.of(invoice1));
-        when(productService.findInternalProductByBarcode("9876543210123", user1.getId())).thenReturn(productNoCustom);
+        when(productService.getOrCreateProductByBarcode("9876543210123", user1.getId())).thenReturn(productNoCustom);
 
         assertThatThrownBy(() -> batchService.createBatch(user1.getId(), batchCreate, invoice1.getId()))
             .isInstanceOf(ConflictException.class)
@@ -213,7 +212,7 @@ public class BatchServiceTest {
         BatchCreate batchCreate = new BatchCreate(LocalDate.of(2026, 3, 1), batch1.getUnitPrice(), batch1.getQuantity(), batch1.getProduct().getBarcode());
 
         when(invoiceRepository.findById(invoice1.getId())).thenReturn(Optional.of(invoice1));
-        when(productService.findInternalProductByBarcode("1234567890123", user1.getId())).thenReturn(productCustom);
+        when(productService.getOrCreateProductByBarcode("1234567890123", user1.getId())).thenReturn(productCustom);
 
         assertThatThrownBy(() -> batchService.createBatch(user1.getId(), batchCreate, invoice1.getId()))
             .isInstanceOf(ConflictException.class)
@@ -255,7 +254,7 @@ public class BatchServiceTest {
         batchCreate = new BatchCreate(batchCreate.expirationDate(), new BigDecimal("5.99"), 10, batchCreate.productBarcode());
 
         when(batchRepository.findById(batch1.getId())).thenReturn(Optional.of(batch1));
-        when(productService.findByBarcodeOptional(user1.getId(), "1234567890123")).thenReturn(Optional.of(productCustom));
+        when(productService.getOrCreateProductByBarcode("1234567890123", user1.getId())).thenReturn(productCustom);
         when(batchRepository.save(any(Batch.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Batch updatedBatch = batchService.updateBatch(user1.getId(), batch1.getId(), batchCreate);
@@ -272,8 +271,7 @@ public class BatchServiceTest {
         batchCreate = new BatchCreate(batchCreate.expirationDate(), new BigDecimal("4.99"), 5, batchCreate.productBarcode());
 
         when(batchRepository.findById(batch2.getId())).thenReturn(Optional.of(batch2));
-        when(productService.findByBarcodeOptional(user1.getId(), "9876543210123")).thenReturn(Optional.empty());
-        when(productService.createProductOpenFoodFacts("9876543210123", user1.getId())).thenReturn(productNoCustom);
+        when(productService.getOrCreateProductByBarcode("9876543210123", user1.getId())).thenReturn(productNoCustom);
         when(batchRepository.save(any(Batch.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Batch updatedBatch = batchService.updateBatch(user1.getId(), batch2.getId(), batchCreate);
@@ -301,7 +299,7 @@ public class BatchServiceTest {
         BatchCreate batchCreate = new BatchCreate(null, batch2.getUnitPrice(), batch2.getQuantity(), batch2.getProduct().getBarcode());
 
         when(batchRepository.findById(batch2.getId())).thenReturn(Optional.of(batch2));
-        when(productService.findByBarcodeOptional(user1.getId(), "9876543210123")).thenReturn(Optional.of(productNoCustom));
+        when(productService.getOrCreateProductByBarcode("9876543210123", user1.getId())).thenReturn(productNoCustom);
 
         assertThatThrownBy(() -> batchService.updateBatch(user1.getId(), batch2.getId(), batchCreate))
             .isInstanceOf(ConflictException.class)
@@ -314,7 +312,7 @@ public class BatchServiceTest {
         BatchCreate batchCreate = new BatchCreate(LocalDate.of(2026, 3, 1), batch1.getUnitPrice(), batch1.getQuantity(), batch1.getProduct().getBarcode());
 
         when(batchRepository.findById(batch1.getId())).thenReturn(Optional.of(batch1));
-        when(productService.findByBarcodeOptional(user1.getId(), "1234567890123")).thenReturn(Optional.of(productCustom));
+        when(productService.getOrCreateProductByBarcode("1234567890123", user1.getId())).thenReturn(productCustom);
 
         assertThatThrownBy(() -> batchService.updateBatch(user1.getId(), batch1.getId(), batchCreate))
             .isInstanceOf(ConflictException.class)
