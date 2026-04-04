@@ -2,7 +2,6 @@ package com.expmatik.backend.sale.DTOs;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 import com.expmatik.backend.sale.PaymentMethod;
 import com.expmatik.backend.sale.TransactionStatus;
@@ -10,8 +9,10 @@ import com.expmatik.backend.sale.TransactionStatus;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.Positive;
 
 public record SaleCreate(
 
@@ -34,8 +35,14 @@ public record SaleCreate(
     @NotNull
     String barcode,
 
-    @NotNull
-    UUID vendingSlotId
+    @NotBlank
+    String machineName,
+
+    @Positive
+    Integer rowNumber,
+
+    @Positive
+    Integer columnNumber
 
 ) {
 

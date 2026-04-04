@@ -79,8 +79,7 @@ public class SaleService {
         sale.setPaymentMethod(saleCreate.paymentMethod());
         sale.setStatus(saleCreate.status());
         Product product = productService.findInternalProductByBarcode(saleCreate.barcode(), user.getId());
-        VendingSlot vendingSlot = vendingSlotService.getVendingSlotById(saleCreate.vendingSlotId(), user);
-        vendingSlotService.checkUserAuthorization(vendingSlot, user);
+        VendingSlot vendingSlot = vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(saleCreate.machineName(), saleCreate.rowNumber(), saleCreate.columnNumber(), user);
         sale.setProduct(product);
         sale.setVendingSlot(vendingSlot);
         return save(sale);

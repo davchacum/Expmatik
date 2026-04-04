@@ -11,7 +11,6 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
@@ -24,7 +23,7 @@ import com.opencsv.exceptions.CsvValidationException;
 @Component
 public class SaleCSVLector {
 
-    private static final int EXPECTED_COLUMNS = 7;
+    private static final int EXPECTED_COLUMNS = 8;
 
     public List<SaleCreate> readCSV(File file) {
 
@@ -65,8 +64,10 @@ public class SaleCSVLector {
         BigDecimal totalAmount = parseDecimal(row[1], "totalAmount", line);
         PaymentMethod paymentMethod = parsePaymentMethod(row[2], line);
         TransactionStatus status = parseStatus(row[3], line);
-        String barcode = requiredText(row[4], "barcode", line);
-        UUID vendingSlotId = parseUUID(row[5], "vendingSlotId", line);
+        String barcode = parseBarcode(row[4], line);
+        String vendingMachineName = requiredText(row[5], "vendingMachineName", line);
+        Integer rowNumber = parsePositiveInteger(row[6], "rowNumber", line);
+        Integer columnNumber = parsePositiveInteger(row[7], "columnNumber", line);
 
         return new SaleCreate(
                 saleDate,
@@ -74,7 +75,9 @@ public class SaleCSVLector {
                 paymentMethod,
                 status,
                 barcode,
-                vendingSlotId
+                vendingMachineName,
+                rowNumber,
+                columnNumber
         );
     }
 
@@ -107,7 +110,7 @@ public class SaleCSVLector {
             return PaymentMethod.valueOf(normalized);
         } catch (IllegalArgumentException ex) {
             throw new BadRequestException(
-                    "Line " + line + ": invalid paymentMethod -> " + normalized + ".");
+                    "Line " + line + ": invalid payment method -> " + normalized + ".");
         }
     }
 
@@ -135,16 +138,39 @@ public class SaleCSVLector {
         }
     }
 
-    private UUID parseUUID(String value, String fieldName, int line) {
+    private String parseBarcode(String value, int line) {
 
-        try {
-            return UUID.fromString(requiredText(value, fieldName, line));
-        } catch (IllegalArgumentException ex) {
+        String barcode = requiredText(value, "productBarcode", line);
+
+        if (!barcode.matches("\\d+") || (barcode.length() != 8 && barcode.length() != 13)) {
             throw new BadRequestException(
-                    "Line " + line + ": invalid UUID -> " + fieldName);
+                    "Line " + line + ": invalid productBarcode. It must be numeric and contain 8 or 13 digits.");
         }
+
+        return barcode;
     }
 
+    private Integer parsePositiveInteger(String value, String fieldName, int line) {
+
+        String normalized = requiredText(value, fieldName, line);
+
+        try {
+
+            int number = Integer.parseInt(normalized);
+
+            if (number <= 0) {
+                throw new BadRequestException(
+                        "Line " + line + ": " + fieldName + " must be greater than 0.");
+            }
+
+            return number;
+
+        } catch (NumberFormatException ex) {
+
+            throw new BadRequestException(
+                    "Line " + line + ": " + fieldName + " is not a valid integer.");
+        }
+    }
     private LocalDateTime parseDateTime(String value, int line) {
 
         try {
@@ -190,7 +216,9 @@ public class SaleCSVLector {
                     "paymentMethod",
                     "status",
                     "barcode",
-                    "vendingSlotId",
+                    "vendingMachineName",
+                    "rowNumber",
+                    "columnNumber",
                     "failureReason"
             });
 
@@ -203,7 +231,9 @@ public class SaleCSVLector {
                         sale.getPaymentMethod().name(),
                         sale.getStatus().name(),
                         sale.getProduct().getBarcode(),
-                        sale.getVendingSlot().getId().toString(),
+                        sale.getVendingSlot().getVendingMachine().getName(),
+                        sale.getVendingSlot().getRowNumber().toString(),
+                        sale.getVendingSlot().getColumnNumber().toString(),
                         sale.getFailureReason() != null ? sale.getFailureReason() : ""
                 });
             }

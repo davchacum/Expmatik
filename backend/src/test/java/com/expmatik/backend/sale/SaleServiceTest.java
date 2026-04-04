@@ -92,10 +92,13 @@ public class SaleServiceTest {
         vendingMachine = new VendingMachine();
         vendingMachine.setId(UUID.randomUUID());
         vendingMachine.setUser(user);
+        vendingMachine.setName("Máquina 1");
 
         vendingSlot = new VendingSlot();
         vendingSlot.setId(UUID.randomUUID());
         vendingSlot.setVendingMachine(vendingMachine);
+        vendingSlot.setRowNumber(1);
+        vendingSlot.setColumnNumber(1);
         vendingSlot.setProduct(product);
 
         productInfo = new ProductInfo();
@@ -178,11 +181,13 @@ public class SaleServiceTest {
             PaymentMethod.CASH,
             TransactionStatus.SUCCESS,
             barcode,
-            vendingSlot.getId()
+            "Máquina 1",
+            1,
+            1
         );
 
         when(productService.findInternalProductByBarcode(barcode, user.getId())).thenReturn(product);
-        when(vendingSlotService.getVendingSlotById(vendingSlot.getId(), user)).thenReturn(vendingSlot);
+        when(vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(saleCreate.machineName(), saleCreate.rowNumber(), saleCreate.columnNumber(), user)).thenReturn(vendingSlot);
         when(saleRepository.save(any(Sale.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Sale result = saleService.createSale(saleCreate, user);
@@ -194,7 +199,7 @@ public class SaleServiceTest {
         assertThat(result.getProduct()).isEqualTo(product);
         assertThat(result.getVendingSlot()).isEqualTo(vendingSlot);
         verify(productService).findInternalProductByBarcode(barcode, user.getId());
-        verify(vendingSlotService).getVendingSlotById(vendingSlot.getId(), user);
+        verify(vendingSlotService).getVendingSlotByMachineNameAndRowAndColumn(saleCreate.machineName(), saleCreate.rowNumber(), saleCreate.columnNumber(), user);
         verify(saleRepository).save(any(Sale.class));
     }
 
