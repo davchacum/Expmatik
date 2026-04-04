@@ -626,5 +626,54 @@ public class ProductServiceTest {
                 .hasMessage("No product found in the internal catalog with barcode: " + barcode);
     }
 
+    // ==================== getOrCreateProductByBarcode Tests ====================
+
+    @Test
+    @DisplayName("getOrCreateProductByBarcode - returns existing product if found")
+    void testGetOrCreateProductByBarcodeReturnsExisting() {
+        String barcode = "1111111111111";
+        UUID userId = user1.getId();
+
+        Product existingProduct = new Product();
+        existingProduct.setBarcode(barcode);
+
+        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
+                .thenReturn(Optional.of(existingProduct));
+
+        Product result = productService.getOrCreateProductByBarcode(barcode, userId);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getBarcode()).isEqualTo(barcode);
+
+        verify(productService, never()).createProductOpenFoodFacts(any(), any());
+    }
+
+     @Test
+    @DisplayName("getOrCreateProductByBarcode - creates new product when not found")
+    void testGetOrCreateProductByBarcodeCreatesNew() throws IOException {
+        String barcode = "2222222222222";
+        UUID userId = user1.getId();
+
+        Product apiProduct = new Product();
+        apiProduct.setBarcode(barcode);
+        apiProduct.setName("Producto API");
+        apiProduct.setBrand("Marca API");
+        apiProduct.setImageUrl("https://api.example.com/image.png");
+        apiProduct.setIsCustom(false);
+
+        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
+                .thenReturn(Optional.empty());
+
+        doReturn(Optional.of(apiProduct)).when(productService).findProductInOpenFoodFacts(barcode);
+        when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Product result = productService.getOrCreateProductByBarcode(barcode, userId);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getBarcode()).isEqualTo(barcode);
+        assertThat(result.getName()).isEqualTo("Producto API");
+
+        verify(productService).createProductOpenFoodFacts(barcode, userId);
+    }
 
 }

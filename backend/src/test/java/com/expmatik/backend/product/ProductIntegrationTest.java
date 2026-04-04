@@ -172,10 +172,11 @@ public class ProductIntegrationTest {
     void testGetAllNonCustomProducts() throws Exception {
         mockMvc.perform(get("/api/products/non-custom"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(3))
+                .andExpect(jsonPath("$.length()").value(4))
                 .andExpect(jsonPath("$[0].name").value("Leche Entera"))
                 .andExpect(jsonPath("$[1].name").value("Pan de Molde"))
-                .andExpect(jsonPath("$[2].name").value("Yogur Natural"));  
+                .andExpect(jsonPath("$[2].name").value("Yogur Natural"))
+                .andExpect(jsonPath("$[3].name").value("Requiere actualización"));  
     }
 
     // == Pruebas para Get /api/products ==
@@ -229,7 +230,7 @@ public class ProductIntegrationTest {
     void testSearchProducts_EmptySearchTerm() throws Exception {
         mockMvc.perform(get("/api/products").param("name", ""))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.length()").value(4));
+                .andExpect(jsonPath("$.content.length()").value(5));
     }
 
     @Test

@@ -29,7 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Service
 public class ProductService {
 
-    private static final String OpenFoodFactsApiUrl = "https://world.openfoodfacts.org/api/v3/product/";
+    private static final String OpenFoodFactsApiUrl = "https://world.openfoodfacts.org/api/v2/product/";
     private static final long MIN_WAIT_INTERVAL = 1000; 
     private long lastCallTimestamp = 0;
 
@@ -139,11 +139,11 @@ public class ProductService {
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         
         connection.setRequestMethod("GET");
-        connection.setRequestProperty("User-Agent", "PostmanRuntime/7.39.1");
-        connection.setRequestProperty("Accept", "*/*");
+        String myUserAgent = "Expmatik/1.0 (davchacum@alum.us.es)";
+        connection.setRequestProperty("User-Agent", myUserAgent);
+        connection.setRequestProperty("Accept", "application/json");
         connection.setRequestProperty("Cache-Control", "no-cache");
-        connection.setRequestProperty("Connection", "keep-alive");
-        connection.setRequestProperty("Accept-Encoding", "gzip, deflate, br");
+        connection.setRequestProperty("Accept-Encoding", "gzip");
 
         int responseCode = connection.getResponseCode();
 
@@ -174,6 +174,16 @@ public class ProductService {
             throw new ResourceNotFoundException("No product found in the internal catalog with barcode: " + barcode);
         }
         return productOpt.get();
+    }
+
+    @Transactional
+    public Product getOrCreateProductByBarcode(String barcode, UUID userId) {
+        Optional <Product> productOpt = productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId);
+        if(productOpt.isPresent()) {
+            return productOpt.get();
+        }
+        Product product = createProductOpenFoodFacts(barcode, userId);
+        return product;
     } 
 
     @Transactional(readOnly = true)

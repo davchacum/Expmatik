@@ -41,8 +41,10 @@ public class ProductInfoIntegrationTest {
         mockMvc.perform(get("/api/product-info"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.length()").value(3))
                 .andExpect(jsonPath("$.content[0].productId").value("00000000-0000-0000-0000-000000000001"))
-                .andExpect(jsonPath("$.content[1].productId").value("00000000-0000-0000-0000-000000000004"));
+                .andExpect(jsonPath("$.content[1].productId").value("00000000-0000-0000-0000-000000000005"))
+                .andExpect(jsonPath("$.content[2].productId").value("00000000-0000-0000-0000-000000000004"));
     }
 
     @Test

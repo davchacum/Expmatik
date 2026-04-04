@@ -1,6 +1,5 @@
 package com.expmatik.backend.batch;
 
-import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,7 +51,7 @@ public class BatchService {
         if(invoice.getStatus() != InvoiceStatus.PENDING) {
             throw new ConflictException("Cannot add batch to an invoice that is not pending.");
         }
-       Product product = productService.findInternalProductByBarcode(batch.productBarcode(), userId);
+       Product product = productService.getOrCreateProductByBarcode(batch.productBarcode(), userId);
         if(product.getIsPerishable() == true && batch.expirationDate() == null) {
             throw new ConflictException("Expiration date for product " + product.getBarcode() + " is required for perishable products.");
         } else if(product.getIsPerishable() == false && batch.expirationDate() != null) {
@@ -79,14 +78,7 @@ public class BatchService {
             throw new ConflictException("Cannot edit batch from an invoice that is not pending.");
         }
         
-        Optional<Product> productOptional = productService.findByBarcodeOptional(userId, batch.productBarcode());
-        Product product;
-        if (productOptional.isEmpty()) {
-            
-            product = productService.createProductOpenFoodFacts(batch.productBarcode(), userId);
-        }else {
-            product = productOptional.get();
-        }
+        Product product = productService.getOrCreateProductByBarcode(batch.productBarcode(), userId);
         if(product.getIsPerishable() == true && batch.expirationDate() == null) {
                 throw new ConflictException("Expiration date for product " + product.getBarcode() + " is required for perishable products.");
         } else if(product.getIsPerishable() == false && batch.expirationDate() != null) {
