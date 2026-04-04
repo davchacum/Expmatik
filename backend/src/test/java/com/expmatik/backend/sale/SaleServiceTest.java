@@ -10,8 +10,11 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,8 +29,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.access.AccessDeniedException;
 
+import com.expmatik.backend.exceptions.BadRequestException;
 import com.expmatik.backend.exceptions.ConflictException;
 import com.expmatik.backend.exceptions.OutOfStockException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
@@ -547,4 +552,188 @@ public class SaleServiceTest {
         );
     }
 
+    // == Test readSalesFromCSV ==
+
+    @Test
+    @DisplayName("readSalesFromCSV - valid CSV content should return list of SaleCreate")
+    void testReadSalesFromCSV_ValidContent_ReturnsSaleCreateList() {
+
+        String csvContent = "saleDate,totalAmount,paymentMethod,status,barcode,vendingMachineName,rowNumber,columnNumber\n" +
+                "2024-03-01T10:00:00,2.50,CREDIT_CARD,SUCCESS,20000001,Máquina 1,1,1\n" +
+                "2024-03-02T11:30:00,5.00,CASH,SUCCESS,20000002,Máquina 1,1,2";
+
+        SaleCreate saleCreate1 = new SaleCreate(
+            LocalDateTime.parse("2024-03-01T10:00:00"),
+            new BigDecimal("2.50"),
+            PaymentMethod.CREDIT_CARD,
+            TransactionStatus.SUCCESS,
+            "20000001",
+            "Máquina 1",
+            1,
+            1
+        );
+
+        SaleCreate saleCreate2 = new SaleCreate(
+            LocalDateTime.parse("2024-03-02T11:30:00"),
+            new BigDecimal("5.00"),
+            PaymentMethod.CASH,
+            TransactionStatus.SUCCESS,
+            "20000002",
+            "Máquina 1",
+            1,
+            2
+        );
+
+        MockMultipartFile csvFile = new MockMultipartFile(
+            "csv",
+            "sales.csv",
+            "text/csv",
+            csvContent.getBytes()
+        );
+
+        when(saleCSVLector.readCSV(any(File.class))).thenReturn(List.of(saleCreate1, saleCreate2));
+
+        List<SaleCreate> result = saleService.readSalesFromCSV(csvFile);
+
+        assertThat(result).containsExactly(saleCreate1, saleCreate2);
+        verify(saleCSVLector).readCSV(any(File.class));
+    }
+
+    @Test
+    @DisplayName("readSalesFromCSV - empty file should throw BadRequestException")
+    void testReadSalesFromCSV_EmptyFile_ThrowsBadRequestException() {
+        MockMultipartFile emptyFile = new MockMultipartFile(
+            "csv",
+            "empty.csv",
+            "text/csv",
+            new byte[0]
+        );
+
+        assertThrows(BadRequestException.class, () -> {
+            saleService.readSalesFromCSV(emptyFile);
+        });
+    }
+
+    @Test
+    @DisplayName("readSalesFromCSV - null file should throw BadRequestException")
+    void testReadSalesFromCSV_NullFile_ThrowsBadRequestException() {
+        assertThrows(BadRequestException.class, () -> {
+            saleService.readSalesFromCSV(null);
+        });
+    }
+
+    @Test
+    @DisplayName("readSalesFromCSV - file with non-csv extension should throw BadRequestException")
+    void testReadSalesFromCSV_NonCSVFile_ThrowsBadRequestException() {
+        MockMultipartFile nonCSVFile = new MockMultipartFile(
+            "file",
+            "sales.txt",
+            "text/plain",
+            "Some content".getBytes()
+        );
+
+        assertThrows(BadRequestException.class, () -> {
+            saleService.readSalesFromCSV(nonCSVFile);
+        });
+    }
+
+    // == Test exportSalesCSV ==
+
+    @Test
+    @DisplayName("exportSalesCSV - valid filters should call repository and CSV generator")
+    void testExportSalesCSV_ValidFilters_ReturnsCSVData() {
+        UUID userId = UUID.randomUUID();
+        String barcode = "123456";
+        String machineName = "Máquina 1";
+        Integer rowNumber = 1;
+        Integer columnNumber = 1;
+        LocalDateTime startDate = LocalDateTime.now().minusDays(1);
+        LocalDateTime endDate = LocalDateTime.now();
+        PaymentMethod paymentMethod = PaymentMethod.CASH;
+        TransactionStatus status = TransactionStatus.SUCCESS;
+
+        sale.setSaleDate(LocalDateTime.parse("2024-03-01T10:00:00"));
+        sale.setTotalAmount(new BigDecimal("2.50"));
+        sale.setPaymentMethod(PaymentMethod.CREDIT_CARD);
+        sale.setStatus(TransactionStatus.SUCCESS);
+        product.setBarcode("123456");
+        sale.setProduct(product);
+
+        List<Sale> sales = List.of(sale);
+
+        when(saleRepository.searchAdvanced(
+                userId, barcode, machineName, rowNumber, columnNumber,
+                startDate, endDate,
+                paymentMethod, status
+        )).thenReturn(sales);
+        when(saleCSVLector.generateCSV(sales)).thenCallRealMethod();
+        byte[] result = saleService.exportSalesCSV(userId, barcode, machineName, rowNumber, columnNumber, startDate, endDate, paymentMethod, status);
+        String csv = new String(result, StandardCharsets.UTF_8);
+
+        assertThat(result).isNotEmpty();
+        assertThat(csv).contains("\"saleId\",\"saleDate\",\"totalAmount\",\"paymentMethod\",\"status\",\"barcode\",\"vendingMachineName\",\"rowNumber\",\"columnNumber\",\"failureReason\"");
+        assertThat(csv).contains("\"2024-03-01T10:00\",\"2.50\",\"CREDIT_CARD\",\"SUCCESS\",\"123456\",\"Máquina 1\",\"1\",\"1\",\"\"");
+        verify(saleRepository).searchAdvanced(
+                userId, barcode, machineName, rowNumber, columnNumber,
+                startDate, endDate,
+                paymentMethod, status
+        );
+        verify(saleCSVLector).generateCSV(sales);
+    }
+
+    @Test
+    @DisplayName("exportSalesCSV - blank filters should be treated as null")
+    void testExportSalesCSV_BlankFilters_TreatedAsNull() {
+        UUID userId = UUID.randomUUID();
+        String barcode = "   ";
+        String machineName = "   ";
+        Integer rowNumber = null;
+        Integer columnNumber = null;
+        LocalDateTime startDate = null;
+        LocalDateTime endDate = null;
+        PaymentMethod paymentMethod = null;
+        TransactionStatus status = null;
+
+        when(saleRepository.searchAdvanced(
+                eq(userId), isNull(), isNull(), isNull(), isNull(),
+                isNull(), isNull(),
+                isNull(), isNull()
+        )).thenReturn(List.of());
+
+        saleService.exportSalesCSV(userId, barcode, machineName, rowNumber, columnNumber, startDate, endDate, paymentMethod, status);
+
+        verify(saleRepository).searchAdvanced(
+                eq(userId), isNull(), isNull(), isNull(), isNull(),
+                isNull(), isNull(),
+                isNull(), isNull()
+        );
+    }
+
+    @Test
+    @DisplayName("exportSalesCSV - specific filters should be passed to repository")
+    void testExportSalesCSV_SpecificFilters_PassedToRepository() {
+        UUID userId = UUID.randomUUID();
+        String barcode = "ABC123";
+        String machineName = "Máquina 1";
+        Integer rowNumber = null;
+        Integer columnNumber = null;
+        LocalDateTime startDate = null;
+        LocalDateTime endDate = null;
+        PaymentMethod paymentMethod = null;
+        TransactionStatus status = null;
+
+        when(saleRepository.searchAdvanced(
+                eq(userId), eq(barcode), eq(machineName), isNull(), isNull(),
+                isNull(), isNull(),
+                isNull(), isNull()
+        )).thenReturn(List.of());
+
+        saleService.exportSalesCSV(userId, barcode, machineName, rowNumber, columnNumber, startDate, endDate, paymentMethod, status);
+
+        verify(saleRepository).searchAdvanced(
+                eq(userId), eq(barcode), eq(machineName), isNull(), isNull(),
+                isNull(), isNull(),
+                isNull(), isNull()
+        );
+    }
 }

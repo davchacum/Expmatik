@@ -167,138 +167,138 @@ public class InvoiceServiceTest {
     }
 
         @Test
-        @DisplayName("createInvoicesFromCSV should throw BadRequestException when barcode is not numeric")
-        void testCreateInvoicesFromCSV_InvalidBarcode_NotNumeric() {
+        @DisplayName("readInvoicesFromCSV should throw BadRequestException when barcode is not numeric")
+        void testReadInvoicesFromCSV_InvalidBarcode_NotNumeric() {
             User user = user1;
             MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                 ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
                  "FAC-2026-001,Supplier A,PENDING,2026-03-10,ABC1234567,24,0.85,2026-09-30").getBytes());
 
-            assertThatThrownBy(() -> invoiceService.createInvoicesFromCSV(user, csvContent))
+            assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Line 2: invalid productBarcode. It must be numeric and contain 8 or 13 digits.");
         }
 
         @Test
-        @DisplayName("createInvoicesFromCSV should throw BadRequestException when barcode length is not 8 or 13")
-        void testCreateInvoicesFromCSV_InvalidBarcode_Length() {
+        @DisplayName("readInvoicesFromCSV should throw BadRequestException when barcode length is not 8 or 13")
+        void testReadInvoicesFromCSV_InvalidBarcode_Length() {
             User user = user1;
             MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                 ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
                  "FAC-2026-001,Supplier A,PENDING,2026-03-10,1234567,24,0.85,2026-09-30").getBytes());
 
-            assertThatThrownBy(() -> invoiceService.createInvoicesFromCSV(user, csvContent))
+            assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Line 2: invalid productBarcode. It must be numeric and contain 8 or 13 digits.");
         }
 
         @Test
-        @DisplayName("createInvoicesFromCSV should throw BadRequestException when quantity is not a valid integer")
-        void testCreateInvoicesFromCSV_InvalidQuantity_NotInteger() {
+        @DisplayName("readInvoicesFromCSV should throw BadRequestException when quantity is not a valid integer")
+        void testReadInvoicesFromCSV_InvalidQuantity_NotInteger() {
             User user = user1;
             MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                 ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
                  "FAC-2026-001,Supplier A,PENDING,2026-03-10,12345678,abc,0.85,2026-09-30").getBytes());
 
-            assertThatThrownBy(() -> invoiceService.createInvoicesFromCSV(user, csvContent))
+            assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Line 2: quantity is not a valid integer.");
         }
 
         @Test
-        @DisplayName("createInvoicesFromCSV should throw BadRequestException when quantity is less than or equal to 0")
-        void testCreateInvoicesFromCSV_InvalidQuantity_Negative() {
+        @DisplayName("readInvoicesFromCSV should throw BadRequestException when quantity is less than or equal to 0")
+        void testReadInvoicesFromCSV_InvalidQuantity_Negative() {
             User user = user1;
             MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                 ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
                  "FAC-2026-001,Supplier A,PENDING,2026-03-10,12345678,0,0.85,2026-09-30").getBytes());
 
-            assertThatThrownBy(() -> invoiceService.createInvoicesFromCSV(user, csvContent))
+            assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Line 2: quantity must be greater than 0.");
         }
 
         @Test
-        @DisplayName("createInvoicesFromCSV should throw BadRequestException when unitPrice is not a valid decimal")
-        void testCreateInvoicesFromCSV_InvalidUnitPrice_NotDecimal() {
+        @DisplayName("readInvoicesFromCSV should throw BadRequestException when unitPrice is not a valid decimal")
+        void testReadInvoicesFromCSV_InvalidUnitPrice_NotDecimal() {
             User user = user1;
             MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                 ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
                  "FAC-2026-001,Supplier A,PENDING,2026-03-10,12345678,24,abc,2026-09-30").getBytes());
 
-            assertThatThrownBy(() -> invoiceService.createInvoicesFromCSV(user, csvContent))
+            assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Line 2: unitPrice is not a valid decimal.");
         }
 
         @Test
-        @DisplayName("createInvoicesFromCSV should throw BadRequestException when unitPrice is less than or equal to 0")
-        void testCreateInvoicesFromCSV_InvalidUnitPrice_Negative() {
+        @DisplayName("readInvoicesFromCSV should throw BadRequestException when unitPrice is less than or equal to 0")
+        void testReadInvoicesFromCSV_InvalidUnitPrice_Negative() {
             User user = user1;
             MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                 ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
                  "FAC-2026-001,Supplier A,PENDING,2026-03-10,12345678,24,0,2026-09-30").getBytes());
 
-            assertThatThrownBy(() -> invoiceService.createInvoicesFromCSV(user, csvContent))
+            assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Line 2: unitPrice must be greater than 0.");
         }
 
         @Test
-        @DisplayName("createInvoicesFromCSV should throw BadRequestException when unitPrice has more than 10 integer digits")
-        void testCreateInvoicesFromCSV_InvalidUnitPrice_TooManyIntegerDigits() {
+        @DisplayName("readInvoicesFromCSV should throw BadRequestException when unitPrice has more than 10 integer digits")
+        void testReadInvoicesFromCSV_InvalidUnitPrice_TooManyIntegerDigits() {
             User user = user1;
             MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                 ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
                  "FAC-2026-001,Supplier A,PENDING,2026-03-10,12345678,24,12345678901.00,2026-09-30").getBytes());
 
-            assertThatThrownBy(() -> invoiceService.createInvoicesFromCSV(user, csvContent))
+            assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Line 2: unitPrice must have at most 10 integer digits and 2 decimal places.");
         }
 
         @Test
-        @DisplayName("createInvoicesFromCSV should throw BadRequestException when unitPrice has more than 2 decimal places")
-        void testCreateInvoicesFromCSV_InvalidUnitPrice_TooManyDecimals() {
+        @DisplayName("readInvoicesFromCSV should throw BadRequestException when unitPrice has more than 2 decimal places")
+        void testReadInvoicesFromCSV_InvalidUnitPrice_TooManyDecimals() {
             User user = user1;
             MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                 ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
                  "FAC-2026-001,Supplier A,PENDING,2026-03-10,12345678,24,1.234,2026-09-30").getBytes());
 
-            assertThatThrownBy(() -> invoiceService.createInvoicesFromCSV(user, csvContent))
+            assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Line 2: unitPrice must have at most 10 integer digits and 2 decimal places.");
         }
 
         @Test
-        @DisplayName("createInvoicesFromCSV should throw BadRequestException when invoiceDate is invalid")
-        void testCreateInvoicesFromCSV_InvalidInvoiceDate() {
+        @DisplayName("readInvoicesFromCSV should throw BadRequestException when invoiceDate is invalid")
+        void testReadInvoicesFromCSV_InvalidInvoiceDate() {
             User user = user1;
             MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                 ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
                  "FAC-2026-001,Supplier A,PENDING,2026-13-10,12345678,24,0.85,2026-09-30").getBytes());
 
-            assertThatThrownBy(() -> invoiceService.createInvoicesFromCSV(user, csvContent))
+            assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Line 2: invalid invoiceDate. Expected format: yyyy-MM-dd.");
         }
 
         @Test
-        @DisplayName("createInvoicesFromCSV should throw BadRequestException when expirationDate is invalid")
-        void testCreateInvoicesFromCSV_InvalidExpirationDate() {
+        @DisplayName("readInvoicesFromCSV should throw BadRequestException when expirationDate is invalid")
+        void testReadInvoicesFromCSV_InvalidExpirationDate() {
             User user = user1;
             MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                 ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
                  "FAC-2026-001,Supplier A,PENDING,2026-03-10,12345678,24,0.85,2026-99-99").getBytes());
 
-            assertThatThrownBy(() -> invoiceService.createInvoicesFromCSV(user, csvContent))
+            assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Line 2: invalid expirationDate. Expected format: yyyy-MM-dd.");
         }
 
         @Test
-        @DisplayName("createInvoicesFromCSV should skip blank rows and not throw error")
-        void testCreateInvoicesFromCSV_BlankRow() {
+        @DisplayName("readInvoicesFromCSV should skip blank rows and not throw error")
+        void testReadInvoicesFromCSV_BlankRow() {
             User user = user1;
             MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                 ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
@@ -306,7 +306,7 @@ public class InvoiceServiceTest {
                  ",,,,,,,\n" + // blank row
                  "FAC-2026-002,Supplier B,PENDING,2026-03-11,12345678,12,0.95,2026-08-01").getBytes());
 
-            List<InvoiceRequest> createdInvoices = invoiceService.createInvoicesFromCSV(user, csvContent);
+            List<InvoiceRequest> createdInvoices = invoiceService.readInvoicesFromCSV(user, csvContent);
             assertNotNull(createdInvoices);
             assertEquals(2, createdInvoices.size());
         }
@@ -874,11 +874,11 @@ public class InvoiceServiceTest {
             .hasMessage("Invoice number: " + request.invoiceNumber() + " already exists");
     }
 
-    // == createInvoicesFromCSV tests ==
+    // == readInvoicesFromCSV tests ==
 
     @Test
-    @DisplayName("createInvoicesFromCSV should create multiple invoices from valid CSV")
-    void testCreateInvoicesFromCSV_Valid() {
+    @DisplayName("readInvoicesFromCSV should create multiple invoices from valid CSV")
+    void testReadInvoicesFromCSV_Valid() {
         User user = user1;
         MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
             ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
@@ -886,7 +886,7 @@ public class InvoiceServiceTest {
              "FAC-2026-001,Supplier A,PENDING,2026-03-10,5000112556780,10,1.20,2026-09-30\n" +
              "FAC-2026-002,Supplier B,PENDING,2026-03-11,8410494300050,12,0.95,2026-08-01").getBytes());
 
-        List<InvoiceRequest> createdInvoices = invoiceService.createInvoicesFromCSV(user, csvContent);
+        List<InvoiceRequest> createdInvoices = invoiceService.readInvoicesFromCSV(user, csvContent);
 
         assertNotNull(createdInvoices);
         assertEquals(2, createdInvoices.size());
@@ -904,68 +904,68 @@ public class InvoiceServiceTest {
     }
 
     @Test
-    @DisplayName("createInvoicesFromCSV should throw BadRequestException if no file is provided or file is empty")
-    void testCreateInvoicesFromCSV_NoFile() {
+    @DisplayName("readInvoicesFromCSV should throw BadRequestException if no file is provided or file is empty")
+    void testReadInvoicesFromCSV_NoFile() {
         User user = user1;
         MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv", new byte[0]);
 
-        assertThatThrownBy(() -> invoiceService.createInvoicesFromCSV(user, csvContent))
+        assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
             .isInstanceOf(BadRequestException.class)
             .hasMessage("No file uploaded or file is empty.");
     }
 
     @Test
-    @DisplayName("createInvoicesFromCSV should throw BadRequestException if file is null")
-    void testCreateInvoicesFromCSV_NullFile() {
+    @DisplayName("readInvoicesFromCSV should throw BadRequestException if file is null")
+    void testReadInvoicesFromCSV_NullFile() {
         User user = user1;
         MultipartFile csvContent = null;
 
-        assertThatThrownBy(() -> invoiceService.createInvoicesFromCSV(user, csvContent))
+        assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
             .isInstanceOf(BadRequestException.class)
             .hasMessage("No file uploaded or file is empty.");
     }
 
     @Test
-    @DisplayName("createInvoicesFromCSV should throw BadRequestException if file is not a CSV")
-    void testCreateInvoicesFromCSV_InvalidFileType() {
+    @DisplayName("readInvoicesFromCSV should throw BadRequestException if file is not a CSV")
+    void testReadInvoicesFromCSV_InvalidFileType() {
         User user = user1;
         MultipartFile csvContent = new MockMultipartFile("file", "invoices.txt", "text/plain",
             ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
              "FAC-2026-001,Supplier A,PENDING,2026-03-10,5000112556780,24,0.85,2026-09-30").getBytes());
 
-        assertThatThrownBy(() -> invoiceService.createInvoicesFromCSV(user, csvContent))
+        assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
             .isInstanceOf(BadRequestException.class)
             .hasMessage("The file must have a .csv extension.");
     }
 
     @Test
-    @DisplayName("createInvoicesFromCSV should throw BadRequestException if CSV contains no valid invoice records")
-    void testCreateInvoicesFromCSV_NoValidRecords() {
+    @DisplayName("readInvoicesFromCSV should throw BadRequestException if CSV contains no valid invoice records")
+    void testReadInvoicesFromCSV_NoValidRecords() {
         User user = user1;
         MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
             ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate").getBytes());
 
-        assertThatThrownBy(() -> invoiceService.createInvoicesFromCSV(user, csvContent))
+        assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
             .isInstanceOf(BadRequestException.class)
             .hasMessage("The CSV does not contain valid invoice records.");
     }
 
     @Test
-    @DisplayName("createInvoicesFromCSV should throw BadRequestException if a row has an incorrect number of columns")
-    void testCreateInvoicesFromCSV_IncorrectColumns() {
+    @DisplayName("readInvoicesFromCSV should throw BadRequestException if a row has an incorrect number of columns")
+    void testReadInvoicesFromCSV_IncorrectColumns() {
         User user = user1;
         MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
             ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
              "FAC-2026-001,Supplier A,PENDING,2026-03-10,5000112556780,24,0.85").getBytes());
 
-        assertThatThrownBy(() -> invoiceService.createInvoicesFromCSV(user, csvContent))
+        assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
             .isInstanceOf(BadRequestException.class)
             .hasMessage("Line 2: expected 8 columns but found 7.");
     }
 
     @Test
-    @DisplayName("createInvoicesFromCSV should throw BadRequestException for inconsistent supplierName, status and invoiceDate")
-    void testCreateInvoicesFromCSV_InconsistentData() {
+    @DisplayName("readInvoicesFromCSV should throw BadRequestException for inconsistent supplierName, status and invoiceDate")
+    void testReadInvoicesFromCSV_InconsistentData() {
         User user = user1;
 
         MultipartFile supplierNameCsv = new MockMultipartFile("file", "invoices.csv", "text/csv",
@@ -973,7 +973,7 @@ public class InvoiceServiceTest {
              "FAC-2026-001,Supplier A,PENDING,2026-03-10,5000112556780,24,0.85,2026-09-30\n" +
              "FAC-2026-001,Supplier B,PENDING,2026-03-10,5000112556780,10,1.20,2026-09-30").getBytes());
 
-        assertThatThrownBy(() -> invoiceService.createInvoicesFromCSV(user, supplierNameCsv))
+        assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, supplierNameCsv))
             .isInstanceOf(BadRequestException.class)
             .hasMessage("Line 3: inconsistent supplierName for invoice FAC-2026-001.");
 
@@ -982,7 +982,7 @@ public class InvoiceServiceTest {
              "FAC-2026-001,Supplier A,PENDING,2026-03-10,5000112556780,24,0.85,2026-09-30\n" +
              "FAC-2026-001,Supplier A,RECEIVED,2026-03-10,5000112556780,10,1.20,2026-09-30").getBytes());
 
-        assertThatThrownBy(() -> invoiceService.createInvoicesFromCSV(user, statusCsv))
+        assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, statusCsv))
             .isInstanceOf(BadRequestException.class)
             .hasMessage("Line 3: inconsistent status for invoice FAC-2026-001.");
 
@@ -991,33 +991,33 @@ public class InvoiceServiceTest {
              "FAC-2026-001,Supplier A,PENDING,2026-03-10,5000112556780,24,0.85,2026-09-30\n" +
              "FAC-2026-001,Supplier A,PENDING,2026-03-11,5000112556780,10,1.20,2026-09-30").getBytes());
 
-        assertThatThrownBy(() -> invoiceService.createInvoicesFromCSV(user, invoiceDateCsv))
+        assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, invoiceDateCsv))
             .isInstanceOf(BadRequestException.class)
             .hasMessage("Line 3: inconsistent invoiceDate for invoice FAC-2026-001.");
     }
 
     @Test
-    @DisplayName("createInvoicesFromCSV should throw BadRequestException when status is empty")
-    void testCreateInvoicesFromCSV_EmptyStatus() {
+    @DisplayName("readInvoicesFromCSV should throw BadRequestException when status is empty")
+    void testReadInvoicesFromCSV_EmptyStatus() {
         User user = user1;
         MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
             ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
              "FAC-2026-001,Supplier A,,2026-03-10,5000112556780,24,0.85,2026-09-30").getBytes());
 
-        assertThatThrownBy(() -> invoiceService.createInvoicesFromCSV(user, csvContent))
+        assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
             .isInstanceOf(BadRequestException.class)
             .hasMessage("Line 2: required field is empty -> status.");
     }
 
     @Test
-    @DisplayName("createInvoicesFromCSV should throw BadRequestException when status is invalid")
-    void testCreateInvoicesFromCSV_InvalidStatus() {
+    @DisplayName("readInvoicesFromCSV should throw BadRequestException when status is invalid")
+    void testReadInvoicesFromCSV_InvalidStatus() {
         User user = user1;
         MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
             ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
              "FAC-2026-001,Supplier A,SENT,2026-03-10,5000112556780,24,0.85,2026-09-30").getBytes());
 
-        assertThatThrownBy(() -> invoiceService.createInvoicesFromCSV(user, csvContent))
+        assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
             .isInstanceOf(BadRequestException.class)
             .hasMessage("Line 2: invalid status -> SENT. Allowed values: PENDING, RECEIVED, CANCELED.");
     }

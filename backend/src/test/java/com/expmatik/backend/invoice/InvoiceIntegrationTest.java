@@ -1229,7 +1229,7 @@ public class InvoiceIntegrationTest {
 
     @Test
     @WithUserDetails("admin@expmatik.com")
-    void testCreateInvoicesFromCSV() throws Exception {
+    void testReadInvoicesFromCSV() throws Exception {
         MockMultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
             ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
              "FAC-2026-001,Supplier A,PENDING,2026-03-10,20000001,24,0.85,2026-09-30\n" +
@@ -1291,7 +1291,7 @@ public class InvoiceIntegrationTest {
 
     @Test
     @WithUserDetails("admin@expmatik.com")
-    void testCreateInvoicesFromCSVNotPending() throws Exception {
+    void testReadInvoicesFromCSVNotPending() throws Exception {
         MockMultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
             ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
              "FAC-2026-001,Supplier A,RECEIVED,2026-03-10,20000001,24,0.85,2026-09-30\n" +
@@ -1334,7 +1334,7 @@ public class InvoiceIntegrationTest {
 
     @Test
     @WithUserDetails("admin@expmatik.com")
-    void testCreateInvoicesFromCSVWithNonCustomProductNotInDatabase() throws Exception {
+    void testReadInvoicesFromCSVWithNonCustomProductNotInDatabase() throws Exception {
         MockMultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
             ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
              "FAC-2026-001,Supplier B,PENDING,2026-03-11,4716982022201,12,0.95,2026-08-01").getBytes());
@@ -1356,7 +1356,7 @@ public class InvoiceIntegrationTest {
 
     @Test
     @WithUserDetails("admin@expmatik.com")
-    void testCreateInvoicesFromCSV_SupplierMismatch() throws Exception {
+    void testReadInvoicesFromCSV_SupplierMismatch() throws Exception {
         MockMultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
             ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
             "FAC-2026-001,Supplier A,PENDING,2026-03-11,20000000,12,0.95,\n" +
@@ -1369,7 +1369,7 @@ public class InvoiceIntegrationTest {
 
     @Test
     @WithUserDetails("admin@expmatik.com")
-    void testCreateInvoicesFromCSV_StatusMismatch() throws Exception {
+    void testReadInvoicesFromCSV_StatusMismatch() throws Exception {
         MockMultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
             ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
             "FAC-2026-001,Supplier B,RECEIVED,2026-03-11,20000000,12,0.95,\n" +
@@ -1382,7 +1382,7 @@ public class InvoiceIntegrationTest {
 
     @Test
     @WithUserDetails("admin@expmatik.com")
-    void testCreateInvoicesFromCSV_DateMismatch() throws Exception {
+    void testReadInvoicesFromCSV_DateMismatch() throws Exception {
         MockMultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
             ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
             "FAC-2026-001,Supplier B,PENDING,2026-03-12,20000000,12,0.95,\n" +
@@ -1395,7 +1395,7 @@ public class InvoiceIntegrationTest {
 
     @Test
     @WithUserDetails("admin2@expmatik.com")
-    void testCreateInvoicesFromCSV_EmptyFile() throws Exception {
+    void testReadInvoicesFromCSV_EmptyFile() throws Exception {
 
         MockMultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
             ("").getBytes());
@@ -1407,7 +1407,7 @@ public class InvoiceIntegrationTest {
 
     @Test
     @WithUserDetails("admin2@expmatik.com")
-    void testCreateInvoicesFromCSV_NoCsvFileExtension() throws Exception {
+    void testReadInvoicesFromCSV_NoCsvFileExtension() throws Exception {
         MockMultipartFile csvContent = new MockMultipartFile("file", "invoices.txt", "text/csv",
             ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
             "FAC-2026-001,Supplier B,PENDING,2026-03-11,20000000,12,0.95,").getBytes());
@@ -1419,7 +1419,7 @@ public class InvoiceIntegrationTest {
 
     @Test
     @WithUserDetails("admin@expmatik.com")
-    void testCreateInvoicesFromCSV_NoHeaders() throws Exception {
+    void testReadInvoicesFromCSV_NoHeaders() throws Exception {
         MockMultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
             ("FAC-2026-001,Supplier B,PENDING,2026-03-11,20000000,12,0.95,").getBytes());
 
