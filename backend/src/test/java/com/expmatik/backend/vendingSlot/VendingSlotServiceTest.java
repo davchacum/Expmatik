@@ -633,11 +633,49 @@ public class VendingSlotServiceTest {
             any(User.class)
         );
     }
-        
 
+    // == Test getVendingSlotByMachineNameAndRowAndColumn ==
 
+    @Test
+    @DisplayName("getVendingSlotByMachineNameAndRowAndColumn - valid machine name, row, column, and authorized user")
+    void testGetVendingSlotByMachineNameAndRowAndColumn_validMachineNameRowColumnAndAuthorizedUser_shouldReturnVendingSlot() {
+        String machineName = vendingMachine.getName();
+        Integer row = vendingSlot.getRowNumber();
+        Integer column = vendingSlot.getColumnNumber();
 
-    
+        when(vendingSlotRepository.findByVendingMachineNameAndRowAndColumn(machineName, row, column)).thenReturn(Optional.of(vendingSlot));
+        VendingSlot result = vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(machineName, row, column, user);
+        assertThat(result).isEqualTo(vendingSlot);
+        verify(vendingSlotRepository).findByVendingMachineNameAndRowAndColumn(machineName, row, column);
+    }
 
+    @Test
+    @DisplayName("getVendingSlotByMachineNameAndRowAndColumn - valid machine name, row, column but unauthorized user")
+    void testGetVendingSlotByMachineNameAndRowAndColumn_validMachineNameRowColumnButUnauthorizedUser_shouldThrowUnauthorizedAccessException() {
+        String machineName = vendingMachine.getName();
+        Integer row = vendingSlot.getRowNumber();
+        Integer column = vendingSlot.getColumnNumber();
+        User unauthorizedUser = new User();
+        unauthorizedUser.setId(UUID.randomUUID());
 
+        when(vendingSlotRepository.findByVendingMachineNameAndRowAndColumn(machineName, row, column)).thenReturn(Optional.of(vendingSlot));
+
+        assertThrows(AccessDeniedException.class, () -> {
+            vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(machineName, row, column, unauthorizedUser);
+        });
+    }
+
+    @Test
+    @DisplayName("getVendingSlotByMachineNameAndRowAndColumn - notFound case")
+    void testGetVendingSlotByMachineNameAndRowAndColumn_notFoundCase_shouldThrowResourceNotFoundException() {
+        String machineName = vendingMachine.getName();
+        Integer row = vendingSlot.getRowNumber();
+        Integer column = vendingSlot.getColumnNumber();
+
+        when(vendingSlotRepository.findByVendingMachineNameAndRowAndColumn(machineName, row, column)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> {
+            vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(machineName, row, column, user);
+        });
+    }
 }

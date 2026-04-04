@@ -96,7 +96,9 @@ public class SaleIntegrationTest {
             PaymentMethod.CREDIT_CARD,
             TransactionStatus.SUCCESS,
             "20000001",
-            UUID.fromString("00000000-0000-0000-0000-000000000001")
+            "Máquina 1",
+            1,
+            1
         );
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/sales")
@@ -118,7 +120,9 @@ public class SaleIntegrationTest {
             PaymentMethod.CREDIT_CARD,
             TransactionStatus.SUCCESS,
             "20000001",
-            UUID.fromString("00000000-0000-0000-0000-000000000001")
+                        "Máquina 1",
+            1,
+            1
         );
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/sales")
@@ -137,7 +141,9 @@ public class SaleIntegrationTest {
             PaymentMethod.CREDIT_CARD,
             TransactionStatus.SUCCESS,
             "20000001",
-            UUID.fromString("00000000-0000-0000-0000-000000000001")
+                        "Máquina 1",
+            1,
+            1
         );
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/sales")
@@ -156,7 +162,9 @@ public class SaleIntegrationTest {
             PaymentMethod.CREDIT_CARD,
             TransactionStatus.SUCCESS,
             "20000001",
-            UUID.fromString("00000000-0000-0000-0000-000000009999")
+                        "Máquina 99",
+            1,
+            1
         );
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/sales")

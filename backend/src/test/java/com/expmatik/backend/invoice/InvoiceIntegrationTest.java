@@ -50,6 +50,9 @@ public class InvoiceIntegrationTest {
     private static final Integer OLD_QUANTITY_PRODUCTINFO2 = 200;
     private static final BigDecimal OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO2 = new BigDecimal("2.2");
 
+    private static final Integer OLD_QUANTITY_PRODUCTINFO3 = 150;
+    private static final BigDecimal OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO3 = new BigDecimal("1.0");
+
     @Test
     @WithUserDetails("admin@expmatik.com")
     void testGetInvoiceById() throws Exception {
@@ -771,15 +774,21 @@ public class InvoiceIntegrationTest {
         //quantity, lastPurchaseUnitPrice 3
         UUID productInfoId2 = UUID.fromString("00000000-0000-0000-0000-000000000002");
 
+        UUID productInfoId3 = UUID.fromString("00000000-0000-0000-0000-000000000003");
+
         mockMvc.perform(get("/api/product-info"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content[0].productInfoId").value(productInfoId2.toString()))
                 .andExpect(jsonPath("$.content[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2))
                 .andExpect(jsonPath("$.content[0].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO2))
-                .andExpect(jsonPath("$.content[1].productInfoId").value(productInfoId1.toString()))
-                .andExpect(jsonPath("$.content[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
-                .andExpect(jsonPath("$.content[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
+                .andExpect(jsonPath("$.content[1].productInfoId").value(productInfoId3.toString()))
+                .andExpect(jsonPath("$.content[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO3))
+                .andExpect(jsonPath("$.content[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO3))
+                .andExpect(jsonPath("$.content[2].productInfoId").value(productInfoId1.toString()))
+                .andExpect(jsonPath("$.content[2].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
+                .andExpect(jsonPath("$.content[2].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
+
     }
 
     @Test
@@ -813,15 +822,20 @@ public class InvoiceIntegrationTest {
         //quantity, lastPurchaseUnitPrice 3
         UUID productInfoId2 = UUID.fromString("00000000-0000-0000-0000-000000000002");
 
+        UUID productInfoId3 = UUID.fromString("00000000-0000-0000-0000-000000000003");
+
         mockMvc.perform(get("/api/product-info"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content[0].productInfoId").value(productInfoId2.toString()))
                 .andExpect(jsonPath("$.content[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2))
                 .andExpect(jsonPath("$.content[0].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO2))
-                .andExpect(jsonPath("$.content[1].productInfoId").value(productInfoId1.toString()))
-                .andExpect(jsonPath("$.content[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
-                .andExpect(jsonPath("$.content[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
+                .andExpect(jsonPath("$.content[1].productInfoId").value(productInfoId3.toString()))
+                .andExpect(jsonPath("$.content[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO3))
+                .andExpect(jsonPath("$.content[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO3))
+                .andExpect(jsonPath("$.content[2].productInfoId").value(productInfoId1.toString()))
+                .andExpect(jsonPath("$.content[2].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
+                .andExpect(jsonPath("$.content[2].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
     }
 
     @Test
@@ -855,15 +869,20 @@ public class InvoiceIntegrationTest {
         //quantity, lastPurchaseUnitPrice 3
         UUID productInfoId2 = UUID.fromString("00000000-0000-0000-0000-000000000002");
 
+        UUID productInfoId3 = UUID.fromString("00000000-0000-0000-0000-000000000003");
+
         mockMvc.perform(get("/api/product-info"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content[0].productInfoId").value(productInfoId2.toString()))
                 .andExpect(jsonPath("$.content[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2))
                 .andExpect(jsonPath("$.content[0].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO2))
-                .andExpect(jsonPath("$.content[1].productInfoId").value(productInfoId1.toString()))
-                .andExpect(jsonPath("$.content[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
-                .andExpect(jsonPath("$.content[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
+                .andExpect(jsonPath("$.content[1].productInfoId").value(productInfoId3.toString()))
+                .andExpect(jsonPath("$.content[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO3))
+                .andExpect(jsonPath("$.content[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO3))
+                .andExpect(jsonPath("$.content[2].productInfoId").value(productInfoId1.toString()))
+                .andExpect(jsonPath("$.content[2].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
+                .andExpect(jsonPath("$.content[2].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
     }
 
     @Test
@@ -896,15 +915,20 @@ public class InvoiceIntegrationTest {
         //quantity, lastPurchaseUnitPrice 3
         UUID productInfoId2 = UUID.fromString("00000000-0000-0000-0000-000000000002");
 
+        UUID productInfoId3 = UUID.fromString("00000000-0000-0000-0000-000000000003");
+
         mockMvc.perform(get("/api/product-info"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content[0].productInfoId").value(productInfoId2.toString()))
                 .andExpect(jsonPath("$.content[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2))
                 .andExpect(jsonPath("$.content[0].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO2))
-                .andExpect(jsonPath("$.content[1].productInfoId").value(productInfoId1.toString()))
-                .andExpect(jsonPath("$.content[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
-                .andExpect(jsonPath("$.content[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
+                .andExpect(jsonPath("$.content[1].productInfoId").value(productInfoId3.toString()))
+                .andExpect(jsonPath("$.content[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO3))
+                .andExpect(jsonPath("$.content[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO3))
+                .andExpect(jsonPath("$.content[2].productInfoId").value(productInfoId1.toString()))
+                .andExpect(jsonPath("$.content[2].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
+                .andExpect(jsonPath("$.content[2].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
     }
 
     @Test
@@ -1086,15 +1110,20 @@ public class InvoiceIntegrationTest {
         //quantity, lastPurchaseUnitPrice 3
         UUID productInfoId2 = UUID.fromString("00000000-0000-0000-0000-000000000002");
 
+        UUID productInfoId3 = UUID.fromString("00000000-0000-0000-0000-000000000003");
+
         mockMvc.perform(get("/api/product-info"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content[0].productInfoId").value(productInfoId2.toString()))
                 .andExpect(jsonPath("$.content[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2))
                 .andExpect(jsonPath("$.content[0].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO2))
-                .andExpect(jsonPath("$.content[1].productInfoId").value(productInfoId1.toString()))
-                .andExpect(jsonPath("$.content[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
-                .andExpect(jsonPath("$.content[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
+                .andExpect(jsonPath("$.content[1].productInfoId").value(productInfoId3.toString()))
+                .andExpect(jsonPath("$.content[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO3))
+                .andExpect(jsonPath("$.content[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO3))
+                .andExpect(jsonPath("$.content[2].productInfoId").value(productInfoId1.toString()))
+                .andExpect(jsonPath("$.content[2].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
+                .andExpect(jsonPath("$.content[2].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
     }
 
     @Test
@@ -1114,6 +1143,8 @@ public class InvoiceIntegrationTest {
         //quantity + 100, lastPurchaseUnitPrice 3
         UUID productInfoId2 = UUID.fromString("00000000-0000-0000-0000-000000000002");
 
+        UUID productInfoId3 = UUID.fromString("00000000-0000-0000-0000-000000000003");
+
         mockMvc.perform(get("/api/product-info"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
@@ -1122,7 +1153,10 @@ public class InvoiceIntegrationTest {
                 .andExpect(jsonPath("$.content[0].lastPurchaseUnitPrice").value(new BigDecimal("3").doubleValue()))
                 .andExpect(jsonPath("$.content[1].productInfoId").value(productInfoId1.toString()))
                 .andExpect(jsonPath("$.content[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1 + 100))
-                .andExpect(jsonPath("$.content[1].lastPurchaseUnitPrice").value(new BigDecimal("2").doubleValue()));
+                .andExpect(jsonPath("$.content[1].lastPurchaseUnitPrice").value(new BigDecimal("2").doubleValue()))
+                .andExpect(jsonPath("$.content[2].productInfoId").value(productInfoId3.toString()))
+                .andExpect(jsonPath("$.content[2].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO3))
+                .andExpect(jsonPath("$.content[2].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO3));
     }
 
     @Test
@@ -1142,15 +1176,20 @@ public class InvoiceIntegrationTest {
         //quantity, lastPurchaseUnitPrice 3
         UUID productInfoId2 = UUID.fromString("00000000-0000-0000-0000-000000000002");
 
+        UUID productInfoId3 = UUID.fromString("00000000-0000-0000-0000-000000000003");
+
         mockMvc.perform(get("/api/product-info"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content[0].productInfoId").value(productInfoId2.toString()))
                 .andExpect(jsonPath("$.content[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2))
                 .andExpect(jsonPath("$.content[0].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO2))
-                .andExpect(jsonPath("$.content[1].productInfoId").value(productInfoId1.toString()))
-                .andExpect(jsonPath("$.content[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
-                .andExpect(jsonPath("$.content[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
+                .andExpect(jsonPath("$.content[1].productInfoId").value(productInfoId3.toString()))
+                .andExpect(jsonPath("$.content[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO3))
+                .andExpect(jsonPath("$.content[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO3))
+                .andExpect(jsonPath("$.content[2].productInfoId").value(productInfoId1.toString()))
+                .andExpect(jsonPath("$.content[2].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
+                .andExpect(jsonPath("$.content[2].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
     }
 
     @Test
@@ -1234,15 +1273,20 @@ public class InvoiceIntegrationTest {
         //quantity, lastPurchaseUnitPrice 3
         UUID productInfoId2 = UUID.fromString("00000000-0000-0000-0000-000000000002");
 
+        UUID productInfoId3 = UUID.fromString("00000000-0000-0000-0000-000000000003");
+
         mockMvc.perform(get("/api/product-info"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content[0].productInfoId").value(productInfoId2.toString()))
-                .andExpect(jsonPath("$.content[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2 ))
+                .andExpect(jsonPath("$.content[0].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO2))
                 .andExpect(jsonPath("$.content[0].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO2))
-                .andExpect(jsonPath("$.content[1].productInfoId").value(productInfoId1.toString()))
-                .andExpect(jsonPath("$.content[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
-                .andExpect(jsonPath("$.content[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
+                .andExpect(jsonPath("$.content[1].productInfoId").value(productInfoId3.toString()))
+                .andExpect(jsonPath("$.content[1].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO3))
+                .andExpect(jsonPath("$.content[1].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO3))
+                .andExpect(jsonPath("$.content[2].productInfoId").value(productInfoId1.toString()))
+                .andExpect(jsonPath("$.content[2].stockQuantity").value(OLD_QUANTITY_PRODUCTINFO1))
+                .andExpect(jsonPath("$.content[2].lastPurchaseUnitPrice").value(OLD_LAST_PURCHASE_UNIT_PRICE_PRODUCTINFO1));
     }
 
     @Test

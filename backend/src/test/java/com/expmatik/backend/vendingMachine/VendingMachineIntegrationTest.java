@@ -187,8 +187,7 @@ public class VendingMachineIntegrationTest {
         UUID vendingMachineId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
         VendingMachineUpdate request = new VendingMachineUpdate(
-            "Edificio A, Planta Baja",
-            "Máquina 1 Actualizada"
+            "Edificio A, Planta Baja"
         );
 
         String requestBody = objectMapper.writeValueAsString(request);
@@ -198,46 +197,9 @@ public class VendingMachineIntegrationTest {
                         .content(requestBody))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(vendingMachineId.toString()))
-                .andExpect(jsonPath("$.name").value("Máquina 1 Actualizada"))
                 .andExpect(jsonPath("$.location").value("Edificio A, Planta Baja"))
                 .andExpect(jsonPath("$.rowCount").value(1))
                 .andExpect(jsonPath("$.columnCount").value(1));
-    }
-
-    @Test
-    @WithUserDetails("admin@expmatik.com")
-    void testUpdateVendingMachine_DuplicateName_shouldReturn409() throws Exception {
-        UUID vendingMachineId = UUID.fromString("00000000-0000-0000-0000-000000000001");
-
-        VendingMachineUpdate request = new VendingMachineUpdate(
-            "Edificio A, Planta Baja",
-            "Máquina 2"
-        );
-
-        String requestBody = objectMapper.writeValueAsString(request);
-
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/vending-machines/{id}", vendingMachineId)
-                        .contentType("application/json")
-                        .content(requestBody))
-                .andExpect(status().isConflict());
-    }
-
-    @Test
-    @WithUserDetails("admin@expmatik.com")
-    void testUpdateVendingMachine_NotFound_shouldReturn404() throws Exception {
-        UUID vendingMachineId = UUID.fromString("00000000-0000-0000-0000-000000000099");
-
-        VendingMachineUpdate request = new VendingMachineUpdate(
-            "Edificio A, Planta Baja",
-            "Máquina 1 Actualizada"
-        );
-
-        String requestBody = objectMapper.writeValueAsString(request);
-
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/vending-machines/{id}", vendingMachineId)
-                        .contentType("application/json")
-                        .content(requestBody))
-                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -246,8 +208,7 @@ public class VendingMachineIntegrationTest {
         UUID vendingMachineId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
         VendingMachineUpdate request = new VendingMachineUpdate(
-            "Edificio A, Planta Baja",
-            "Máquina 1 Actualizada"
+            "Edificio A, Planta Baja"
         );
 
         String requestBody = objectMapper.writeValueAsString(request);
@@ -264,8 +225,7 @@ public class VendingMachineIntegrationTest {
         UUID vendingMachineId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
         VendingMachineUpdate request = new VendingMachineUpdate(
-            "Edificio A, Planta Baja",
-            "Máquina 1 Actualizada"
+            "Edificio A, Planta Baja"
         );
         String requestBody = objectMapper.writeValueAsString(request);
 

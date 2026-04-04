@@ -138,6 +138,23 @@ public class InvoiceCSVLectorValidationTest {
     }
 
     @Nested
+    @DisplayName("parseStatus")
+    class ParseStatus {
+        @Test
+        void validStatus() {
+            assertEquals(InvoiceStatus.CANCELED, invokeParseStatus("CANCELED", 1));
+            assertEquals(InvoiceStatus.PENDING, invokeParseStatus("PENDING", 2));
+            assertEquals(InvoiceStatus.RECEIVED, invokeParseStatus("RECEIVED", 3));
+        }
+        @Test
+        void invalidStatus() {
+            assertThatThrownBy(() -> invokeParseStatus("unknown", 4))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("invalid status");
+        }
+    }
+
+    @Nested
     @DisplayName("isBlankRow")
     class IsBlankRow {
         @Test
@@ -175,6 +192,20 @@ public class InvoiceCSVLectorValidationTest {
             throw new RuntimeException(e);
         }
     }
+
+    private InvoiceStatus invokeParseStatus(String value, int line) {
+        try {
+            var m = InvoiceCSVLector.class.getDeclaredMethod("parseStatus", String.class, int.class);
+            m.setAccessible(true);
+            return (InvoiceStatus) m.invoke(lector, value, line);
+        } catch (Exception e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof RuntimeException) throw (RuntimeException) cause;
+            if (cause != null) throw new RuntimeException(cause);
+            throw new RuntimeException(e);
+        }
+    }
+
     private BigDecimal invokeParsePositiveDecimal(String value, String field, int line) {
         try {
             var m = InvoiceCSVLector.class.getDeclaredMethod("parsePositiveDecimal", String.class, String.class, int.class);
