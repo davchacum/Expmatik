@@ -17,6 +17,7 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
         AND (:notificationType IS NULL OR n.type = :notificationType)
         AND (n.createdAt >= COALESCE(:startDate, n.createdAt))
         AND (n.createdAt <= COALESCE(:endDate, n.createdAt))
+        ORDER BY n.createdAt DESC
     """)
     Page<Notification> searchNotifications(
         @Param("userId") UUID userId,

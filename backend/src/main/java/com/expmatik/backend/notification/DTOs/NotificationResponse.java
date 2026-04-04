@@ -3,37 +3,31 @@ package com.expmatik.backend.notification.DTOs;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+
 import com.expmatik.backend.notification.Notification;
 import com.expmatik.backend.notification.NotificationType;
 
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-
 public record NotificationResponse(
 
-    @NotNull
-    @Size(max = 500)
+    UUID id,
+
     String message,
 
-    @NotNull
     LocalDateTime createdAt,
 
-    @NotNull
     NotificationType type,
 
-    @NotNull
-    @Size(max = 255)
     String link,
 
-    @NotNull
     Boolean isRead,
 
-    @NotNull
     UUID userId
 ) {
 
     public static NotificationResponse fromEntity(Notification notification) {
         return new NotificationResponse(
+            notification.getId(),
             notification.getMessage(),
             notification.getCreatedAt(),
             notification.getType(),
@@ -41,6 +35,10 @@ public record NotificationResponse(
             notification.getIsRead(),
             notification.getUser().getId()
         );
+    }
+
+    public static Page<NotificationResponse> fromEntityPage(Page<Notification> notificationPage) {
+        return notificationPage.map(NotificationResponse::fromEntity);
     }
 
 }

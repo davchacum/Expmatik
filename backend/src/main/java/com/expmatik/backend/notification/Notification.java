@@ -7,6 +7,8 @@ import com.expmatik.backend.user.User;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotNull;
@@ -33,6 +35,7 @@ public class Notification extends BaseEntity {
     private LocalDateTime createdAt;
 
     @NotNull
+    @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
     private NotificationType type;
 

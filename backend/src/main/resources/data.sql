@@ -70,3 +70,7 @@ INSERT INTO expiration_batch (id, expiration_date,quantity,vending_slot_id) VALU
 INSERT INTO sale (id, sale_date, total_amount, payment_method, status, vending_slot_id, product_id, failure_reason) VALUES
 ('00000000-0000-0000-0000-000000000001', '2024-03-01T10:00:00', 2.50, 'CREDIT_CARD', 'SUCCESS', '00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', null),
 ('00000000-0000-0000-0000-000000000002', '2024-03-02T11:30:00', 5.00, 'CASH', 'SUCCESS', '00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', null);
+
+INSERT INTO notification (id, message, created_at, type, link, is_read, user_id) VALUES
+('00000000-0000-0000-0000-000000000001', 'El producto Leche Entera está a punto de caducar.', '2024-03-01T09:00:00', 'EXPIRATION_WARNING', 'Unknown', false, '00000000-0000-0000-0000-000000000001'),
+('00000000-0000-0000-0000-000000000002', 'El producto Leche Entera está caducado.', '2025-03-01T09:00:00', 'PRODUCT_EXPIRED', 'Unknown', true, '00000000-0000-0000-0000-000000000001');
