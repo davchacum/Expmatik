@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.time.LocalDate;
 import java.util.UUID;
 
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -377,25 +378,40 @@ public class VendingSlotIntegrationTest {
     @Test
     @DisplayName("PATCH /api/vending-slots/{id}/decrement-stock - valid ID, valid quantity and authorized user should decrement stock")
     @WithUserDetails("admin@expmatik.com")
-    public void testDecrementVendingSlotStock_ValidIdAndValidQuantityAndAuthorizedUser_ShouldDecrementStock() throws Exception {
+    public void testDecrementVendingSlotStock_ValidIdAndValidQuantityAndAuthorizedUser_ShouldDecrementStockAndCreateNotification() throws Exception {
         UUID vendingSlotId = UUID.fromString("00000000-0000-0000-0000-000000000003");
 
         mockMvc.perform(patch("/api/vending-slots/{id}/decrement-stock", vendingSlotId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(vendingSlotId.toString()))
                 .andExpect(jsonPath("$.currentStock").value(3));
+
+        mockMvc.perform(get("/api/notifications"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].type").value("PRODUCT_LOW_STOCK"))
+                .andExpect(jsonPath("$.content[0].isRead").value(false))
+                .andExpect(jsonPath("$.content[0].createdAt").value(Matchers.startsWith(LocalDate.now().toString())));
     }
 
     @Test
     @DisplayName("PATCH /api/vending-slots/{id}/decrement-stock - valid ID, valid quantity and authorized user should decrement stock and delete expiration batch if stock reaches zero")
     @WithUserDetails("admin@expmatik.com")
-    public void testDecrementVendingSlotStock_ValidIdAndValidQuantityAndAuthorizedUser_ShouldDecrementStockAndDeleteExpirationBatchIfStockReachesZero() throws Exception {
+    public void testDecrementVendingSlotStock_ValidIdAndValidQuantityAndAuthorizedUser_ShouldDecrementStockAndDeleteExpirationBatchIfStockReachesZeroAndCreateNotification() throws Exception {
         UUID vendingSlotId = UUID.fromString("00000000-0000-0000-0000-000000000007");
 
         mockMvc.perform(patch("/api/vending-slots/{id}/decrement-stock", vendingSlotId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(vendingSlotId.toString()))
                 .andExpect(jsonPath("$.currentStock").value(0));
+
+        mockMvc.perform(get("/api/notifications"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].type").value("PRODUCT_OUT_OF_STOCK"))
+                .andExpect(jsonPath("$.content[0].isRead").value(false))
+                .andExpect(jsonPath("$.content[0].createdAt").value(Matchers.startsWith(LocalDate.now().toString())));
+
     }
 
     @Test

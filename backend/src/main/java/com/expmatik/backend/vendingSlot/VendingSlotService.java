@@ -160,15 +160,23 @@ public class VendingSlotService {
             throw new SlotBlockedException("The vending slot is blocked for maintenance.");
         }
         if(vendingSlot.getCurrentStock() == 3) {
+            createProductLowStockNotification(vendingSlot, user);
+        }else if(vendingSlot.getCurrentStock() == 0) {
+            createProductOutOfStockNotification(vendingSlot, user);
+        }
+        return saveVendingSlot(vendingSlot);
+    }
+
+    private void createProductLowStockNotification(VendingSlot vendingSlot, User user) {
             String message = "El stock del producto " + vendingSlot.getProduct().getName() + " en la ranura (" + vendingSlot.getRowNumber() + "," + vendingSlot.getColumnNumber() + ") de la máquina expendedora " + vendingSlot.getVendingMachine().getName() + " le quedan 3 unidades. Por favor, recargue el producto lo antes posible para evitar quedarse sin stock.";
             String link ="Unknown";
             notificationService.createNotification(NotificationType.PRODUCT_LOW_STOCK,message, link, user);
-        }else if(vendingSlot.getCurrentStock() == 0) {
+    }
+
+    private void createProductOutOfStockNotification(VendingSlot vendingSlot, User user) {
             String message = "El stock del producto " + vendingSlot.getProduct().getName() + " en la ranura (" + vendingSlot.getRowNumber() + "," + vendingSlot.getColumnNumber() + ") de la máquina expendedora " + vendingSlot.getVendingMachine().getName() + " se ha agotado. Por favor, recargue el producto lo antes posible para evitar perder ventas.";
             String link ="Unknown";
             notificationService.createNotification(NotificationType.PRODUCT_OUT_OF_STOCK,message, link, user);
-        }
-        return saveVendingSlot(vendingSlot);
     }
  
     public void checkUserAuthorization(VendingSlot vendingSlot, User user) {
