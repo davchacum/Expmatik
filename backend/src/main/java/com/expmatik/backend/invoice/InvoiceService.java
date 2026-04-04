@@ -190,8 +190,8 @@ public class InvoiceService {
         existingInvoice.setInvoiceDate(invoiceRequest.invoiceDate());
         return save(existingInvoice);
     }
-    @Transactional
-    public List<InvoiceRequest> createInvoicesFromCSV(User user,MultipartFile csvContent) {
+    @Transactional(readOnly = true)
+    public List<InvoiceRequest> readInvoicesFromCSV(User user,MultipartFile csvContent) {
         if (csvContent == null || csvContent.isEmpty()) {
             throw new BadRequestException("No file uploaded or file is empty.");
         }
@@ -200,17 +200,20 @@ public class InvoiceService {
             throw new BadRequestException("The file must have a .csv extension.");
         }
 
-        File tempCsv;
+        File tempCsv = null;
         try {
             tempCsv = File.createTempFile("preview-", ".csv");
             csvContent.transferTo(tempCsv);
             
             List<InvoiceRequest> requests = invoiceCSVLector.readCSV(tempCsv);
             
-            tempCsv.delete();
             return requests;
         } catch (IOException ex) {
             throw new BadRequestException("Could not process file");
+        } finally {
+            if (tempCsv != null && tempCsv.exists()) {
+                tempCsv.delete();
+            }
         }
     }
 }

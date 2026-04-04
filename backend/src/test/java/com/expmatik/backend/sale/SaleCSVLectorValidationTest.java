@@ -141,6 +141,27 @@ public class SaleCSVLectorValidationTest {
         }
     }
 
+    @Nested
+    @DisplayName("requiredText")
+    class RequiredText {
+        @Test
+        void validText() {
+            assertEquals("Some text", requiredText("  Some text  ", "description", 1));
+        }
+        @Test
+        void emptyOrBlank() {
+            assertThatThrownBy(() -> requiredText("", "description", 2))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("required field is empty");
+            assertThatThrownBy(() -> requiredText("   ", "description", 3))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("required field is empty");
+            assertThatThrownBy(() -> requiredText(null, "description", 4))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("required field is empty");
+        }
+    }
+
     private BigDecimal invokeParseDecimal(String value, String field, int line) {
         try {
             var m = SaleCSVLector.class.getDeclaredMethod("parseDecimal", String.class, String.class, int.class);
@@ -223,6 +244,18 @@ public class SaleCSVLectorValidationTest {
             var m = SaleCSVLector.class.getDeclaredMethod("parsePositiveInteger", String.class, String.class, int.class);
             m.setAccessible(true);
             return (Integer) m.invoke(lector, value, field, line);
+        } catch (Exception e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof RuntimeException) throw (RuntimeException) cause;
+            if (cause != null) throw new RuntimeException(cause);
+            throw new RuntimeException(e);
+        }
+    }
+        private String requiredText(String value, String fieldName, int line) {
+        try {
+            var m = SaleCSVLector.class.getDeclaredMethod("requiredText", String.class, String.class, int.class);
+            m.setAccessible(true);
+            return (String) m.invoke(lector, value, fieldName, line);
         } catch (Exception e) {
             Throwable cause = e.getCause();
             if (cause instanceof RuntimeException) throw (RuntimeException) cause;

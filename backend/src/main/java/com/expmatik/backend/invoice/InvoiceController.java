@@ -134,9 +134,9 @@ public class InvoiceController {
 
     @PostMapping(value = "/csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public ResponseEntity<?> createInvoicesFromCSV(@RequestPart(value = "file") MultipartFile csvContent) {
+    public ResponseEntity<?> readInvoicesFromCSV(@RequestPart(value = "file") MultipartFile csvContent) {
         User user = userService.getUserProfile();
-        List<InvoiceRequest> createdInvoices = invoiceService.createInvoicesFromCSV(user,csvContent);
+        List<InvoiceRequest> createdInvoices = invoiceService.readInvoicesFromCSV(user,csvContent);
         return ResponseEntity.ok(createdInvoices);
     }
 

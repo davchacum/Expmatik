@@ -80,11 +80,11 @@ public class SaleController {
 
     @PostMapping(value="/csv" , consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public ResponseEntity<?> createSalesFromCSV(@RequestParam("csv") MultipartFile csvContent) throws AccessDeniedException {
-        return ResponseEntity.ok(saleService.createSalesFromCSV(csvContent));
+    public ResponseEntity<?> readSalesFromCSV(@RequestParam("csv") MultipartFile csvContent) throws AccessDeniedException {
+        return ResponseEntity.ok(saleService.readSalesFromCSV(csvContent));
     }
 
-    @GetMapping("/export")
+    @GetMapping("/csv-export")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> exportSalesToCSV(@RequestParam(value = "barcode", required = false) String barcode, 
         @RequestParam(required = false) String machineName, 

@@ -150,8 +150,8 @@ public class SaleService {
             , pageable);
     }
 
-    @Transactional
-    public List<SaleCreate> createSalesFromCSV(MultipartFile csvContent) {
+    @Transactional(readOnly = true)
+    public List<SaleCreate> readSalesFromCSV(MultipartFile csvContent) {
 
         if (csvContent == null || csvContent.isEmpty()) {
             throw new BadRequestException("No file uploaded or file is empty.");
