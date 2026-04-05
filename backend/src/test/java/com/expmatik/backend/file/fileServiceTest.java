@@ -171,7 +171,7 @@ public class fileServiceTest {
                     fileStorageService.saveCustomProductImage(invalidFile)
                 );
 
-                assertEquals("File type is not allowed", exception.getMessage());
+                assertEquals("File type is not allowed. Allowed types: jpg, jpeg, png", exception.getMessage());
             }
 
             @Test
@@ -202,7 +202,7 @@ public class fileServiceTest {
                     fileStorageService.saveCustomProductImage(problematicFile)
                 );
 
-                assertEquals("Could not store image", exception.getMessage());
+                assertEquals("Could not store image. Please try again!", exception.getMessage());
             }
         }
     }

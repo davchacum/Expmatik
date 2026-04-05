@@ -1,9 +1,9 @@
 package com.expmatik.backend.invoice;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
@@ -31,15 +31,15 @@ public class InvoiceCSVLectorValidationTest {
         }
         @Test
         void invalidBarcodeNonNumeric() {
-            assertThatThrownBy(() -> invokeParseBarcode("12A45678", 3))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("invalid productBarcode");
+
+            BadRequestException exception = assertThrows(BadRequestException.class, () -> invokeParseBarcode("12A45678", 3));
+
+            assertEquals("Line 3: invalid productBarcode. It must be numeric and contain 8 or 13 digits.", exception.getMessage());
         }
         @Test
         void invalidBarcodeWrongLength() {
-            assertThatThrownBy(() -> invokeParseBarcode("1234567", 4))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("invalid productBarcode");
+            BadRequestException exception = assertThrows(BadRequestException.class, () -> invokeParseBarcode("1234567", 4));
+            assertEquals("Line 4: invalid productBarcode. It must be numeric and contain 8 or 13 digits.", exception.getMessage());
         }
     }
 
@@ -52,18 +52,15 @@ public class InvoiceCSVLectorValidationTest {
         }
         @Test
         void zeroOrNegative() {
-            assertThatThrownBy(() -> invokeParsePositiveInteger("0", "quantity", 2))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("must be greater than 0");
-            assertThatThrownBy(() -> invokeParsePositiveInteger("-1", "quantity", 3))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("must be greater than 0");
+            BadRequestException exception1 = assertThrows(BadRequestException.class, () -> invokeParsePositiveInteger("0", "quantity", 2));
+            assertEquals("Line 2: quantity must be greater than 0.", exception1.getMessage());
+            BadRequestException exception2 = assertThrows(BadRequestException.class, () -> invokeParsePositiveInteger("-1", "quantity", 3));
+            assertEquals("Line 3: quantity must be greater than 0.", exception2.getMessage());
         }
         @Test
         void notANumber() {
-            assertThatThrownBy(() -> invokeParsePositiveInteger("abc", "quantity", 4))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("is not a valid integer");
+            BadRequestException exception = assertThrows(BadRequestException.class, () -> invokeParsePositiveInteger("abc", "quantity", 4));
+            assertEquals("Line 4: quantity is not a valid integer.", exception.getMessage());
         }
     }
 
@@ -76,30 +73,25 @@ public class InvoiceCSVLectorValidationTest {
         }
         @Test
         void zeroOrNegative() {
-            assertThatThrownBy(() -> invokeParsePositiveDecimal("0", "unitPrice", 2))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("must be greater than 0");
-            assertThatThrownBy(() -> invokeParsePositiveDecimal("-1.5", "unitPrice", 3))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("must be greater than 0");
+            BadRequestException exception1 = assertThrows(BadRequestException.class, () -> invokeParsePositiveDecimal("0", "unitPrice", 2));
+            assertEquals("Line 2: unitPrice must be greater than 0.", exception1.getMessage());
+            BadRequestException exception2 = assertThrows(BadRequestException.class, () -> invokeParsePositiveDecimal("-1.5", "unitPrice", 3));
+            assertEquals("Line 3: unitPrice must be greater than 0.", exception2.getMessage());
         }
         @Test
         void tooManyIntegerDigits() {
-            assertThatThrownBy(() -> invokeParsePositiveDecimal("12345678901.00", "unitPrice", 4))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("must have at most 10 integer digits");
+            BadRequestException exception = assertThrows(BadRequestException.class, () -> invokeParsePositiveDecimal("12345678901.00", "unitPrice", 4));
+            assertEquals("Line 4: unitPrice must have at most 10 integer digits and 2 decimal places.", exception.getMessage());
         }
         @Test
         void tooManyFractionDigits() {
-            assertThatThrownBy(() -> invokeParsePositiveDecimal("1.123", "unitPrice", 5))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("must have at most 10 integer digits and 2 decimal places");
+            BadRequestException exception = assertThrows(BadRequestException.class, () -> invokeParsePositiveDecimal("1.123", "unitPrice", 5));
+            assertEquals("Line 5: unitPrice must have at most 10 integer digits and 2 decimal places.", exception.getMessage());
         }
         @Test
         void notADecimal() {
-            assertThatThrownBy(() -> invokeParsePositiveDecimal("abc", "unitPrice", 6))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("is not a valid decimal");
+            BadRequestException exception = assertThrows(BadRequestException.class, () -> invokeParsePositiveDecimal("abc", "unitPrice", 6));
+            assertEquals("Line 6: unitPrice is not a valid decimal.", exception.getMessage());
         }
     }
 
@@ -116,9 +108,8 @@ public class InvoiceCSVLectorValidationTest {
         }
         @Test
         void invalidDate() {
-            assertThatThrownBy(() -> invokeParseOptionalDate("2026-13-10", "expirationDate", 3))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("invalid expirationDate");
+            BadRequestException exception = assertThrows(BadRequestException.class, () -> invokeParseOptionalDate("2026-13-10", "expirationDate", 3));
+            assertEquals("Line 3: invalid expirationDate. Expected format: yyyy-MM-dd.", exception.getMessage());
         }
     }
 
@@ -131,9 +122,8 @@ public class InvoiceCSVLectorValidationTest {
         }
         @Test
         void invalidDate() {
-            assertThatThrownBy(() -> invokeParseDate("2026-02-30", "invoiceDate", 2))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("invalid invoiceDate");
+            BadRequestException exception = assertThrows(BadRequestException.class, () -> invokeParseDate("2026-02-30", "invoiceDate", 2));
+            assertEquals("Line 2: invalid invoiceDate. Expected format: yyyy-MM-dd.", exception.getMessage());
         }
     }
 
@@ -148,9 +138,8 @@ public class InvoiceCSVLectorValidationTest {
         }
         @Test
         void invalidStatus() {
-            assertThatThrownBy(() -> invokeParseStatus("unknown", 4))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("invalid status");
+            BadRequestException exception = assertThrows(BadRequestException.class, () -> invokeParseStatus("unknown", 4));
+            assertEquals("Line 4: invalid status -> UNKNOWN. Allowed values: PENDING, RECEIVED, CANCELED.", exception.getMessage());
         }
     }
 
@@ -163,15 +152,12 @@ public class InvoiceCSVLectorValidationTest {
         }
         @Test
         void emptyOrBlank() {
-            assertThatThrownBy(() -> requiredText("", "description", 2))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("required field is empty");
-            assertThatThrownBy(() -> requiredText("   ", "description", 3))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("required field is empty");
-            assertThatThrownBy(() -> requiredText(null, "description", 4))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("required field is empty");
+            BadRequestException exception1 = assertThrows(BadRequestException.class, () -> requiredText("", "description", 2));
+            assertEquals("Line 2: required field is empty -> description.", exception1.getMessage());
+            BadRequestException exception2 = assertThrows(BadRequestException.class, () -> requiredText("   ", "description", 3));
+            assertEquals("Line 3: required field is empty -> description.", exception2.getMessage());
+            BadRequestException exception3 = assertThrows(BadRequestException.class, () -> requiredText(null, "description", 4));
+            assertEquals("Line 4: required field is empty -> description.", exception3.getMessage());
         }
     }
 
