@@ -10,6 +10,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -45,74 +46,104 @@ public class UserServiceTest {
 
     // == Test findCurrentUser ==
 
-    @Test
-    @DisplayName("findCurrentUser should return username when authenticated")
-    void findCurrentUser_shouldReturnUsernameWhenAuthenticated() {
-        UserDetailsImpl userDetails = mock(UserDetailsImpl.class);
-        when(userDetails.getUsername()).thenReturn("test@email.com");
-        when(authentication.getPrincipal()).thenReturn(userDetails);
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        SecurityContextHolder.setContext(securityContext);
+    @Nested
+    @DisplayName("findCurrentUser")
+    class FindCurrentUser {
 
-        String username = userService.findCurrentUser();
+        @Nested
+        @DisplayName("Success Cases")
+        class SuccessCases {
 
-        assertEquals("test@email.com", username);
-    }
+            @Test
+            @DisplayName("findCurrentUser should return username when authenticated")
+            void findCurrentUser_shouldReturnUsernameWhenAuthenticated() {
+                UserDetailsImpl userDetails = mock(UserDetailsImpl.class);
+                when(userDetails.getUsername()).thenReturn("test@email.com");
+                when(authentication.getPrincipal()).thenReturn(userDetails);
+                when(securityContext.getAuthentication()).thenReturn(authentication);
+                SecurityContextHolder.setContext(securityContext);
 
-    @Test
-    @DisplayName("findCurrentUser should throw when authentication is null")
-    void findCurrentUser_shouldThrowWhenAuthenticationNull() {
-        when(securityContext.getAuthentication()).thenReturn(null);
-        SecurityContextHolder.setContext(securityContext);
+                String username = userService.findCurrentUser();
 
-        assertThrows(AuthenticationException.class, () -> userService.findCurrentUser());
-    }
+                assertEquals("test@email.com", username);
+            }
+        }
 
-    @Test
-    @DisplayName("findCurrentUser should throw when principal is not UserDetails")
-    void findCurrentUser_shouldThrowWhenPrincipalNotUserDetails() {
-        when(authentication.getPrincipal()).thenReturn("someString");
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        SecurityContextHolder.setContext(securityContext);
+        @Nested
+        @DisplayName("Failure Cases")
+        class FailureCases {
 
-        assertThrows(AuthenticationException.class, () -> userService.findCurrentUser());
+            @Test
+            @DisplayName("findCurrentUser should throw when authentication is null")
+            void findCurrentUser_shouldThrowWhenAuthenticationNull() {
+                when(securityContext.getAuthentication()).thenReturn(null);
+                SecurityContextHolder.setContext(securityContext);
+
+                assertThrows(AuthenticationException.class, () -> userService.findCurrentUser());
+            }
+
+            @Test
+            @DisplayName("findCurrentUser should throw when principal is not UserDetails")
+            void findCurrentUser_shouldThrowWhenPrincipalNotUserDetails() {
+                when(authentication.getPrincipal()).thenReturn("someString");
+                when(securityContext.getAuthentication()).thenReturn(authentication);
+                SecurityContextHolder.setContext(securityContext);
+
+                assertThrows(AuthenticationException.class, () -> userService.findCurrentUser());
+            }
+        }
     }
 
     // == Test getUserProfile ==
 
-    @Test
-    @DisplayName("getUserProfile should return user when exists")
-    void getUserProfile_shouldReturnUserWhenExists() {
-        User user = new User();
-        user.setEmail("test@email.com");
+    @Nested
+    @DisplayName("getUserProfile")
+    class GetUserProfile {
 
-        UserDetailsImpl userDetails = mock(UserDetailsImpl.class);
-        when(userDetails.getUsername()).thenReturn("test@email.com");
-        when(authentication.getPrincipal()).thenReturn(userDetails);
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        SecurityContextHolder.setContext(securityContext);
+        @Nested
+        @DisplayName("Success Cases")
+        class SuccessCases {
 
-        when(userRepository.findByEmail("test@email.com"))
-                .thenReturn(Optional.of(user));
+            @Test
+            @DisplayName("getUserProfile should return user when exists")
+            void getUserProfile_shouldReturnUserWhenExists() {
+                User user = new User();
+                user.setEmail("test@email.com");
 
-        User result = userService.getUserProfile();
+                UserDetailsImpl userDetails = mock(UserDetailsImpl.class);
+                when(userDetails.getUsername()).thenReturn("test@email.com");
+                when(authentication.getPrincipal()).thenReturn(userDetails);
+                when(securityContext.getAuthentication()).thenReturn(authentication);
+                SecurityContextHolder.setContext(securityContext);
 
-        assertNotNull(result);
-        assertEquals("test@email.com", result.getEmail());
-    }
+                when(userRepository.findByEmail("test@email.com"))
+                        .thenReturn(Optional.of(user));
 
-    @Test
-    @DisplayName("getUserProfile should throw when user not found")
-    void getUserProfile_shouldThrowWhenUserNotFound() {
-        UserDetailsImpl userDetails = mock(UserDetailsImpl.class);
-        when(userDetails.getUsername()).thenReturn("test@email.com");
-        when(authentication.getPrincipal()).thenReturn(userDetails);
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        SecurityContextHolder.setContext(securityContext);
+                User result = userService.getUserProfile();
 
-        when(userRepository.findByEmail("test@email.com"))
-                .thenReturn(Optional.empty());
+                assertNotNull(result);
+                assertEquals("test@email.com", result.getEmail());
+            }
+        }
 
-        assertThrows(ResourceNotFoundException.class, () -> userService.getUserProfile());
+        @Nested
+        @DisplayName("Failure Cases")
+        class FailureCases {
+
+            @Test
+            @DisplayName("getUserProfile should throw when user not found")
+            void getUserProfile_shouldThrowWhenUserNotFound() {
+                UserDetailsImpl userDetails = mock(UserDetailsImpl.class);
+                when(userDetails.getUsername()).thenReturn("test@email.com");
+                when(authentication.getPrincipal()).thenReturn(userDetails);
+                when(securityContext.getAuthentication()).thenReturn(authentication);
+                SecurityContextHolder.setContext(securityContext);
+
+                when(userRepository.findByEmail("test@email.com"))
+                        .thenReturn(Optional.empty());
+
+                assertThrows(ResourceNotFoundException.class, () -> userService.getUserProfile());
+            }
+        }
     }
 }
