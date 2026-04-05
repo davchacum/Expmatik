@@ -120,8 +120,7 @@ public class InvoiceService {
         return save(invoice);
     }
 
-    @Transactional
-    public Invoice markInvoiceAsReceived(Invoice invoice) {
+    private Invoice markInvoiceAsReceived(Invoice invoice) {
         for(Batch batch : invoice.getBatch()) {
             batchService.addStockQuantity(batch, batch.getQuantity(), invoice.getUser());
         }
