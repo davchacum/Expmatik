@@ -9,6 +9,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -35,472 +37,569 @@ public class BatchIntegrationTest {
 
     // == Pruebas para POST /api/batches == //
 
-    @Test
-    @WithUserDetails("admin@expmatik.com")
-    void testCreateBatch() throws Exception {
+    @Nested
+    @DisplayName("POST /api/batches")
+    class CreateBatchTests {
 
-        BatchCreate batchCreate = new BatchCreate(
-            LocalDate.now().plusDays(10),
-            new BigDecimal("5.99"),
-            10,
-            "20000001"
-        );
+        @Nested
+        @DisplayName("Success cases")
+        class SuccessCases {
 
-        UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+            @Test
+            @WithUserDetails("admin@expmatik.com")
+            void testCreateBatch_ValidDataAndBelongsToUser_ShouldSucceed() throws Exception {
+
+                BatchCreate batchCreate = new BatchCreate(
+                    LocalDate.now().plusDays(10),
+                    new BigDecimal("5.99"),
+                    10,
+                    "20000001"
+                );
+
+                UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
 
-        String jsonRequest = objectMapper.writeValueAsString(batchCreate);
+                String jsonRequest = objectMapper.writeValueAsString(batchCreate);
 
-        mockMvc.perform(post("/api/batches")
-                .param("invoiceId", invoiceId.toString())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonRequest))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.expirationDate").value(batchCreate.expirationDate().toString()))
-                .andExpect(jsonPath("$.unitPrice").value(batchCreate.unitPrice()))
-                .andExpect(jsonPath("$.quantity").value(batchCreate.quantity()))
-                .andExpect(jsonPath("$.productId").value("00000000-0000-0000-0000-000000000001"))
-                .andExpect(jsonPath("$.productName").value("Leche Entera"));
-    }
+                mockMvc.perform(post("/api/batches")
+                        .param("invoiceId", invoiceId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.expirationDate").value(batchCreate.expirationDate().toString()))
+                        .andExpect(jsonPath("$.unitPrice").value(batchCreate.unitPrice()))
+                        .andExpect(jsonPath("$.quantity").value(batchCreate.quantity()))
+                        .andExpect(jsonPath("$.productId").value("00000000-0000-0000-0000-000000000001"))
+                        .andExpect(jsonPath("$.productName").value("Leche Entera"));
+            }
 
-    @Test
-    @WithUserDetails("admin@expmatik.com")
-    void testCreateBatchAndProductInfo() throws Exception {
+            @Test
+            @WithUserDetails("admin@expmatik.com")
+            void testCreateBatchAndProductInfo_ValidData_ShouldSucceed() throws Exception {
 
-        BatchCreate batchCreate = new BatchCreate(
-            null,
-            new BigDecimal("5.99"),
-            10,
-            "20000002"
-        );
+                BatchCreate batchCreate = new BatchCreate(
+                    null,
+                    new BigDecimal("5.99"),
+                    10,
+                    "20000002"
+                );
 
-        UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+                UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
-        String jsonRequest = objectMapper.writeValueAsString(batchCreate);
+                String jsonRequest = objectMapper.writeValueAsString(batchCreate);
 
-        mockMvc.perform(post("/api/batches")
-                .param("invoiceId", invoiceId.toString())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonRequest))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.unitPrice").value(batchCreate.unitPrice()))
-                .andExpect(jsonPath("$.quantity").value(batchCreate.quantity()))
-                .andExpect(jsonPath("$.productId").value("00000000-0000-0000-0000-000000000002"))
-                .andExpect(jsonPath("$.productName").value("Pan de Molde"));
-    }
+                mockMvc.perform(post("/api/batches")
+                        .param("invoiceId", invoiceId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.unitPrice").value(batchCreate.unitPrice()))
+                        .andExpect(jsonPath("$.quantity").value(batchCreate.quantity()))
+                        .andExpect(jsonPath("$.productId").value("00000000-0000-0000-0000-000000000002"))
+                        .andExpect(jsonPath("$.productName").value("Pan de Molde"));
+            }
 
-    @Test
-    @WithUserDetails("admin@expmatik.com")
-    void testCreateBatchWithOpenFoodFactsProduct() throws Exception {
-        Thread.sleep(2000);
-        BatchCreate batchCreate = new BatchCreate(
-            LocalDate.now().plusDays(10),
-            new BigDecimal("5.99"),
-            10,
-            "4716982022201"
-        );
+            @Test
+            @WithUserDetails("admin@expmatik.com")
+            void testCreateBatch_WithOpenFoodFactsProduct_ShouldSucceed() throws Exception {
+                Thread.sleep(2000);
+                BatchCreate batchCreate = new BatchCreate(
+                    LocalDate.now().plusDays(10),
+                    new BigDecimal("5.99"),
+                    10,
+                    "4716982022201"
+                );
 
-        UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+                UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
-        String jsonRequest = objectMapper.writeValueAsString(batchCreate);
+                String jsonRequest = objectMapper.writeValueAsString(batchCreate);
 
-        mockMvc.perform(post("/api/batches")
-                .param("invoiceId", invoiceId.toString())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonRequest))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.unitPrice").value(batchCreate.unitPrice()))
-                .andExpect(jsonPath("$.quantity").value(batchCreate.quantity()))
-                .andExpect(jsonPath("$.expirationDate").value(batchCreate.expirationDate().toString()))
-                .andExpect(jsonPath("$.productName").value("Choco Bom"));
-    }
+                mockMvc.perform(post("/api/batches")
+                        .param("invoiceId", invoiceId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.unitPrice").value(batchCreate.unitPrice()))
+                        .andExpect(jsonPath("$.quantity").value(batchCreate.quantity()))
+                        .andExpect(jsonPath("$.expirationDate").value(batchCreate.expirationDate().toString()))
+                        .andExpect(jsonPath("$.productName").value("Choco Bom"));
+            }
+        }
 
-    @Test
-    @WithUserDetails("admin@expmatik.com")
-    void testCreateBatchWithNonExistentProduct() throws Exception {
+        @Nested
+        @DisplayName("Failure cases")
+        class FailureCases {
 
-        BatchCreate batchCreate = new BatchCreate(
-            LocalDate.now().plusDays(10),
-            new BigDecimal("5.99"),
-            10,
-            "200000099"
-        );
+            @Test
+            @WithUserDetails("admin@expmatik.com")
+            void testCreateBatch_NonExistingProduct_ShouldThrowResourceNotFoundException() throws Exception {
 
-        UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+                BatchCreate batchCreate = new BatchCreate(
+                    LocalDate.now().plusDays(10),
+                    new BigDecimal("5.99"),
+                    10,
+                    "200000099"
+                );
 
-        String jsonRequest = objectMapper.writeValueAsString(batchCreate);
+                UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
-        mockMvc.perform(post("/api/batches")
-                .param("invoiceId", invoiceId.toString())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonRequest))
-                .andExpect(status().isBadRequest());
-    }
+                String jsonRequest = objectMapper.writeValueAsString(batchCreate);
 
-    @Test
-    @WithUserDetails("admin@expmatik.com")
-    void testCreateBatchWithNonExistentInvoice() throws Exception {
+                mockMvc.perform(post("/api/batches")
+                        .param("invoiceId", invoiceId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                        .andExpect(status().isBadRequest());
+            }
 
-        BatchCreate batchCreate = new BatchCreate(
-            LocalDate.now().plusDays(10),
-            new BigDecimal("5.99"),
-            10,
-            "20000001"
-        );
+            @Test
+            @WithUserDetails("admin@expmatik.com")
+            void testCreateBatch_NonExistingInvoice_ShouldThrowResourceNotFoundException() throws Exception {
 
-        UUID invoiceId = UUID.fromString("99000000-0000-0000-0000-000000000001");
+                BatchCreate batchCreate = new BatchCreate(
+                    LocalDate.now().plusDays(10),
+                    new BigDecimal("5.99"),
+                    10,
+                    "20000001"
+                );
 
-        String jsonRequest = objectMapper.writeValueAsString(batchCreate);
+                UUID invoiceId = UUID.fromString("99000000-0000-0000-0000-000000000001");
 
-        mockMvc.perform(post("/api/batches")
-                .param("invoiceId", invoiceId.toString())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonRequest))
-                .andExpect(status().isNotFound());
-    }
+                String jsonRequest = objectMapper.writeValueAsString(batchCreate);
 
-    @Test
-    @WithUserDetails("admin2@expmatik.com")
-    void testCreateBatchWithUnauthorizedUser() throws Exception {
+                mockMvc.perform(post("/api/batches")
+                        .param("invoiceId", invoiceId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                        .andExpect(status().isNotFound());
+            }
 
-        BatchCreate batchCreate = new BatchCreate(
-            LocalDate.now().plusDays(10),
-            new BigDecimal("5.99"),
-            10,
-            "20000001"
-        );
+            @Test
+            @WithUserDetails("admin2@expmatik.com")
+            void testCreateBatch_InvoiceNotOwned_ShouldThrowAccessDeniedException() throws Exception {
 
-        UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+                BatchCreate batchCreate = new BatchCreate(
+                    LocalDate.now().plusDays(10),
+                    new BigDecimal("5.99"),
+                    10,
+                    "20000001"
+                );
 
-        String jsonRequest = objectMapper.writeValueAsString(batchCreate);
+                UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
-        mockMvc.perform(post("/api/batches")
-                .param("invoiceId", invoiceId.toString())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonRequest))
-                .andExpect(status().isForbidden());
-    }
+                String jsonRequest = objectMapper.writeValueAsString(batchCreate);
 
-    @Test
-    @WithUserDetails("admin@expmatik.com")
-    void testCreateBatchWithPerishableProductAndMissingExpirationDate() throws Exception {
+                mockMvc.perform(post("/api/batches")
+                        .param("invoiceId", invoiceId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                        .andExpect(status().isForbidden());
+            }
 
-        BatchCreate batchCreate = new BatchCreate(
-            null,
-            new BigDecimal("5.99"),
-            10,
-            "20000001"
-        );
+            @Test
+            @WithUserDetails("repo@expmatik.com")
+            void testCreateBatch_UnauthorizedUser_ShouldThrowAccessDeniedException() throws Exception {
 
-        UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+                BatchCreate batchCreate = new BatchCreate(
+                    LocalDate.now().plusDays(10),
+                    new BigDecimal("5.99"),
+                    10,
+                    "20000001"
+                );
 
-        String jsonRequest = objectMapper.writeValueAsString(batchCreate);
+                UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
-        mockMvc.perform(post("/api/batches")
-                .param("invoiceId", invoiceId.toString())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonRequest))
-                .andExpect(status().isConflict());
-    }
+                String jsonRequest = objectMapper.writeValueAsString(batchCreate);
 
-    @Test
-    @WithUserDetails("admin@expmatik.com")
-    void testCreateBatchWithNonPerishableProductAndProvidedExpirationDate() throws Exception {
+                mockMvc.perform(post("/api/batches")
+                        .param("invoiceId", invoiceId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                        .andExpect(status().isForbidden());
+            }
 
-        BatchCreate batchCreate = new BatchCreate(
-            LocalDate.now().plusDays(10),
-            new BigDecimal("5.99"),
-            10,
-            "20000002"
-        );
+            @Test
+            @WithUserDetails("admin@expmatik.com")
+            void testCreateBatch_WithPerishableProductAndMissingExpirationDate_ShouldThrowConflictException() throws Exception {
 
-        UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+                BatchCreate batchCreate = new BatchCreate(
+                    null,
+                    new BigDecimal("5.99"),
+                    10,
+                    "20000001"
+                );
 
-        String jsonRequest = objectMapper.writeValueAsString(batchCreate);
+                UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
-        mockMvc.perform(post("/api/batches")
-                .param("invoiceId", invoiceId.toString())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonRequest))
-                .andExpect(status().isConflict());
-    }
+                String jsonRequest = objectMapper.writeValueAsString(batchCreate);
 
-    @Test
-    @WithUserDetails("admin@expmatik.com")
-    void testCreateBatchWithNonPendingInvoice() throws Exception {
+                mockMvc.perform(post("/api/batches")
+                        .param("invoiceId", invoiceId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                        .andExpect(status().isConflict());
+            }
 
-        BatchCreate batchUpdate = new BatchCreate(
-            LocalDate.now().plusDays(10),
-            new BigDecimal("5.99"),
-            10,
-            "20000001"
-        );
+            @Test
+            @WithUserDetails("admin@expmatik.com")
+            void testCreateBatch_WithNonPerishableProductAndProvidedExpirationDate_ShouldThrowConflictException() throws Exception {
 
-        UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000002");
+                BatchCreate batchCreate = new BatchCreate(
+                    LocalDate.now().plusDays(10),
+                    new BigDecimal("5.99"),
+                    10,
+                    "20000002"
+                );
 
-        String jsonRequest = objectMapper.writeValueAsString(batchUpdate);
+                UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
-        mockMvc.perform(post("/api/batches")
-                .param("invoiceId", invoiceId.toString())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonRequest))
-                .andExpect(status().isConflict());
+                String jsonRequest = objectMapper.writeValueAsString(batchCreate);
+
+                mockMvc.perform(post("/api/batches")
+                        .param("invoiceId", invoiceId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                        .andExpect(status().isConflict());
+            }
+
+            @Test
+            @WithUserDetails("admin@expmatik.com")
+            void testCreateBatch_WithNonPendingInvoice_ShouldThrowConflictException() throws Exception {
+
+                BatchCreate batchUpdate = new BatchCreate(
+                    LocalDate.now().plusDays(10),
+                    new BigDecimal("5.99"),
+                    10,
+                    "20000001"
+                );
+
+                UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000002");
+
+                String jsonRequest = objectMapper.writeValueAsString(batchUpdate);
+
+                mockMvc.perform(post("/api/batches")
+                        .param("invoiceId", invoiceId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                        .andExpect(status().isConflict());
+            }
+        }
     }
 
     // == Pruebas para PUT /api/batches/{batchId} == //
 
-    @Test
-    @WithUserDetails("admin@expmatik.com")
-    void testUpdateBatch() throws Exception {
+    @Nested
+    @DisplayName("PUT /api/batches/{batchId}")
+    class UpdateBatchTests {
 
-        BatchCreate batchUpdate = new BatchCreate(
-            LocalDate.now().plusDays(10),
-            new BigDecimal("5.99"),
-            10,
-            "20000001"
-        );
+        @Nested
+        @DisplayName("Success cases")
+        class SuccessCases {
 
-        UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+            @Test
+            @WithUserDetails("admin@expmatik.com")
+            void testUpdateBatch_ValidDataAndBelongsToUser_shouldSucceed() throws Exception {
 
-        String jsonRequest = objectMapper.writeValueAsString(batchUpdate);
+                BatchCreate batchUpdate = new BatchCreate(
+                    LocalDate.now().plusDays(10),
+                    new BigDecimal("5.99"),
+                    10,
+                    "20000001"
+                );
 
-        mockMvc.perform(put("/api/batches/"+batchId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonRequest))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.expirationDate").value(batchUpdate.expirationDate().toString()))
-                .andExpect(jsonPath("$.unitPrice").value(batchUpdate.unitPrice()))
-                .andExpect(jsonPath("$.quantity").value(batchUpdate.quantity()))
-                .andExpect(jsonPath("$.productId").value("00000000-0000-0000-0000-000000000001"))
-                .andExpect(jsonPath("$.productName").value("Leche Entera"));
-    }
+                UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
-    @Test
-    @WithUserDetails("admin@expmatik.com")
-    void testUpdateBatchAndProductInfo() throws Exception {
+                String jsonRequest = objectMapper.writeValueAsString(batchUpdate);
 
-        BatchCreate batchUpdate = new BatchCreate(
-            null,
-            new BigDecimal("5.99"),
-            10,
-            "20000002"
-        );
+                mockMvc.perform(put("/api/batches/"+batchId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.expirationDate").value(batchUpdate.expirationDate().toString()))
+                        .andExpect(jsonPath("$.unitPrice").value(batchUpdate.unitPrice()))
+                        .andExpect(jsonPath("$.quantity").value(batchUpdate.quantity()))
+                        .andExpect(jsonPath("$.productId").value("00000000-0000-0000-0000-000000000001"))
+                        .andExpect(jsonPath("$.productName").value("Leche Entera"));
+            }
 
-        UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+            @Test
+            @WithUserDetails("admin@expmatik.com")
+            void testUpdateBatchAndProductInfo_ValidDataAndBelongsToUser_shouldSucceed() throws Exception {
 
-        String jsonRequest = objectMapper.writeValueAsString(batchUpdate);
+                BatchCreate batchUpdate = new BatchCreate(
+                    null,
+                    new BigDecimal("5.99"),
+                    10,
+                    "20000002"
+                );
 
-        mockMvc.perform(put("/api/batches/" + batchId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonRequest))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.unitPrice").value(batchUpdate.unitPrice()))
-                .andExpect(jsonPath("$.quantity").value(batchUpdate.quantity()))
-                .andExpect(jsonPath("$.productId").value("00000000-0000-0000-0000-000000000002"))
-                .andExpect(jsonPath("$.productName").value("Pan de Molde"));
-    }
+                UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
-    @Test
-    @WithUserDetails("admin@expmatik.com")
-    void testUpdateBatchWithOpenFoodFactsProduct() throws Exception {
-        Thread.sleep(2000);
-        BatchCreate batchUpdate = new BatchCreate(
-            LocalDate.now().plusDays(10),
-            new BigDecimal("5.99"),
-            10,
-            "4716982022201"
-        );
+                String jsonRequest = objectMapper.writeValueAsString(batchUpdate);
 
-        UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+                mockMvc.perform(put("/api/batches/" + batchId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.unitPrice").value(batchUpdate.unitPrice()))
+                        .andExpect(jsonPath("$.quantity").value(batchUpdate.quantity()))
+                        .andExpect(jsonPath("$.productId").value("00000000-0000-0000-0000-000000000002"))
+                        .andExpect(jsonPath("$.productName").value("Pan de Molde"));
+            }
 
-        String jsonRequest = objectMapper.writeValueAsString(batchUpdate);
+            @Test
+            @WithUserDetails("admin@expmatik.com")
+            void testUpdateBatch_WithOpenFoodFactsProduct_shouldSucceed() throws Exception {
+                Thread.sleep(2000);
+                BatchCreate batchUpdate = new BatchCreate(
+                    LocalDate.now().plusDays(10),
+                    new BigDecimal("5.99"),
+                    10,
+                    "4716982022201"
+                );
 
-        mockMvc.perform(put("/api/batches/" + batchId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonRequest))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.unitPrice").value(batchUpdate.unitPrice()))
-                .andExpect(jsonPath("$.quantity").value(batchUpdate.quantity()))
-                .andExpect(jsonPath("$.expirationDate").value(batchUpdate.expirationDate().toString()))
-                .andExpect(jsonPath("$.productName").value("Choco Bom"));
-    }
+                UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
-    @Test
-    @WithUserDetails("admin@expmatik.com")
-    void testUpdateBatchWithNonExistentProduct() throws Exception {
+                String jsonRequest = objectMapper.writeValueAsString(batchUpdate);
 
-        BatchCreate batchUpdate = new BatchCreate(
-            LocalDate.now().plusDays(10),
-            new BigDecimal("5.99"),
-            10,
-            "200000099"
-        );
+                mockMvc.perform(put("/api/batches/" + batchId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.unitPrice").value(batchUpdate.unitPrice()))
+                        .andExpect(jsonPath("$.quantity").value(batchUpdate.quantity()))
+                        .andExpect(jsonPath("$.expirationDate").value(batchUpdate.expirationDate().toString()))
+                        .andExpect(jsonPath("$.productName").value("Choco Bom"));
+            }
+        }
 
-        UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+        @Nested
+        @DisplayName("Failure cases")
+        class FailureCases {
 
-        String jsonRequest = objectMapper.writeValueAsString(batchUpdate);
+            @Test
+            @WithUserDetails("admin@expmatik.com")
+            void testUpdateBatch_WithNonExistentProduct_shouldThrowBadRequestException() throws Exception {
 
-        mockMvc.perform(put("/api/batches/" + batchId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonRequest))
-                .andExpect(status().isBadRequest());
-    }
+                BatchCreate batchUpdate = new BatchCreate(
+                    LocalDate.now().plusDays(10),
+                    new BigDecimal("5.99"),
+                    10,
+                    "200000099"
+                );
 
-    @Test
-    @WithUserDetails("admin@expmatik.com")
-    void testUpdateBatchWithNonExistentBatch() throws Exception {
+                UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
-        BatchCreate batchUpdate = new BatchCreate(
-            LocalDate.now().plusDays(10),
-            new BigDecimal("5.99"),
-            10,
-            "20000001"
-        );
+                String jsonRequest = objectMapper.writeValueAsString(batchUpdate);
 
-        UUID batchId = UUID.fromString("99000000-0000-0000-0000-000000000001");
+                mockMvc.perform(put("/api/batches/" + batchId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                        .andExpect(status().isBadRequest());
+            }
 
-        String jsonRequest = objectMapper.writeValueAsString(batchUpdate);
+            @Test
+            @WithUserDetails("admin@expmatik.com")
+            void testUpdateBatch_WithNonExistentBatch_shouldThrowResourceNotFoundException() throws Exception {
 
-        mockMvc.perform(put("/api/batches/" + batchId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonRequest))
-                .andExpect(status().isNotFound());
-    }
+                BatchCreate batchUpdate = new BatchCreate(
+                    LocalDate.now().plusDays(10),
+                    new BigDecimal("5.99"),
+                    10,
+                    "20000001"
+                );
 
-    @Test
-    @WithUserDetails("admin2@expmatik.com")
-    void testUpdateBatchWithUnauthorizedUser() throws Exception {
+                UUID batchId = UUID.fromString("99000000-0000-0000-0000-000000000001");
 
-        BatchCreate batchUpdate = new BatchCreate(
-            LocalDate.now().plusDays(10),
-            new BigDecimal("5.99"),
-            10,
-            "20000001"
-        );
+                String jsonRequest = objectMapper.writeValueAsString(batchUpdate);
 
-        UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000001"); 
+                mockMvc.perform(put("/api/batches/" + batchId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                        .andExpect(status().isNotFound());
+            }
 
-        String jsonRequest = objectMapper.writeValueAsString(batchUpdate);
+            @Test
+            @WithUserDetails("admin2@expmatik.com")
+            void testUpdateBatch_InvoiceNotOwned_shouldThrowAccessDeniedException() throws Exception {
 
-        mockMvc.perform(put("/api/batches/" + batchId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonRequest))
-                .andExpect(status().isForbidden());
-    }
+                BatchCreate batchUpdate = new BatchCreate(
+                    LocalDate.now().plusDays(10),
+                    new BigDecimal("5.99"),
+                    10,
+                    "20000001"
+                );
 
-    @Test
-    @WithUserDetails("admin@expmatik.com")
-    void testUpdateBatchWithPerishableProductAndMissingExpirationDate() throws Exception {
+                UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000001"); 
 
-        BatchCreate batchUpdate = new BatchCreate(
-            null,
-            new BigDecimal("5.99"),
-            10,
-            "20000001"
-        );
+                String jsonRequest = objectMapper.writeValueAsString(batchUpdate);
 
-        UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+                mockMvc.perform(put("/api/batches/" + batchId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                        .andExpect(status().isForbidden());
+            }
 
-        String jsonRequest = objectMapper.writeValueAsString(batchUpdate);
+            @Test
+            @WithUserDetails("repo@expmatik.com")
+            void testUpdateBatch_WithUnauthorizedUser_shouldThrowAccessDeniedException() throws Exception {
 
-        mockMvc.perform(put("/api/batches/" + batchId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonRequest))
-                .andExpect(status().isConflict());
-    }
+                BatchCreate batchUpdate = new BatchCreate(
+                    LocalDate.now().plusDays(10),
+                    new BigDecimal("5.99"),
+                    10,
+                    "20000001"
+                );
 
-    @Test
-    @WithUserDetails("admin@expmatik.com")
-    void testUpdateBatchWithNonPerishableProductAndProvidedExpirationDate() throws Exception {
+                UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000001"); 
 
-        BatchCreate batchUpdate = new BatchCreate(
-            LocalDate.now().plusDays(10),
-            new BigDecimal("5.99"),
-            10,
-            "20000002"
-        );
+                String jsonRequest = objectMapper.writeValueAsString(batchUpdate);
 
-        UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+                mockMvc.perform(put("/api/batches/" + batchId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                        .andExpect(status().isForbidden());
+            }
 
-        String jsonRequest = objectMapper.writeValueAsString(batchUpdate);
+            @Test
+            @WithUserDetails("admin@expmatik.com")
+            void testUpdateBatch_WithPerishableProductAndMissingExpirationDate_shouldThrowConflictException() throws Exception {
 
-        mockMvc.perform(put("/api/batches/" + batchId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonRequest))
-                .andExpect(status().isConflict());
-    }
+                BatchCreate batchUpdate = new BatchCreate(
+                    null,
+                    new BigDecimal("5.99"),
+                    10,
+                    "20000001"
+                );
 
-    @Test
-    @WithUserDetails("admin@expmatik.com")
-    void testUpdateBatchWithNonPendingInvoice() throws Exception {
+                UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
-        BatchCreate batchUpdate = new BatchCreate(
-            LocalDate.now().plusDays(10),
-            new BigDecimal("5.99"),
-            10,
-            "20000001"
-        );
+                String jsonRequest = objectMapper.writeValueAsString(batchUpdate);
 
-        UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000003");
+                mockMvc.perform(put("/api/batches/" + batchId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                        .andExpect(status().isConflict());
+            }
 
-        String jsonRequest = objectMapper.writeValueAsString(batchUpdate);
+            @Test
+            @WithUserDetails("admin@expmatik.com")
+            void testUpdateBatch_WithNonPerishableProductAndProvidedExpirationDate_shouldThrowConflictException() throws Exception {
 
-        mockMvc.perform(put("/api/batches/" + batchId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonRequest))
-                .andExpect(status().isConflict());
+                BatchCreate batchUpdate = new BatchCreate(
+                    LocalDate.now().plusDays(10),
+                    new BigDecimal("5.99"),
+                    10,
+                    "20000002"
+                );
+
+                UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+
+                String jsonRequest = objectMapper.writeValueAsString(batchUpdate);
+
+                mockMvc.perform(put("/api/batches/" + batchId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                        .andExpect(status().isConflict());
+            }
+
+            @Test
+            @WithUserDetails("admin@expmatik.com")
+            void testUpdateBatch_WithNonPendingInvoice_shouldThrowConflictException() throws Exception {
+
+                BatchCreate batchUpdate = new BatchCreate(
+                    LocalDate.now().plusDays(10),
+                    new BigDecimal("5.99"),
+                    10,
+                    "20000001"
+                );
+
+                UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000003");
+
+                String jsonRequest = objectMapper.writeValueAsString(batchUpdate);
+
+                mockMvc.perform(put("/api/batches/" + batchId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                        .andExpect(status().isConflict());
+            }
+        }
     }
 
     // == Pruebas para DELETE /api/batches/{batchId} == //
 
-    @Test
-    @WithUserDetails("admin@expmatik.com")
-    void testDeleteBatch() throws Exception {
-        UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    @Nested
+    @DisplayName("DELETE /api/batches/{batchId}")
+    class DeleteBatchTests {
 
-        mockMvc.perform(MockMvcRequestBuilders.delete("/api/batches/" + batchId))
-                .andExpect(status().isNoContent());
-    }
+        @Nested
+        @DisplayName("Success cases")
+        class SuccessCases {
 
-    @Test
-    @WithUserDetails("admin@expmatik.com")
-    void testDeleteBatchWithNonExistentBatch() throws Exception {
-        UUID batchId = UUID.fromString("99000000-0000-0000-0000-000000000001");
+            @Test
+            @WithUserDetails("admin@expmatik.com")
+            void testDeleteBatch_ValidBatch_shouldSucceed() throws Exception {
+                UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
-        mockMvc.perform(MockMvcRequestBuilders.delete("/api/batches/" + batchId))
-                .andExpect(status().isNotFound());
-    }
+                mockMvc.perform(MockMvcRequestBuilders.delete("/api/batches/" + batchId))
+                        .andExpect(status().isNoContent());
+            }
+        }
 
-    @Test
-    @WithUserDetails("admin2@expmatik.com")
-    void testDeleteBatchWithUnauthorizedUser() throws Exception {
-        UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+        @Nested
+        @DisplayName("Failure cases")
+        class FailureCases {
 
-        mockMvc.perform(MockMvcRequestBuilders.delete("/api/batches/" + batchId))
-                .andExpect(status().isForbidden());
-    }
+            @Test
+            @WithUserDetails("admin@expmatik.com")
+            void testDeleteBatch_WithNonExistentBatch_shouldThrowResourceNotFoundException() throws Exception {
+                UUID batchId = UUID.fromString("99000000-0000-0000-0000-000000000001");
 
-    @Test
-    @WithUserDetails("admin@expmatik.com")
-    void testDeleteBatchWithNonPendingInvoice() throws Exception {
-        UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000003");
+                mockMvc.perform(MockMvcRequestBuilders.delete("/api/batches/" + batchId))
+                        .andExpect(status().isNotFound());
+            }
 
-        mockMvc.perform(MockMvcRequestBuilders.delete("/api/batches/" + batchId))
-                .andExpect(status().isConflict());
-    }
+            @Test
+            @WithUserDetails("admin2@expmatik.com")
+            void testDeleteBatch_NotOwnedBatch_shouldThrowForbiddenException() throws Exception {
+                UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
-    @Test
-    @WithUserDetails("admin@expmatik.com")
-    void testDeleteBatchWithOnlyOneBatchInInvoice() throws Exception {
-        UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+                mockMvc.perform(MockMvcRequestBuilders.delete("/api/batches/" + batchId))
+                        .andExpect(status().isForbidden());
+            }
 
-        mockMvc.perform(MockMvcRequestBuilders.delete("/api/batches/" + batchId))
-                .andExpect(status().isNoContent());
+            @Test
+            @WithUserDetails("repo@expmatik.com")
+            void testDeleteBatch_WithUnauthorizedUser_shouldThrowForbiddenException() throws Exception {
+                UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
-        batchId = UUID.fromString("00000000-0000-0000-0000-000000000002");
+                mockMvc.perform(MockMvcRequestBuilders.delete("/api/batches/" + batchId))
+                        .andExpect(status().isForbidden());
+            }
 
-        mockMvc.perform(MockMvcRequestBuilders.delete("/api/batches/" + batchId))
-                .andExpect(status().isConflict());
+            @Test
+            @WithUserDetails("admin@expmatik.com")
+            void testDeleteBatch_WithNonPendingInvoice_shouldThrowConflictException() throws Exception {
+                UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000003");
+
+                mockMvc.perform(MockMvcRequestBuilders.delete("/api/batches/" + batchId))
+                        .andExpect(status().isConflict());
+            }
+
+            @Test
+            @WithUserDetails("admin@expmatik.com")
+            void testDeleteBatch_WithOnlyOneBatchInInvoice_shouldThrowConflictException() throws Exception {
+                UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+
+                mockMvc.perform(MockMvcRequestBuilders.delete("/api/batches/" + batchId))
+                        .andExpect(status().isNoContent());
+
+                batchId = UUID.fromString("00000000-0000-0000-0000-000000000002");
+
+                mockMvc.perform(MockMvcRequestBuilders.delete("/api/batches/" + batchId))
+                        .andExpect(status().isConflict());
+            }
+        }
     }
 
 }

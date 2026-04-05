@@ -14,6 +14,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -161,252 +162,297 @@ public class BatchServiceTest {
 
     // == createBatch tests ==
 
-    @Test
-    @DisplayName("Create batch with valid data should succeed")
-    void testCreateBatch_ValidData_ShouldSucceed() {
+    @Nested
+    @DisplayName("createBatch")
+    class CreateBatchTests {
 
-        BatchCreate batchCreate = new BatchCreate(batch1);
+        @Nested
+        @DisplayName("Succes cases")
+        class SuccessCases {
 
-        when(invoiceRepository.findById(invoice1.getId())).thenReturn(Optional.of(invoice1));
-        when(productService.getOrCreateProductByBarcode("1234567890123", user1.getId())).thenReturn(productCustom);
-        when(batchRepository.save(any(Batch.class))).thenAnswer(invocation -> invocation.getArgument(0));
+            @Test
+            @DisplayName("Create batch with valid data should succeed")
+            void testCreateBatch_ValidData_ShouldSucceed() {
 
-        Batch createdBatch = batchService.createBatch(user1.getId(), batchCreate, invoice1.getId());
+                BatchCreate batchCreate = new BatchCreate(batch1);
 
-        assert(batch1.getExpirationDate() == null);
-        assert(batch1.getUnitPrice().equals(createdBatch.getUnitPrice()));
-        assert(batch1.getQuantity() == createdBatch.getQuantity());
-    }
+                when(invoiceRepository.findById(invoice1.getId())).thenReturn(Optional.of(invoice1));
+                when(productService.getOrCreateProductByBarcode("1234567890123", user1.getId())).thenReturn(productCustom);
+                when(batchRepository.save(any(Batch.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-    @Test
-    @DisplayName("Create batch with non-existing invoice should throw ResourceNotFoundException")
-    void testCreateBatch_NonExistingInvoice_ShouldThrowResourceNotFoundException() {
+                Batch createdBatch = batchService.createBatch(user1.getId(), batchCreate, invoice1.getId());
 
-        BatchCreate batchCreate = new BatchCreate(batch1);
+                assert(batch1.getExpirationDate() == null);
+                assert(batch1.getUnitPrice().equals(createdBatch.getUnitPrice()));
+                assert(batch1.getQuantity() == createdBatch.getQuantity());
+            }
+        }
 
-        when(invoiceRepository.findById(invoice1.getId())).thenReturn(Optional.empty());
+        @Nested
+        @DisplayName("Failure cases")
+        class FailureCases {
 
-        assertThatThrownBy(() -> batchService.createBatch(user1.getId(), batchCreate, invoice1.getId()))
-            .isInstanceOf(ResourceNotFoundException.class)
-            .hasMessageContaining("Invoice not found with id: " + invoice1.getId());
-    }
+            @Test
+            @DisplayName("Create batch with non-existing invoice should throw ResourceNotFoundException")
+            void testCreateBatch_NonExistingInvoice_ShouldThrowResourceNotFoundException() {
 
-    @Test
-    @DisplayName("Create batch with perishable product and null expiration date should throw ConflictException")
-    void testCreateBatch_PerishableProductNullExpirationDate_ShouldThrowConflictException() {
+                BatchCreate batchCreate = new BatchCreate(batch1);
 
-        BatchCreate batchCreate = new BatchCreate(null, batch2.getUnitPrice(), batch2.getQuantity(), batch2.getProduct().getBarcode());
+                when(invoiceRepository.findById(invoice1.getId())).thenReturn(Optional.empty());
 
-        when(invoiceRepository.findById(invoice1.getId())).thenReturn(Optional.of(invoice1));
-        when(productService.getOrCreateProductByBarcode("9876543210123", user1.getId())).thenReturn(productNoCustom);
+                assertThatThrownBy(() -> batchService.createBatch(user1.getId(), batchCreate, invoice1.getId()))
+                    .isInstanceOf(ResourceNotFoundException.class)
+                    .hasMessageContaining("Invoice not found with id: " + invoice1.getId());
+            }
 
-        assertThatThrownBy(() -> batchService.createBatch(user1.getId(), batchCreate, invoice1.getId()))
-            .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("Expiration date for product " + batch2.getProduct().getBarcode() + " is required for perishable products.");
-    }
+            @Test
+            @DisplayName("Create batch with perishable product and null expiration date should throw ConflictException")
+            void testCreateBatch_PerishableProductNullExpirationDate_ShouldThrowConflictException() {
 
-    @Test
-    @DisplayName("Create batch with non-perishable product and non-null expiration date should throw ConflictException")
-    void testCreateBatch_NonPerishableProductNonNullExpirationDate_ShouldThrowConflictException() {
+                BatchCreate batchCreate = new BatchCreate(null, batch2.getUnitPrice(), batch2.getQuantity(), batch2.getProduct().getBarcode());
 
-        BatchCreate batchCreate = new BatchCreate(LocalDate.of(2026, 3, 1), batch1.getUnitPrice(), batch1.getQuantity(), batch1.getProduct().getBarcode());
+                when(invoiceRepository.findById(invoice1.getId())).thenReturn(Optional.of(invoice1));
+                when(productService.getOrCreateProductByBarcode("9876543210123", user1.getId())).thenReturn(productNoCustom);
 
-        when(invoiceRepository.findById(invoice1.getId())).thenReturn(Optional.of(invoice1));
-        when(productService.getOrCreateProductByBarcode("1234567890123", user1.getId())).thenReturn(productCustom);
+                assertThatThrownBy(() -> batchService.createBatch(user1.getId(), batchCreate, invoice1.getId()))
+                    .isInstanceOf(ConflictException.class)
+                    .hasMessageContaining("Expiration date for product " + batch2.getProduct().getBarcode() + " is required for perishable products.");
+            }
 
-        assertThatThrownBy(() -> batchService.createBatch(user1.getId(), batchCreate, invoice1.getId()))
-            .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("Expiration date for product " + batch1.getProduct().getBarcode() + " should not be provided for non-perishable products.");
-    }
+            @Test
+            @DisplayName("Create batch with non-perishable product and non-null expiration date should throw ConflictException")
+            void testCreateBatch_NonPerishableProductNonNullExpirationDate_ShouldThrowConflictException() {
 
-    @Test
-    @DisplayName("Create batch with invoice belonging to another user should throw AccessDeniedException")
-    void testCreateBatch_InvoiceBelongsToAnotherUser_ShouldThrowAccessDeniedException() {
+                BatchCreate batchCreate = new BatchCreate(LocalDate.of(2026, 3, 1), batch1.getUnitPrice(), batch1.getQuantity(), batch1.getProduct().getBarcode());
 
-        BatchCreate batchCreate = new BatchCreate(batch1);
+                when(invoiceRepository.findById(invoice1.getId())).thenReturn(Optional.of(invoice1));
+                when(productService.getOrCreateProductByBarcode("1234567890123", user1.getId())).thenReturn(productCustom);
 
-        when(invoiceRepository.findById(invoice2.getId())).thenReturn(Optional.of(invoice2));
+                assertThatThrownBy(() -> batchService.createBatch(user1.getId(), batchCreate, invoice1.getId()))
+                    .isInstanceOf(ConflictException.class)
+                    .hasMessageContaining("Expiration date for product " + batch1.getProduct().getBarcode() + " should not be provided for non-perishable products.");
+            }
 
-        assertThatThrownBy(() -> batchService.createBatch(user1.getId(), batchCreate, invoice2.getId()))
-            .isInstanceOf(AccessDeniedException.class)
-            .hasMessageContaining("You don't have permission to edit this invoice.");
-    }
+            @Test
+            @DisplayName("Create batch with invoice belonging to another user should throw AccessDeniedException")
+            void testCreateBatch_InvoiceBelongsToAnotherUser_ShouldThrowAccessDeniedException() {
 
-    @Test
-    @DisplayName("Create batch with invoice that is not pending should throw ConflictException")
-    void testCreateBatch_InvoiceNotPending_ShouldThrowConflictException() {
+                BatchCreate batchCreate = new BatchCreate(batch1);
 
-        BatchCreate batchCreate = new BatchCreate(batch3);
+                when(invoiceRepository.findById(invoice2.getId())).thenReturn(Optional.of(invoice2));
 
-        when(invoiceRepository.findById(invoice2.getId())).thenReturn(Optional.of(invoice2));
+                assertThatThrownBy(() -> batchService.createBatch(user1.getId(), batchCreate, invoice2.getId()))
+                    .isInstanceOf(AccessDeniedException.class)
+                    .hasMessageContaining("You don't have permission to edit this invoice.");
+            }
 
-        assertThatThrownBy(() -> batchService.createBatch(user2.getId(), batchCreate, invoice2.getId()))
-            .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("Cannot add batch to an invoice that is not pending.");
+            @Test
+            @DisplayName("Create batch with invoice that is not pending should throw ConflictException")
+            void testCreateBatch_InvoiceNotPending_ShouldThrowConflictException() {
+
+                BatchCreate batchCreate = new BatchCreate(batch3);
+
+                when(invoiceRepository.findById(invoice2.getId())).thenReturn(Optional.of(invoice2));
+
+                assertThatThrownBy(() -> batchService.createBatch(user2.getId(), batchCreate, invoice2.getId()))
+                    .isInstanceOf(ConflictException.class)
+                    .hasMessageContaining("Cannot add batch to an invoice that is not pending.");
+            }
+        }
     }
 
     // == updateBatch tests ==
 
-    @Test
-    @DisplayName("Update batch with valid data should succeed")
-    void testUpdateBatch_ValidData_ShouldSucceed() {
-        BatchCreate batchCreate = new BatchCreate(batch1);
-        batchCreate = new BatchCreate(batchCreate.expirationDate(), new BigDecimal("5.99"), 10, batchCreate.productBarcode());
+    @Nested
+    @DisplayName("updateBatch")
+    class UpdateBatchTests {
 
-        when(batchRepository.findById(batch1.getId())).thenReturn(Optional.of(batch1));
-        when(productService.getOrCreateProductByBarcode("1234567890123", user1.getId())).thenReturn(productCustom);
-        when(batchRepository.save(any(Batch.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        @Nested
+        @DisplayName("Success Cases")
+        class SuccessCases {
 
-        Batch updatedBatch = batchService.updateBatch(user1.getId(), batch1.getId(), batchCreate);
+            @Test
+            @DisplayName("Update batch with valid data should succeed")
+            void testUpdateBatch_ValidData_ShouldSucceed() {
+                BatchCreate batchCreate = new BatchCreate(batch1);
+                batchCreate = new BatchCreate(batchCreate.expirationDate(), new BigDecimal("5.99"), 10, batchCreate.productBarcode());
 
-        assert(batch1.getExpirationDate() == null);
-        assert(updatedBatch.getUnitPrice().equals(new BigDecimal("5.99")));
-        assert(updatedBatch.getQuantity() == 10);
-    }
+                when(batchRepository.findById(batch1.getId())).thenReturn(Optional.of(batch1));
+                when(productService.getOrCreateProductByBarcode("1234567890123", user1.getId())).thenReturn(productCustom);
+                when(batchRepository.save(any(Batch.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-    @Test
-    @DisplayName("Update batch with valid data should succeed and product info does not exist, product is created from OpenFoodFacts")
-    void testUpdateBatch_ValidData_ShouldSucceedAndProductInfoDoesNotExist(){
-        BatchCreate batchCreate = new BatchCreate(batch2);
-        batchCreate = new BatchCreate(batchCreate.expirationDate(), new BigDecimal("4.99"), 5, batchCreate.productBarcode());
+                Batch updatedBatch = batchService.updateBatch(user1.getId(), batch1.getId(), batchCreate);
 
-        when(batchRepository.findById(batch2.getId())).thenReturn(Optional.of(batch2));
-        when(productService.getOrCreateProductByBarcode("9876543210123", user1.getId())).thenReturn(productNoCustom);
-        when(batchRepository.save(any(Batch.class))).thenAnswer(invocation -> invocation.getArgument(0));
+                assert(batch1.getExpirationDate() == null);
+                assert(updatedBatch.getUnitPrice().equals(new BigDecimal("5.99")));
+                assert(updatedBatch.getQuantity() == 10);
+            }
+        }
 
-        Batch updatedBatch = batchService.updateBatch(user1.getId(), batch2.getId(), batchCreate);
+        @Nested
+        @DisplayName("Failure Cases")
+        class FailureCases {
 
-        assert(updatedBatch.getExpirationDate().equals(batch2.getExpirationDate()));
-        assert(updatedBatch.getUnitPrice().equals(new BigDecimal("4.99")));
-        assert(updatedBatch.getQuantity() == 5);
-    }
+            @Test
+            @DisplayName("Update batch with valid data should succeed and product info does not exist, product is created from OpenFoodFacts")
+            void testUpdateBatch_ValidData_ShouldSucceedAndProductInfoDoesNotExist(){
+                BatchCreate batchCreate = new BatchCreate(batch2);
+                batchCreate = new BatchCreate(batchCreate.expirationDate(), new BigDecimal("4.99"), 5, batchCreate.productBarcode());
 
-    @Test
-    @DisplayName("Update batch with non-existing batch should throw ResourceNotFoundException")
-    void testUpdateBatch_NonExistingBatch_ShouldThrowResourceNotFoundException() {
-        BatchCreate batchCreate = new BatchCreate(batch1);
+                when(batchRepository.findById(batch2.getId())).thenReturn(Optional.of(batch2));
+                when(productService.getOrCreateProductByBarcode("9876543210123", user1.getId())).thenReturn(productNoCustom);
+                when(batchRepository.save(any(Batch.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        when(batchRepository.findById(batch1.getId())).thenReturn(Optional.empty());
+                Batch updatedBatch = batchService.updateBatch(user1.getId(), batch2.getId(), batchCreate);
 
-        assertThatThrownBy(() -> batchService.updateBatch(user1.getId(), batch1.getId(), batchCreate))
-            .isInstanceOf(ResourceNotFoundException.class)
-            .hasMessageContaining("Batch not found with id: " + batch1.getId());
-    }
+                assert(updatedBatch.getExpirationDate().equals(batch2.getExpirationDate()));
+                assert(updatedBatch.getUnitPrice().equals(new BigDecimal("4.99")));
+                assert(updatedBatch.getQuantity() == 5);
+            }
 
-    @Test
-    @DisplayName("Update batch with perishable product and null expiration date should throw ConflictException")
-    void testUpdateBatch_PerishableProduct_NullExpirationDate_ShouldThrowConflictException() {
-        BatchCreate batchCreate = new BatchCreate(null, batch2.getUnitPrice(), batch2.getQuantity(), batch2.getProduct().getBarcode());
+            @Test
+            @DisplayName("Update batch with non-existing batch should throw ResourceNotFoundException")
+            void testUpdateBatch_NonExistingBatch_ShouldThrowResourceNotFoundException() {
+                BatchCreate batchCreate = new BatchCreate(batch1);
 
-        when(batchRepository.findById(batch2.getId())).thenReturn(Optional.of(batch2));
-        when(productService.getOrCreateProductByBarcode("9876543210123", user1.getId())).thenReturn(productNoCustom);
+                when(batchRepository.findById(batch1.getId())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> batchService.updateBatch(user1.getId(), batch2.getId(), batchCreate))
-            .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("Expiration date for product " + batch2.getProduct().getBarcode() + " is required for perishable products.");
-    }
+                assertThatThrownBy(() -> batchService.updateBatch(user1.getId(), batch1.getId(), batchCreate))
+                    .isInstanceOf(ResourceNotFoundException.class)
+                    .hasMessageContaining("Batch not found with id: " + batch1.getId());
+            }
 
-    @Test
-    @DisplayName("Update batch with non-perishable product and non-null expiration date should throw ConflictException")
-    void testUpdateBatch_NonPerishableProduct_NonNullExpirationDate_ShouldThrowConflictException() {
-        BatchCreate batchCreate = new BatchCreate(LocalDate.of(2026, 3, 1), batch1.getUnitPrice(), batch1.getQuantity(), batch1.getProduct().getBarcode());
+            @Test
+            @DisplayName("Update batch with perishable product and null expiration date should throw ConflictException")
+            void testUpdateBatch_PerishableProduct_NullExpirationDate_ShouldThrowConflictException() {
+                BatchCreate batchCreate = new BatchCreate(null, batch2.getUnitPrice(), batch2.getQuantity(), batch2.getProduct().getBarcode());
 
-        when(batchRepository.findById(batch1.getId())).thenReturn(Optional.of(batch1));
-        when(productService.getOrCreateProductByBarcode("1234567890123", user1.getId())).thenReturn(productCustom);
+                when(batchRepository.findById(batch2.getId())).thenReturn(Optional.of(batch2));
+                when(productService.getOrCreateProductByBarcode("9876543210123", user1.getId())).thenReturn(productNoCustom);
 
-        assertThatThrownBy(() -> batchService.updateBatch(user1.getId(), batch1.getId(), batchCreate))
-            .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("Expiration date for product " + batch1.getProduct().getBarcode() + " should not be provided for non-perishable products.");
-    }
+                assertThatThrownBy(() -> batchService.updateBatch(user1.getId(), batch2.getId(), batchCreate))
+                    .isInstanceOf(ConflictException.class)
+                    .hasMessageContaining("Expiration date for product " + batch2.getProduct().getBarcode() + " is required for perishable products.");
+            }
 
-    @Test
-    @DisplayName("Update batch with invoice that is not pending should throw ConflictException")
-    void testUpdateBatch_InvoiceNotPending_ShouldThrowConflictException() {
-        BatchCreate batchCreate = new BatchCreate(batch3);
+            @Test
+            @DisplayName("Update batch with non-perishable product and non-null expiration date should throw ConflictException")
+            void testUpdateBatch_NonPerishableProduct_NonNullExpirationDate_ShouldThrowConflictException() {
+                BatchCreate batchCreate = new BatchCreate(LocalDate.of(2026, 3, 1), batch1.getUnitPrice(), batch1.getQuantity(), batch1.getProduct().getBarcode());
 
-        when(batchRepository.findById(batch3.getId())).thenReturn(Optional.of(batch3));
+                when(batchRepository.findById(batch1.getId())).thenReturn(Optional.of(batch1));
+                when(productService.getOrCreateProductByBarcode("1234567890123", user1.getId())).thenReturn(productCustom);
 
-        assertThatThrownBy(() -> batchService.updateBatch(user2.getId(), batch3.getId(), batchCreate))
-            .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("Cannot edit batch from an invoice that is not pending.");
-    }
+                assertThatThrownBy(() -> batchService.updateBatch(user1.getId(), batch1.getId(), batchCreate))
+                    .isInstanceOf(ConflictException.class)
+                    .hasMessageContaining("Expiration date for product " + batch1.getProduct().getBarcode() + " should not be provided for non-perishable products.");
+            }
 
-    @Test
-    @DisplayName("Update batch with invoice belonging to another user should throw AccessDeniedException")
-    void testUpdateBatch_InvoiceBelongsToAnotherUser_ShouldThrowAccessDeniedException() {
-        BatchCreate batchCreate = new BatchCreate(batch3);
+            @Test
+            @DisplayName("Update batch with invoice that is not pending should throw ConflictException")
+            void testUpdateBatch_InvoiceNotPending_ShouldThrowConflictException() {
+                BatchCreate batchCreate = new BatchCreate(batch3);
 
-        when(batchRepository.findById(batch3.getId())).thenReturn(Optional.of(batch3));
+                when(batchRepository.findById(batch3.getId())).thenReturn(Optional.of(batch3));
 
-        assertThatThrownBy(() -> batchService.updateBatch(user1.getId(), batch3.getId(), batchCreate))
-            .isInstanceOf(AccessDeniedException.class)
-            .hasMessageContaining("You don't have permission to edit this invoice.");
+                assertThatThrownBy(() -> batchService.updateBatch(user2.getId(), batch3.getId(), batchCreate))
+                    .isInstanceOf(ConflictException.class)
+                    .hasMessageContaining("Cannot edit batch from an invoice that is not pending.");
+            }
+
+            @Test
+            @DisplayName("Update batch with invoice belonging to another user should throw AccessDeniedException")
+            void testUpdateBatch_InvoiceBelongsToAnotherUser_ShouldThrowAccessDeniedException() {
+                BatchCreate batchCreate = new BatchCreate(batch3);
+
+                when(batchRepository.findById(batch3.getId())).thenReturn(Optional.of(batch3));
+
+                assertThatThrownBy(() -> batchService.updateBatch(user1.getId(), batch3.getId(), batchCreate))
+                    .isInstanceOf(AccessDeniedException.class)
+                    .hasMessageContaining("You don't have permission to edit this invoice.");
+            }
+        }
     }
 
     // == deleteBatch tests ==
 
-    @Test
-    @DisplayName("Delete batch with valid data should succeed")
-    void testDeleteBatch_ValidData_ShouldSucceed() {
+    @Nested
+    @DisplayName("deleteBatch")
+    class DeleteBatchTests {
 
-        when(batchRepository.findById(batch1.getId())).thenReturn(Optional.of(batch1));
-        when(invoiceRepository.save(any(Invoice.class))).thenReturn(new Invoice());
-        batchService.deleteBatch(user1.getId(), batch1.getId());
+        @Nested
+        @DisplayName("Success Cases")
+        class SuccessCases {
 
-        verify(invoiceRepository, times(1)).save(any(Invoice.class));
-    }
+            @Test
+            @DisplayName("Delete batch with valid data should succeed")
+            void testDeleteBatch_ValidData_ShouldSucceed() {
 
-    @Test
-    @DisplayName("Delete batch with non-existing batch should throw ResourceNotFoundException")
-    void testDeleteBatch_NonExistingBatch_ShouldThrowResourceNotFoundException() {
-        when(batchRepository.findById(batch1.getId())).thenReturn(Optional.empty());
+                when(batchRepository.findById(batch1.getId())).thenReturn(Optional.of(batch1));
+                when(invoiceRepository.save(any(Invoice.class))).thenReturn(new Invoice());
+                batchService.deleteBatch(user1.getId(), batch1.getId());
 
-        assertThatThrownBy(() -> batchService.deleteBatch(user1.getId(), batch1.getId()))
-            .isInstanceOf(ResourceNotFoundException.class)
-            .hasMessageContaining("Batch not found with id: " + batch1.getId());
-    }
+                verify(invoiceRepository, times(1)).save(any(Invoice.class));
+            }
+        }
 
-    @Test
-    @DisplayName("Delete batch with invoice belonging to another user should throw AccessDeniedException")
-    void testDeleteBatch_InvoiceBelongsToAnotherUser_ShouldThrowAccessDeniedException() {
+        @Nested
+        @DisplayName("Failure Cases")
+        class FailureCases {
 
-        when(batchRepository.findById(batch3.getId())).thenReturn(Optional.of(batch3));
+            @Test
+            @DisplayName("Delete batch with non-existing batch should throw ResourceNotFoundException")
+            void testDeleteBatch_NonExistingBatch_ShouldThrowResourceNotFoundException() {
+                when(batchRepository.findById(batch1.getId())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> batchService.deleteBatch(user1.getId(), batch3.getId()))
-            .isInstanceOf(AccessDeniedException.class)
-            .hasMessageContaining("You don't have permission to edit this invoice.");
-    }
+                assertThatThrownBy(() -> batchService.deleteBatch(user1.getId(), batch1.getId()))
+                    .isInstanceOf(ResourceNotFoundException.class)
+                    .hasMessageContaining("Batch not found with id: " + batch1.getId());
+            }
 
-    @Test
-    @DisplayName("Delete batch with invoice that is not pending should throw ConflictException")
-    void testDeleteBatch_InvoiceNotPending_ShouldThrowConflictException() {
+            @Test
+            @DisplayName("Delete batch with invoice belonging to another user should throw AccessDeniedException")
+            void testDeleteBatch_InvoiceBelongsToAnotherUser_ShouldThrowAccessDeniedException() {
 
-        when(batchRepository.findById(batch3.getId())).thenReturn(Optional.of(batch3));
+                when(batchRepository.findById(batch3.getId())).thenReturn(Optional.of(batch3));
 
-        assertThatThrownBy(() -> batchService.deleteBatch(user2.getId(), batch3.getId()))
-            .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("Cannot delete batch from an invoice that is not pending.");
-    }
+                assertThatThrownBy(() -> batchService.deleteBatch(user1.getId(), batch3.getId()))
+                    .isInstanceOf(AccessDeniedException.class)
+                    .hasMessageContaining("You don't have permission to edit this invoice.");
+            }
 
-    @Test
-    @DisplayName("Delete batch when it's the only batch in the invoice should throw ConflictException")
-    void testDeleteBatch_OnlyBatchInInvoice_ShouldThrowConflictException() {
-        when(batchRepository.findById(batch1.getId())).thenReturn(Optional.of(batch1));
-        batch1.getInvoice().setBatch(new LinkedList<>());
-        batch1.getInvoice().getBatch().add(batch1);
+            @Test
+            @DisplayName("Delete batch with invoice that is not pending should throw ConflictException")
+            void testDeleteBatch_InvoiceNotPending_ShouldThrowConflictException() {
 
-        assertThatThrownBy(() -> batchService.deleteBatch(user1.getId(), batch1.getId()))
-            .isInstanceOf(ConflictException.class)
-            .hasMessageContaining("Cannot delete the only batch in an invoice. Consider deleting the invoice instead.");
-    }
+                when(batchRepository.findById(batch3.getId())).thenReturn(Optional.of(batch3));
 
-    @Test
-    @DisplayName("Add stock quantity with valid data should succeed")
-    void testAddStockQuantity_ValidData_ShouldSucceed() {
-        when(productInfoService.getOrCreateProductInfo(batch1.getProduct().getId(), user1, batch1.getUnitPrice())).thenReturn(productInfo);
-        batchService.addStockQuantity(batch1, 5, user1);
+                assertThatThrownBy(() -> batchService.deleteBatch(user2.getId(), batch3.getId()))
+                    .isInstanceOf(ConflictException.class)
+                    .hasMessageContaining("Cannot delete batch from an invoice that is not pending.");
+            }
 
-        verify(productInfoService, times(1)).editStockQuantity(productInfo.getId(), user1, 5, batch1.getUnitPrice());    
+            @Test
+            @DisplayName("Delete batch when it's the only batch in the invoice should throw ConflictException")
+            void testDeleteBatch_OnlyBatchInInvoice_ShouldThrowConflictException() {
+                when(batchRepository.findById(batch1.getId())).thenReturn(Optional.of(batch1));
+                batch1.getInvoice().setBatch(new LinkedList<>());
+                batch1.getInvoice().getBatch().add(batch1);
+
+                assertThatThrownBy(() -> batchService.deleteBatch(user1.getId(), batch1.getId()))
+                    .isInstanceOf(ConflictException.class)
+                    .hasMessageContaining("Cannot delete the only batch in an invoice. Consider deleting the invoice instead.");
+            }
+
+            @Test
+            @DisplayName("Add stock quantity with valid data should succeed")
+            void testAddStockQuantity_ValidData_ShouldSucceed() {
+                when(productInfoService.getOrCreateProductInfo(batch1.getProduct().getId(), user1, batch1.getUnitPrice())).thenReturn(productInfo);
+                batchService.addStockQuantity(batch1, 5, user1);
+
+                verify(productInfoService, times(1)).editStockQuantity(productInfo.getId(), user1, 5, batch1.getUnitPrice());    
+            }
+        }
     }
 
 }
