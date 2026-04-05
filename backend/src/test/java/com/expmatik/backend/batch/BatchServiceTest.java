@@ -1,6 +1,7 @@
 package com.expmatik.backend.batch;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -200,9 +201,11 @@ public class BatchServiceTest {
 
                 when(invoiceRepository.findById(invoice1.getId())).thenReturn(Optional.empty());
 
-                assertThatThrownBy(() -> batchService.createBatch(user1.getId(), batchCreate, invoice1.getId()))
-                    .isInstanceOf(ResourceNotFoundException.class)
-                    .hasMessageContaining("Invoice not found with id: " + invoice1.getId());
+                ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () ->
+                        batchService.createBatch(user1.getId(), batchCreate, invoice1.getId())
+                );
+
+                assertEquals("Invoice not found with id: " + invoice1.getId(), exception.getMessage());
             }
 
             @Test
@@ -214,9 +217,11 @@ public class BatchServiceTest {
                 when(invoiceRepository.findById(invoice1.getId())).thenReturn(Optional.of(invoice1));
                 when(productService.getOrCreateProductByBarcode("9876543210123", user1.getId())).thenReturn(productNoCustom);
 
-                assertThatThrownBy(() -> batchService.createBatch(user1.getId(), batchCreate, invoice1.getId()))
-                    .isInstanceOf(ConflictException.class)
-                    .hasMessageContaining("Expiration date for product " + batch2.getProduct().getBarcode() + " is required for perishable products.");
+                ConflictException exception = assertThrows(ConflictException.class, () ->
+                        batchService.createBatch(user1.getId(), batchCreate, invoice1.getId())
+                );
+
+                assertEquals("Expiration date for product " + batch2.getProduct().getBarcode() + " is required for perishable products.", exception.getMessage());
             }
 
             @Test
@@ -228,9 +233,11 @@ public class BatchServiceTest {
                 when(invoiceRepository.findById(invoice1.getId())).thenReturn(Optional.of(invoice1));
                 when(productService.getOrCreateProductByBarcode("1234567890123", user1.getId())).thenReturn(productCustom);
 
-                assertThatThrownBy(() -> batchService.createBatch(user1.getId(), batchCreate, invoice1.getId()))
-                    .isInstanceOf(ConflictException.class)
-                    .hasMessageContaining("Expiration date for product " + batch1.getProduct().getBarcode() + " should not be provided for non-perishable products.");
+                ConflictException exception = assertThrows(ConflictException.class, () ->
+                        batchService.createBatch(user1.getId(), batchCreate, invoice1.getId())
+                );
+
+                assertEquals("Expiration date for product " + batch1.getProduct().getBarcode() + " should not be provided for non-perishable products.", exception.getMessage());
             }
 
             @Test
@@ -241,9 +248,11 @@ public class BatchServiceTest {
 
                 when(invoiceRepository.findById(invoice2.getId())).thenReturn(Optional.of(invoice2));
 
-                assertThatThrownBy(() -> batchService.createBatch(user1.getId(), batchCreate, invoice2.getId()))
-                    .isInstanceOf(AccessDeniedException.class)
-                    .hasMessageContaining("You don't have permission to edit this invoice.");
+                AccessDeniedException exception = assertThrows(AccessDeniedException.class, () ->
+                        batchService.createBatch(user1.getId(), batchCreate, invoice2.getId())
+                );
+
+                assertEquals("You don't have permission to edit this invoice.", exception.getMessage());
             }
 
             @Test
@@ -254,9 +263,11 @@ public class BatchServiceTest {
 
                 when(invoiceRepository.findById(invoice2.getId())).thenReturn(Optional.of(invoice2));
 
-                assertThatThrownBy(() -> batchService.createBatch(user2.getId(), batchCreate, invoice2.getId()))
-                    .isInstanceOf(ConflictException.class)
-                    .hasMessageContaining("Cannot add batch to an invoice that is not pending.");
+                ConflictException exception = assertThrows(ConflictException.class, () ->
+                        batchService.createBatch(user2.getId(), batchCreate, invoice2.getId())
+                );
+
+                assertEquals("Cannot add batch to an invoice that is not pending.", exception.getMessage());
             }
         }
     }
@@ -317,9 +328,11 @@ public class BatchServiceTest {
 
                 when(batchRepository.findById(batch1.getId())).thenReturn(Optional.empty());
 
-                assertThatThrownBy(() -> batchService.updateBatch(user1.getId(), batch1.getId(), batchCreate))
-                    .isInstanceOf(ResourceNotFoundException.class)
-                    .hasMessageContaining("Batch not found with id: " + batch1.getId());
+                ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () ->
+                        batchService.updateBatch(user1.getId(), batch1.getId(), batchCreate)
+                );
+
+                assertEquals("Batch not found with id: " + batch1.getId(), exception.getMessage());
             }
 
             @Test
@@ -330,9 +343,11 @@ public class BatchServiceTest {
                 when(batchRepository.findById(batch2.getId())).thenReturn(Optional.of(batch2));
                 when(productService.getOrCreateProductByBarcode("9876543210123", user1.getId())).thenReturn(productNoCustom);
 
-                assertThatThrownBy(() -> batchService.updateBatch(user1.getId(), batch2.getId(), batchCreate))
-                    .isInstanceOf(ConflictException.class)
-                    .hasMessageContaining("Expiration date for product " + batch2.getProduct().getBarcode() + " is required for perishable products.");
+                ConflictException exception = assertThrows(ConflictException.class, () ->
+                    batchService.updateBatch(user1.getId(), batch2.getId(), batchCreate)
+                );
+
+                assertEquals("Expiration date for product " + batch2.getProduct().getBarcode() + " is required for perishable products.", exception.getMessage());
             }
 
             @Test
@@ -343,9 +358,11 @@ public class BatchServiceTest {
                 when(batchRepository.findById(batch1.getId())).thenReturn(Optional.of(batch1));
                 when(productService.getOrCreateProductByBarcode("1234567890123", user1.getId())).thenReturn(productCustom);
 
-                assertThatThrownBy(() -> batchService.updateBatch(user1.getId(), batch1.getId(), batchCreate))
-                    .isInstanceOf(ConflictException.class)
-                    .hasMessageContaining("Expiration date for product " + batch1.getProduct().getBarcode() + " should not be provided for non-perishable products.");
+                ConflictException exception = assertThrows(ConflictException.class, () ->
+                    batchService.updateBatch(user1.getId(), batch1.getId(), batchCreate)
+                );
+
+                assertEquals("Expiration date for product " + batch1.getProduct().getBarcode() + " should not be provided for non-perishable products.", exception.getMessage());
             }
 
             @Test
@@ -355,9 +372,11 @@ public class BatchServiceTest {
 
                 when(batchRepository.findById(batch3.getId())).thenReturn(Optional.of(batch3));
 
-                assertThatThrownBy(() -> batchService.updateBatch(user2.getId(), batch3.getId(), batchCreate))
-                    .isInstanceOf(ConflictException.class)
-                    .hasMessageContaining("Cannot edit batch from an invoice that is not pending.");
+                ConflictException exception = assertThrows(ConflictException.class, () ->
+                    batchService.updateBatch(user2.getId(), batch3.getId(), batchCreate)
+                );
+
+                assertEquals("Cannot edit batch from an invoice that is not pending.", exception.getMessage());
             }
 
             @Test
@@ -367,9 +386,11 @@ public class BatchServiceTest {
 
                 when(batchRepository.findById(batch3.getId())).thenReturn(Optional.of(batch3));
 
-                assertThatThrownBy(() -> batchService.updateBatch(user1.getId(), batch3.getId(), batchCreate))
-                    .isInstanceOf(AccessDeniedException.class)
-                    .hasMessageContaining("You don't have permission to edit this invoice.");
+                AccessDeniedException exception = assertThrows(AccessDeniedException.class, () ->
+                    batchService.updateBatch(user1.getId(), batch3.getId(), batchCreate)
+                );
+
+                assertEquals("You don't have permission to edit this invoice.", exception.getMessage());
             }
         }
     }
@@ -405,9 +426,11 @@ public class BatchServiceTest {
             void testDeleteBatch_NonExistingBatch_ShouldThrowResourceNotFoundException() {
                 when(batchRepository.findById(batch1.getId())).thenReturn(Optional.empty());
 
-                assertThatThrownBy(() -> batchService.deleteBatch(user1.getId(), batch1.getId()))
-                    .isInstanceOf(ResourceNotFoundException.class)
-                    .hasMessageContaining("Batch not found with id: " + batch1.getId());
+                ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () ->
+                    batchService.deleteBatch(user1.getId(), batch1.getId())
+                );
+
+                assertEquals("Batch not found with id: " + batch1.getId(), exception.getMessage());
             }
 
             @Test
@@ -416,9 +439,11 @@ public class BatchServiceTest {
 
                 when(batchRepository.findById(batch3.getId())).thenReturn(Optional.of(batch3));
 
-                assertThatThrownBy(() -> batchService.deleteBatch(user1.getId(), batch3.getId()))
-                    .isInstanceOf(AccessDeniedException.class)
-                    .hasMessageContaining("You don't have permission to edit this invoice.");
+                AccessDeniedException exception = assertThrows(AccessDeniedException.class, () ->
+                    batchService.deleteBatch(user1.getId(), batch3.getId())
+                );
+
+                assertEquals("You don't have permission to edit this invoice.", exception.getMessage());
             }
 
             @Test
@@ -427,9 +452,11 @@ public class BatchServiceTest {
 
                 when(batchRepository.findById(batch3.getId())).thenReturn(Optional.of(batch3));
 
-                assertThatThrownBy(() -> batchService.deleteBatch(user2.getId(), batch3.getId()))
-                    .isInstanceOf(ConflictException.class)
-                    .hasMessageContaining("Cannot delete batch from an invoice that is not pending.");
+                ConflictException exception = assertThrows(ConflictException.class, () ->
+                    batchService.deleteBatch(user2.getId(), batch3.getId())
+                );
+
+                assertEquals("Cannot delete batch from an invoice that is not pending.", exception.getMessage());
             }
 
             @Test
@@ -439,9 +466,11 @@ public class BatchServiceTest {
                 batch1.getInvoice().setBatch(new LinkedList<>());
                 batch1.getInvoice().getBatch().add(batch1);
 
-                assertThatThrownBy(() -> batchService.deleteBatch(user1.getId(), batch1.getId()))
-                    .isInstanceOf(ConflictException.class)
-                    .hasMessageContaining("Cannot delete the only batch in an invoice. Consider deleting the invoice instead.");
+                ConflictException exception = assertThrows(ConflictException.class, () ->
+                    batchService.deleteBatch(user1.getId(), batch1.getId())
+                );
+
+                assertEquals("Cannot delete the only batch in an invoice. Consider deleting the invoice instead.", exception.getMessage());
             }
 
             @Test

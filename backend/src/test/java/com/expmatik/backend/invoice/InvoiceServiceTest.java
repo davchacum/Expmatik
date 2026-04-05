@@ -1,9 +1,9 @@
 package com.expmatik.backend.invoice;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
@@ -232,9 +232,11 @@ public class InvoiceServiceTest {
                     ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
                     "FAC-2026-001,Supplier A,PENDING,2026-03-10,ABC1234567,24,0.85,2026-09-30").getBytes());
 
-                assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("Line 2: invalid productBarcode. It must be numeric and contain 8 or 13 digits.");
+                BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                    invoiceService.readInvoicesFromCSV(user, csvContent)
+                );
+
+                assertEquals("Line 2: invalid productBarcode. It must be numeric and contain 8 or 13 digits.", exception.getMessage());
             }
 
             @Test
@@ -245,9 +247,11 @@ public class InvoiceServiceTest {
                     ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
                     "FAC-2026-001,Supplier A,PENDING,2026-03-10,1234567,24,0.85,2026-09-30").getBytes());
 
-                assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("Line 2: invalid productBarcode. It must be numeric and contain 8 or 13 digits.");
+                BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                    invoiceService.readInvoicesFromCSV(user, csvContent)
+                );
+
+                assertEquals("Line 2: invalid productBarcode. It must be numeric and contain 8 or 13 digits.", exception.getMessage());
             }
 
             @Test
@@ -258,9 +262,11 @@ public class InvoiceServiceTest {
                     ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
                     "FAC-2026-001,Supplier A,PENDING,2026-03-10,12345678,abc,0.85,2026-09-30").getBytes());
 
-                assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("Line 2: quantity is not a valid integer.");
+                BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                    invoiceService.readInvoicesFromCSV(user, csvContent)
+                );
+
+                assertEquals("Line 2: quantity is not a valid integer.", exception.getMessage());
             }
 
             @Test
@@ -271,9 +277,11 @@ public class InvoiceServiceTest {
                     ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
                     "FAC-2026-001,Supplier A,PENDING,2026-03-10,12345678,0,0.85,2026-09-30").getBytes());
 
-                assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("Line 2: quantity must be greater than 0.");
+                BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                    invoiceService.readInvoicesFromCSV(user, csvContent)
+                );
+
+                assertEquals("Line 2: quantity must be greater than 0.", exception.getMessage());
             }
 
             @Test
@@ -284,9 +292,11 @@ public class InvoiceServiceTest {
                     ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
                     "FAC-2026-001,Supplier A,PENDING,2026-03-10,12345678,24,abc,2026-09-30").getBytes());
 
-                assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("Line 2: unitPrice is not a valid decimal.");
+                BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                    invoiceService.readInvoicesFromCSV(user, csvContent)
+                );
+
+                assertEquals("Line 2: unitPrice is not a valid decimal.", exception.getMessage());
             }
 
             @Test
@@ -297,9 +307,11 @@ public class InvoiceServiceTest {
                     ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
                     "FAC-2026-001,Supplier A,PENDING,2026-03-10,12345678,24,0,2026-09-30").getBytes());
 
-                assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("Line 2: unitPrice must be greater than 0.");
+                BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                    invoiceService.readInvoicesFromCSV(user, csvContent)
+                );
+
+                assertEquals("Line 2: unitPrice must be greater than 0.", exception.getMessage());
             }
 
             @Test
@@ -310,9 +322,11 @@ public class InvoiceServiceTest {
                     ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
                     "FAC-2026-001,Supplier A,PENDING,2026-03-10,12345678,24,12345678901.00,2026-09-30").getBytes());
 
-                assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("Line 2: unitPrice must have at most 10 integer digits and 2 decimal places.");
+                BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                    invoiceService.readInvoicesFromCSV(user, csvContent)
+                );
+
+                assertEquals("Line 2: unitPrice must have at most 10 integer digits and 2 decimal places.", exception.getMessage());
             }
 
             @Test
@@ -323,9 +337,11 @@ public class InvoiceServiceTest {
                     ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
                     "FAC-2026-001,Supplier A,PENDING,2026-03-10,12345678,24,1.234,2026-09-30").getBytes());
 
-                assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("Line 2: unitPrice must have at most 10 integer digits and 2 decimal places.");
+                BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                    invoiceService.readInvoicesFromCSV(user, csvContent)
+                );
+
+                assertEquals("Line 2: unitPrice must have at most 10 integer digits and 2 decimal places.", exception.getMessage());
             }
 
             @Test
@@ -336,9 +352,11 @@ public class InvoiceServiceTest {
                     ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
                     "FAC-2026-001,Supplier A,PENDING,2026-13-10,12345678,24,0.85,2026-09-30").getBytes());
 
-                assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("Line 2: invalid invoiceDate. Expected format: yyyy-MM-dd.");
+                BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                    invoiceService.readInvoicesFromCSV(user, csvContent)
+                );
+
+                assertEquals("Line 2: invalid invoiceDate. Expected format: yyyy-MM-dd.", exception.getMessage());
             }
 
             @Test
@@ -349,9 +367,11 @@ public class InvoiceServiceTest {
                     ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
                     "FAC-2026-001,Supplier A,PENDING,2026-03-10,12345678,24,0.85,2026-99-99").getBytes());
 
-                assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("Line 2: invalid expirationDate. Expected format: yyyy-MM-dd.");
+                BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                    invoiceService.readInvoicesFromCSV(user, csvContent)
+                );
+
+                assertEquals("Line 2: invalid expirationDate. Expected format: yyyy-MM-dd.", exception.getMessage());
             }
 
             @Test
@@ -360,9 +380,11 @@ public class InvoiceServiceTest {
                 User user = user1;
                 MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv", new byte[0]);
 
-                assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("No file uploaded or file is empty.");
+                BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                    invoiceService.readInvoicesFromCSV(user, csvContent)
+                );
+
+                assertEquals("No file uploaded or file is empty.", exception.getMessage());
             }
 
             @Test
@@ -371,9 +393,11 @@ public class InvoiceServiceTest {
                 User user = user1;
                 MultipartFile csvContent = null;
 
-                assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("No file uploaded or file is empty.");
+                BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                    invoiceService.readInvoicesFromCSV(user, csvContent)
+                );
+
+                assertEquals("No file uploaded or file is empty.", exception.getMessage());
             }
 
             @Test
@@ -384,9 +408,11 @@ public class InvoiceServiceTest {
                     ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
                     "FAC-2026-001,Supplier A,PENDING,2026-03-10,5000112556780,24,0.85,2026-09-30").getBytes());
 
-                assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("The file must have a .csv extension.");
+                BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                    invoiceService.readInvoicesFromCSV(user, csvContent)
+                );
+
+                assertEquals("The file must have a .csv extension.", exception.getMessage());
             }
 
             @Test
@@ -396,9 +422,10 @@ public class InvoiceServiceTest {
                 MultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                     ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate").getBytes());
 
-                assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("The CSV does not contain valid invoice records.");
+                BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                    invoiceService.readInvoicesFromCSV(user, csvContent)
+                );
+                assertEquals("The CSV does not contain valid invoice records.", exception.getMessage());
             }
 
             @Test
@@ -409,9 +436,11 @@ public class InvoiceServiceTest {
                     ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
                     "FAC-2026-001,Supplier A,PENDING,2026-03-10,5000112556780,24,0.85").getBytes());
 
-                assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("Line 2: expected 8 columns but found 7.");
+                BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                    invoiceService.readInvoicesFromCSV(user, csvContent)
+                );
+
+                assertEquals("Line 2: expected 8 columns but found 7.", exception.getMessage());
             }
 
             @Test
@@ -424,27 +453,30 @@ public class InvoiceServiceTest {
                     "FAC-2026-001,Supplier A,PENDING,2026-03-10,5000112556780,24,0.85,2026-09-30\n" +
                     "FAC-2026-001,Supplier B,PENDING,2026-03-10,5000112556780,10,1.20,2026-09-30").getBytes());
 
-                assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, supplierNameCsv))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("Line 3: inconsistent supplierName for invoice FAC-2026-001.");
+                BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                    invoiceService.readInvoicesFromCSV(user, supplierNameCsv)
+                );
+                assertEquals("Line 3: inconsistent supplierName for invoice FAC-2026-001.", exception.getMessage());
 
                 MultipartFile statusCsv = new MockMultipartFile("file", "invoices.csv", "text/csv",
                     ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
                     "FAC-2026-001,Supplier A,PENDING,2026-03-10,5000112556780,24,0.85,2026-09-30\n" +
                     "FAC-2026-001,Supplier A,RECEIVED,2026-03-10,5000112556780,10,1.20,2026-09-30").getBytes());
 
-                assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, statusCsv))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("Line 3: inconsistent status for invoice FAC-2026-001.");
+                BadRequestException statusException = assertThrows(BadRequestException.class, () ->
+                    invoiceService.readInvoicesFromCSV(user, statusCsv)
+                );
+                assertEquals("Line 3: inconsistent status for invoice FAC-2026-001.", statusException.getMessage());
 
                 MultipartFile invoiceDateCsv = new MockMultipartFile("file", "invoices.csv", "text/csv",
                     ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
                     "FAC-2026-001,Supplier A,PENDING,2026-03-10,5000112556780,24,0.85,2026-09-30\n" +
                     "FAC-2026-001,Supplier A,PENDING,2026-03-11,5000112556780,10,1.20,2026-09-30").getBytes());
 
-                assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, invoiceDateCsv))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("Line 3: inconsistent invoiceDate for invoice FAC-2026-001.");
+                BadRequestException invoiceDateException = assertThrows(BadRequestException.class, () ->
+                    invoiceService.readInvoicesFromCSV(user, invoiceDateCsv)
+                );
+                assertEquals("Line 3: inconsistent invoiceDate for invoice FAC-2026-001.", invoiceDateException.getMessage());
             }
 
             @Test
@@ -455,9 +487,10 @@ public class InvoiceServiceTest {
                     ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
                     "FAC-2026-001,Supplier A,,2026-03-10,5000112556780,24,0.85,2026-09-30").getBytes());
 
-                assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("Line 2: required field is empty -> status.");
+                BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                    invoiceService.readInvoicesFromCSV(user, csvContent)
+                );
+                assertEquals("Line 2: required field is empty -> status.", exception.getMessage());
             }
 
             @Test
@@ -468,9 +501,10 @@ public class InvoiceServiceTest {
                     ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
                     "FAC-2026-001,Supplier A,SENT,2026-03-10,5000112556780,24,0.85,2026-09-30").getBytes());
 
-                assertThatThrownBy(() -> invoiceService.readInvoicesFromCSV(user, csvContent))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("Line 2: invalid status -> SENT. Allowed values: PENDING, RECEIVED, CANCELED.");
+                BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                    invoiceService.readInvoicesFromCSV(user, csvContent)
+                );
+                assertEquals("Line 2: invalid status -> SENT. Allowed values: PENDING, RECEIVED, CANCELED.", exception.getMessage());
             }
         }
     }
@@ -607,9 +641,10 @@ public class InvoiceServiceTest {
                     LocalDate.of(2026, 3, 1)
                 );
 
-                assertThatThrownBy(() -> invoiceService.createInvoice(user, request))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("Invoice must have at least one batch");
+                BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                    invoiceService.createInvoice(user, request)
+                );
+                assertEquals("Invoice must have at least one batch", exception.getMessage());
             }
 
             @Test
@@ -626,9 +661,10 @@ public class InvoiceServiceTest {
 
                 when(invoiceRepository.findByInvoiceNumber("INV-001")).thenReturn(Optional.of(invoice1));
 
-                assertThatThrownBy(() -> invoiceService.createInvoice(user, request))
-                    .isInstanceOf(ConflictException.class)
-                    .hasMessage("Invoice number: " + request.invoiceNumber() + " already exists");
+                ConflictException exception = assertThrows(ConflictException.class, () ->
+                    invoiceService.createInvoice(user, request)
+                );
+                assertEquals("Invoice number: " + request.invoiceNumber() + " already exists", exception.getMessage());
             }
         }
     }
@@ -670,9 +706,10 @@ public class InvoiceServiceTest {
 
                 when(invoiceRepository.findById(invoiceId)).thenReturn(Optional.empty());
 
-                assertThatThrownBy(() -> invoiceService.findInvoiceById(invoiceId, userId))
-                    .isInstanceOf(ResourceNotFoundException.class)
-                    .hasMessage("Invoice not found");
+                ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () ->
+                    invoiceService.findInvoiceById(invoiceId, userId)
+                );
+                assertEquals("Invoice not found", exception.getMessage());
             }
 
             @Test
@@ -683,9 +720,10 @@ public class InvoiceServiceTest {
 
                 when(invoiceRepository.findById(invoiceId)).thenReturn(Optional.of(invoice1));
 
-                assertThatThrownBy(() -> invoiceService.findInvoiceById(invoiceId, userId))
-                    .isInstanceOf(AccessDeniedException.class)
-                    .hasMessage("Unauthorized access to invoice");
+                AccessDeniedException exception = assertThrows(AccessDeniedException.class, () ->
+                    invoiceService.findInvoiceById(invoiceId, userId)
+                );
+                assertEquals("Unauthorized access to invoice", exception.getMessage());
             }
         }
     }
@@ -727,9 +765,10 @@ public class InvoiceServiceTest {
 
                 when(invoiceRepository.findByInvoiceNumber(invoiceNumber)).thenReturn(Optional.empty());
 
-                assertThatThrownBy(() -> invoiceService.findInvoiceByInvoiceNumber(invoiceNumber, userId))
-                    .isInstanceOf(ResourceNotFoundException.class)
-                    .hasMessage("Invoice not found");
+                ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () ->
+                    invoiceService.findInvoiceByInvoiceNumber(invoiceNumber, userId)
+                );
+                assertEquals("Invoice not found", exception.getMessage());
             }
 
             @Test
@@ -740,9 +779,10 @@ public class InvoiceServiceTest {
 
                 when(invoiceRepository.findByInvoiceNumber(invoiceNumber)).thenReturn(Optional.of(invoice1));
 
-                assertThatThrownBy(() -> invoiceService.findInvoiceByInvoiceNumber(invoiceNumber, userId))
-                    .isInstanceOf(AccessDeniedException.class)
-                    .hasMessage("Unauthorized access to invoice");
+                AccessDeniedException exception = assertThrows(AccessDeniedException.class, () ->
+                    invoiceService.findInvoiceByInvoiceNumber(invoiceNumber, userId)
+                );
+                assertEquals("Unauthorized access to invoice", exception.getMessage());
             }
         }
     }
@@ -830,9 +870,10 @@ public class InvoiceServiceTest {
 
                 when(invoiceRepository.findById(invoiceId)).thenReturn(Optional.empty());
 
-                assertThatThrownBy(() -> invoiceService.updateInvoiceStatus(invoiceId, newStatus, userId))
-                    .isInstanceOf(ResourceNotFoundException.class)
-                    .hasMessage("Invoice not found");
+                ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () ->
+                    invoiceService.updateInvoiceStatus(invoiceId, newStatus, userId)
+                );
+                assertEquals("Invoice not found", exception.getMessage());
             }
 
 
@@ -845,9 +886,10 @@ public class InvoiceServiceTest {
 
                 when(invoiceRepository.findById(invoiceId)).thenReturn(Optional.of(invoice1));
 
-                assertThatThrownBy(() -> invoiceService.updateInvoiceStatus(invoiceId, newStatus, userId))
-                    .isInstanceOf(AccessDeniedException.class)
-                    .hasMessage("Unauthorized access to invoice");
+                AccessDeniedException exception = assertThrows(AccessDeniedException.class, () ->
+                    invoiceService.updateInvoiceStatus(invoiceId, newStatus, userId)
+                );
+                assertEquals("Unauthorized access to invoice", exception.getMessage());
             }
 
             @Test
@@ -859,9 +901,10 @@ public class InvoiceServiceTest {
 
                 when(invoiceRepository.findById(invoiceId)).thenReturn(Optional.of(invoice2));
 
-                assertThatThrownBy(() -> invoiceService.updateInvoiceStatus(invoiceId, newStatus, userId))
-                    .isInstanceOf(ConflictException.class)
-                    .hasMessage("Only pending invoices can be updated");
+                ConflictException exception = assertThrows(ConflictException.class, () ->
+                    invoiceService.updateInvoiceStatus(invoiceId, newStatus, userId)
+                );
+                assertEquals("Only pending invoices can be updated", exception.getMessage());
             }
 
             @Test
@@ -874,9 +917,10 @@ public class InvoiceServiceTest {
 
                 when(invoiceRepository.findById(invoiceId)).thenReturn(Optional.of(invoice1));
 
-                assertThatThrownBy(() -> invoiceService.updateInvoiceStatus(invoiceId, newStatus, userId))
-                    .isInstanceOf(ConflictException.class)
-                    .hasMessage("Only pending invoices can be updated");
+                ConflictException exception = assertThrows(ConflictException.class, () ->
+                    invoiceService.updateInvoiceStatus(invoiceId, newStatus, userId)
+                );
+                assertEquals("Only pending invoices can be updated", exception.getMessage());
             }
         }
     }
@@ -918,9 +962,10 @@ public class InvoiceServiceTest {
 
                 when(invoiceRepository.findById(invoiceId)).thenReturn(Optional.empty());
 
-                assertThatThrownBy(() -> invoiceService.deleteInvoice(invoiceId, userId))
-                    .isInstanceOf(ResourceNotFoundException.class)
-                    .hasMessage("Invoice not found");
+                ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () ->
+                    invoiceService.deleteInvoice(invoiceId, userId)
+                );
+                assertEquals("Invoice not found", exception.getMessage());
             }
 
             @Test
@@ -931,9 +976,10 @@ public class InvoiceServiceTest {
 
                 when(invoiceRepository.findById(invoiceId)).thenReturn(Optional.of(invoice1));
 
-                assertThatThrownBy(() -> invoiceService.deleteInvoice(invoiceId, userId))
-                    .isInstanceOf(AccessDeniedException.class)
-                    .hasMessage("Unauthorized access to invoice");
+                AccessDeniedException exception = assertThrows(AccessDeniedException.class, () ->
+                    invoiceService.deleteInvoice(invoiceId, userId)
+                );
+                assertEquals("Unauthorized access to invoice", exception.getMessage());
             }
 
             @Test
@@ -945,9 +991,10 @@ public class InvoiceServiceTest {
 
                 when(invoiceRepository.findById(invoiceId)).thenReturn(Optional.of(invoice1));
 
-                assertThatThrownBy(() -> invoiceService.deleteInvoice(invoiceId, userId))
-                    .isInstanceOf(ConflictException.class)
-                    .hasMessage("Only pending invoices can be deleted");
+                ConflictException exception = assertThrows(ConflictException.class, () ->
+                    invoiceService.deleteInvoice(invoiceId, userId)
+                );
+                assertEquals("Only pending invoices can be deleted", exception.getMessage());
             }
         }
     }
@@ -1046,9 +1093,10 @@ public class InvoiceServiceTest {
 
                 when(invoiceRepository.findById(invoiceId)).thenReturn(Optional.empty());
 
-                assertThatThrownBy(() -> invoiceService.updateInvoice(invoiceId, request, userId))
-                    .isInstanceOf(ResourceNotFoundException.class)
-                    .hasMessage("Invoice not found");
+                ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () ->
+                    invoiceService.updateInvoice(invoiceId, request, userId)
+                );
+                assertEquals("Invoice not found", exception.getMessage());
             }
 
             @Test
@@ -1065,9 +1113,10 @@ public class InvoiceServiceTest {
 
                 when(invoiceRepository.findById(invoiceId)).thenReturn(Optional.of(invoice1));
 
-                assertThatThrownBy(() -> invoiceService.updateInvoice(invoiceId, request, userId))
-                    .isInstanceOf(AccessDeniedException.class)
-                    .hasMessage("Unauthorized access to invoice");
+                AccessDeniedException exception = assertThrows(AccessDeniedException.class, () ->
+                    invoiceService.updateInvoice(invoiceId, request, userId)
+                );
+                assertEquals("Unauthorized access to invoice", exception.getMessage());
             }
 
             @Test
@@ -1084,9 +1133,11 @@ public class InvoiceServiceTest {
 
                 when(invoiceRepository.findById(invoiceId)).thenReturn(Optional.of(invoice2));
 
-                assertThatThrownBy(() -> invoiceService.updateInvoice(invoiceId, request, userId))
-                    .isInstanceOf(ConflictException.class)
-                    .hasMessage("Only pending invoices can be updated");
+                ConflictException exception = assertThrows(ConflictException.class, () ->
+                    invoiceService.updateInvoice(invoiceId, request, userId)
+                );
+
+                assertEquals("Only pending invoices can be updated", exception.getMessage());
             }
 
             @Test
@@ -1104,9 +1155,11 @@ public class InvoiceServiceTest {
 
                 when(invoiceRepository.findById(invoiceId)).thenReturn(Optional.of(invoice1));
 
-                assertThatThrownBy(() -> invoiceService.updateInvoice(invoiceId, request, userId))
-                    .isInstanceOf(ConflictException.class)
-                    .hasMessage("Only pending invoices can be updated");
+                ConflictException exception = assertThrows(ConflictException.class, () ->
+                    invoiceService.updateInvoice(invoiceId, request, userId)
+                );
+
+                assertEquals("Only pending invoices can be updated", exception.getMessage());
             }
 
             @Test
@@ -1124,9 +1177,10 @@ public class InvoiceServiceTest {
                 when(invoiceRepository.findById(invoiceId)).thenReturn(Optional.of(invoice1));
                 when(invoiceRepository.findByInvoiceNumber("INV-002")).thenReturn(Optional.of(invoice2));
 
-                assertThatThrownBy(() -> invoiceService.updateInvoice(invoiceId, request, userId))
-                    .isInstanceOf(ConflictException.class)
-                    .hasMessage("Invoice number: " + request.invoiceNumber() + " already exists");
+                ConflictException exception = assertThrows(ConflictException.class, () ->
+                    invoiceService.updateInvoice(invoiceId, request, userId)
+                );
+                assertEquals("Invoice number: " + request.invoiceNumber() + " already exists", exception.getMessage());
             }
         }
     } 
@@ -1154,33 +1208,37 @@ public class InvoiceServiceTest {
             @Test
             @DisplayName("validateInvoiceSearchInputs should throw BadRequestException if minPrice is negative")
             void testValidateInvoiceSearchInputs_NegativeMinPrice_shouldThrowBadRequestException() {
-                assertThatThrownBy(() -> invoiceService.validateInvoiceSearchInputs(null, null, BigDecimal.valueOf(-1.0), null))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("Min price cannot be negative");
+                BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                    invoiceService.validateInvoiceSearchInputs(null, null, BigDecimal.valueOf(-1.0), null)
+                );
+                assertEquals("Min price cannot be negative", exception.getMessage());
             }
 
             @Test
             @DisplayName("validateInvoiceSearchInputs should throw BadRequestException if maxPrice is negative")
             void testValidateInvoiceSearchInputs_NegativeMaxPrice_shouldThrowBadRequestException() {
-                assertThatThrownBy(() -> invoiceService.validateInvoiceSearchInputs(null, null, null, BigDecimal.valueOf(-1.0)))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("Max price cannot be negative");
+                BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                    invoiceService.validateInvoiceSearchInputs(null, null, null, BigDecimal.valueOf(-1.0))
+                );
+                assertEquals("Max price cannot be negative", exception.getMessage());
             }
 
             @Test
             @DisplayName("validateInvoiceSearchInputs should throw BadRequestException if minPrice is greater than maxPrice")
             void testValidateInvoiceSearchInputs_MinPriceGreaterThanMaxPrice_shouldThrowBadRequestException() {
-                assertThatThrownBy(() -> invoiceService.validateInvoiceSearchInputs(null, null, BigDecimal.valueOf(10.0), BigDecimal.valueOf(5.0)))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("Min price cannot be greater than max price");
+                BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                    invoiceService.validateInvoiceSearchInputs(null, null, BigDecimal.valueOf(10.0), BigDecimal.valueOf(5.0))
+                );
+                assertEquals("Min price cannot be greater than max price", exception.getMessage());
             }
 
             @Test
             @DisplayName("validateInvoiceSearchInputs should throw BadRequestException if startDate is after endDate")
             void testValidateInvoiceSearchInputs_StartDateAfterEndDate_shouldThrowBadRequestException() {
-                assertThatThrownBy(() -> invoiceService.validateInvoiceSearchInputs(LocalDate.of(2026, 3, 10), LocalDate.of(2026, 3, 1), null, null))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("Start date cannot be after end date");
+                BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                    invoiceService.validateInvoiceSearchInputs(LocalDate.of(2026, 3, 10), LocalDate.of(2026, 3, 1), null, null)
+                );
+                assertEquals("Start date cannot be after end date", exception.getMessage());
             }
         }
     }
