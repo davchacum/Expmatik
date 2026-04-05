@@ -1,7 +1,12 @@
 package com.expmatik.backend.product;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertIterableEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -21,6 +26,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -93,587 +99,699 @@ public class ProductServiceTest {
 
     // ==================== findProductInOpenFoodFacts Tests ====================
 
-    @Test
-    @DisplayName("Test finding product in Open Food Facts")
-    void testFindProductInOpenFoodFacts() throws IOException {
-        String barcode = "4716982022201";
-        JsonNode fixture = new ObjectMapper().readTree(readFixture("product/openfoodfacts-ok.json"));
+    @Nested
+    @DisplayName("Tests for findProductInOpenFoodFacts method")
+    class FindProductInOpenFoodFactsTests {
 
-        doReturn(fixture).when(productService).fetchOpenFoodFactsResponse(eq(barcode), any(ObjectMapper.class));
+        @Nested
+        @DisplayName("Success cases")
+        class SuccessCases {
+        
+            @Test
+            @DisplayName("Test finding product in Open Food Facts")
+            void testFindProductInOpenFoodFacts_ValidBarcode_ReturnsProduct() throws IOException {
+                String barcode = "4716982022201";
+                JsonNode fixture = new ObjectMapper().readTree(readFixture("product/openfoodfacts-ok.json"));
 
-        Optional<Product> result = productService.findProductInOpenFoodFacts(barcode);
+                doReturn(fixture).when(productService).fetchOpenFoodFactsResponse(eq(barcode), any(ObjectMapper.class));
 
-        assertThat(result).isPresent();
-        assertThat(result.get().getBarcode()).isEqualTo(barcode);
-        assertThat(result.get().getName()).isEqualTo("Choco Bom");
-        assertThat(result.get().getBrand()).isEqualTo("Gullón");
-        assertThat(result.get().getDescription()).isEmpty();
-        assertThat(result.get().getIsCustom()).isFalse();
-        assertThat(result.get().getIsPerishable()).isTrue();
-        assertThat(result.get().getCreatedBy()).isNull();
-    }
+                Optional<Product> result = productService.findProductInOpenFoodFacts(barcode);
 
-    @Test
-    @DisplayName("Returns empty when product not found in Open Food Facts")
-    void testFindProductInOpenFoodFactsNotFound() throws IOException {
-        String barcode = "2000000000017";
-        JsonNode fixture = new ObjectMapper().readTree(readFixture("product/openfoodfacts-not-found.json"));
+                assertTrue(result.isPresent());
 
-        doReturn(fixture).when(productService).fetchOpenFoodFactsResponse(eq(barcode), any(ObjectMapper.class));
+                Product product = result.get();
 
-        Optional<Product> result = productService.findProductInOpenFoodFacts(barcode);
-
-        assertThat(result).isEmpty();
-    }
-
-    @Test
-    @DisplayName("Returns empty when Open Food Facts API returns failure")
-    void testFindProductInOpenFoodFactsFailure() throws IOException {
-        String barcode = "78436548736534287654328";
-        JsonNode fixture = new ObjectMapper().readTree(readFixture("product/openfoodfacts-failure.json"));
-
-        doReturn(fixture).when(productService).fetchOpenFoodFactsResponse(eq(barcode), any(ObjectMapper.class));
-        Optional<Product> result = productService.findProductInOpenFoodFacts(barcode);
-        assertThat(result).isEmpty();
-    }
-
-    @Test
-    @DisplayName("Returns empty and logs error when Open Food Facts API connection fails")
-    void testFindProductInOpenFoodFactsConnectionError() throws IOException {
-        String barcode = "5555555555555";
-        IOException ioException = new IOException("Connection timed out");
-
-        doThrow(ioException).when(productService).fetchOpenFoodFactsResponse(eq(barcode), any(ObjectMapper.class));
-
-        PrintStream originalErr = System.err;
-        ByteArrayOutputStream capturedErr = new ByteArrayOutputStream();
-
-        try {
-            System.setErr(new PrintStream(capturedErr));
-
-            Optional<Product> result = productService.findProductInOpenFoodFacts(barcode);
-
-            assertThat(result).isEmpty();
-            assertThat(capturedErr.toString(StandardCharsets.UTF_8))
-                    .contains("Final attempt failed for barcode " + barcode + ": " + ioException.getMessage());
-        } finally {
-            System.setErr(originalErr);
+                assertEquals(barcode, product.getBarcode());
+                assertEquals("Choco Bom", product.getName());
+                assertEquals("Gullón", product.getBrand());
+                assertTrue(product.getDescription().isEmpty());
+                assertFalse(product.getIsCustom());
+                assertTrue(product.getIsPerishable());
+                assertNull(product.getCreatedBy());
+            }
         }
-    }
 
-    private String readFixture(String resourcePath) throws IOException {
-        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
-            assertThat(inputStream).as("Missing test fixture: %s", resourcePath).isNotNull();
-            return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+        @Nested
+        @DisplayName("Failure cases")
+        class FailureCases {
+
+            @Test
+            @DisplayName("Returns empty when product not found in Open Food Facts")
+            void testFindProductInOpenFoodFacts_BarcodeNotFound_ReturnsEmpty() throws IOException {
+                String barcode = "2000000000017";
+                JsonNode fixture = new ObjectMapper().readTree(readFixture("product/openfoodfacts-not-found.json"));
+
+                doReturn(fixture).when(productService).fetchOpenFoodFactsResponse(eq(barcode), any(ObjectMapper.class));
+
+                Optional<Product> result = productService.findProductInOpenFoodFacts(barcode);
+
+                assertTrue(result.isEmpty());
+            }
+
+            @Test
+            @DisplayName("Returns empty when Open Food Facts API returns failure")
+            void testFindProductInOpenFoodFacts_ApiFailure_ReturnsEmpty() throws IOException {
+                String barcode = "78436548736534287654328";
+                JsonNode fixture = new ObjectMapper().readTree(readFixture("product/openfoodfacts-failure.json"));
+
+                doReturn(fixture).when(productService).fetchOpenFoodFactsResponse(eq(barcode), any(ObjectMapper.class));
+                Optional<Product> result = productService.findProductInOpenFoodFacts(barcode);
+                assertTrue(result.isEmpty());
+            }
+
+            @Test
+            @DisplayName("Returns empty and logs error when Open Food Facts API connection fails")
+            void testFindProductInOpenFoodFacts_ConnectionFailure_ReturnsEmpty() throws IOException {
+                String barcode = "5555555555555";
+                IOException ioException = new IOException("Connection timed out");
+
+                doThrow(ioException).when(productService).fetchOpenFoodFactsResponse(eq(barcode), any(ObjectMapper.class));
+
+                PrintStream originalErr = System.err;
+                ByteArrayOutputStream capturedErr = new ByteArrayOutputStream();
+
+                try {
+                    System.setErr(new PrintStream(capturedErr));
+
+                    Optional<Product> result = productService.findProductInOpenFoodFacts(barcode);
+
+                    assertTrue(result.isEmpty());
+                    assertTrue(capturedErr.toString(StandardCharsets.UTF_8).contains("Final attempt failed for barcode " + barcode + ": " + ioException.getMessage()));
+                } finally {
+                    System.setErr(originalErr);
+                }
+            }
+        }
+
+        private String readFixture(String resourcePath) throws IOException {
+                try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
+                    assertNotNull(inputStream, "Missing test fixture: " + resourcePath);
+                    return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+                }
         }
     }
 
     // ==================== updateProductImage Tests ====================
 
-    @Test
-    @DisplayName("Throws when custom product has no file")
-    void testUpdateProductImageCustomWithoutFileThrows() {
-        assertThatThrownBy(() -> productService.updateProductImage(productCustom, null, null))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("Custom products require an image file");
+    @Nested
+    @DisplayName("Tests for updateProductImage method")
+    class UpdateProductImageTests {
 
-        verify(productRepository, never()).save(any(Product.class));
+        @Nested
+        @DisplayName("Success cases")
+        class SuccessCases {
+
+            @Test
+            @DisplayName("Updates custom product image and deletes previous local image")
+            void testUpdateProductImageCustom_UpdateImageAndDeletePrevious_Success() {
+                MultipartFile file = Mockito.mock(MultipartFile.class);
+                when(file.isEmpty()).thenReturn(false);
+
+                productCustom.setImageUrl("uploads/images/old-custom.png");
+                when(fileStorageService.saveCustomProductImage(file)).thenReturn("uploads/images/new-custom.png");
+                when(fileStorageService.isExternalUrl("uploads/images/old-custom.png")).thenReturn(false);
+                when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+                Product result = productService.updateProductImage(productCustom, file, null);
+
+                assertEquals("uploads/images/new-custom.png", result.getImageUrl());
+                verify(fileStorageService).deleteProductImage("uploads/images/old-custom.png");
+                verify(productRepository).save(productCustom);
+            }
+
+            @Test
+            @DisplayName("Updates non-custom image URL and deletes previous local image")
+            void testUpdateProductImageNonCustom_UpdateImageUrlAndDeletePrevious_Success() {
+                productNoCustom.setImageUrl("uploads/images/old-catalog.png");
+                String newImageUrl = "https://cdn.example.com/new-catalog.png";
+
+                when(fileStorageService.isExternalUrl("uploads/images/old-catalog.png")).thenReturn(false);
+                when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+                Product result = productService.updateProductImage(productNoCustom, null, newImageUrl);
+
+                assertEquals(newImageUrl, result.getImageUrl());
+                verify(fileStorageService).deleteProductImage("uploads/images/old-catalog.png");
+                verify(productRepository).save(productNoCustom);
+            }
+
+            @Test
+            @DisplayName("Updates custom product with external URL - does not delete")
+            void testUpdateProductImageCustom_WithExternalUrl_DoesNotDeletePrevious() {
+                MultipartFile file = Mockito.mock(MultipartFile.class);
+                when(file.isEmpty()).thenReturn(false);
+
+                productCustom.setImageUrl("https://external.cdn.com/old-image.png");
+                when(fileStorageService.saveCustomProductImage(file)).thenReturn("uploads/images/new-custom.png");
+                when(fileStorageService.isExternalUrl("https://external.cdn.com/old-image.png")).thenReturn(true);
+                when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+                Product result = productService.updateProductImage(productCustom, file, null);
+
+                assertEquals("uploads/images/new-custom.png", result.getImageUrl());
+                verify(fileStorageService, never()).deleteProductImage(any());
+                verify(productRepository).save(productCustom);
+            }
+
+            @Test
+            @DisplayName("Updates custom product without previous image")
+            void testUpdateProductImageCustom_WithoutPreviousImage_Success() {
+                MultipartFile file = Mockito.mock(MultipartFile.class);
+                when(file.isEmpty()).thenReturn(false);
+
+                productCustom.setImageUrl(null);
+                when(fileStorageService.saveCustomProductImage(file)).thenReturn("uploads/images/new-custom.png");
+                when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+                Product result = productService.updateProductImage(productCustom, file, null);
+
+                assertEquals("uploads/images/new-custom.png", result.getImageUrl());
+                verify(fileStorageService, never()).deleteProductImage(any());
+                verify(productRepository).save(productCustom);
+            }
+
+            @Test
+            @DisplayName("Updates non-custom with external URL - does not delete previous external")
+            void testUpdateProductImageNonCustom_WithExternalUrl_DoesNotDeletePrevious() {
+                productNoCustom.setImageUrl("https://cdn.openfoodfacts.org/old-image.png");
+                String newImageUrl = "https://cdn.example.com/new-catalog.png";
+
+                when(fileStorageService.isExternalUrl("https://cdn.openfoodfacts.org/old-image.png")).thenReturn(true);
+                when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+                Product result = productService.updateProductImage(productNoCustom, null, newImageUrl);
+
+                assertEquals(newImageUrl, result.getImageUrl());
+                verify(fileStorageService, never()).deleteProductImage(any());
+                verify(productRepository).save(productNoCustom);
+            }
+
+            @Test
+            @DisplayName("Updates non-custom without previous image")
+            void testUpdateProductImageNonCustom_WithoutPreviousImage_Success() {
+                productNoCustom.setImageUrl(null);
+                String newImageUrl = "https://cdn.example.com/new-catalog.png";
+
+                when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+                Product result = productService.updateProductImage(productNoCustom, null, newImageUrl);
+
+                assertEquals(newImageUrl, result.getImageUrl());
+                verify(fileStorageService, never()).deleteProductImage(any());
+                verify(productRepository).save(productNoCustom);
+            }
+        }
+
+        @Nested
+        @DisplayName("Failure cases")
+        class FailureCases {
+
+            @Test
+            @DisplayName("Throws when non-custom product has null image URL")
+            void testUpdateProductImageNonCustom_WithNullUrl_shouldThrowBadRequestException() {
+                BadRequestException exception = assertThrows(BadRequestException.class, () -> productService.updateProductImage(productNoCustom, null, null));
+
+                assertEquals("Non-custom products require an image URL", exception.getMessage());
+
+                verify(productRepository, never()).save(any(Product.class));
+            }
+
+            @Test
+            @DisplayName("Throws when custom product has empty file")
+            void testUpdateProductImageCustom_WithEmptyFile_shouldThrowBadRequestException() {
+                MultipartFile file = Mockito.mock(MultipartFile.class);
+                when(file.isEmpty()).thenReturn(true);
+
+                BadRequestException exception = assertThrows(BadRequestException.class, () -> productService.updateProductImage(productCustom, file, null));
+
+                assertEquals("Custom products require an image file", exception.getMessage());
+
+                verify(productRepository, never()).save(any(Product.class));
+            }
+
+            @Test
+            @DisplayName("Throws when non-custom product has blank image URL")
+            void testUpdateProductImageNonCustom_BlankImageUrl_shouldThrowBadRequestException() {
+
+                BadRequestException exception = assertThrows(BadRequestException.class, () -> productService.updateProductImage(productNoCustom, null, "   "));
+
+                assertEquals("Non-custom products require an image URL", exception.getMessage());
+
+                verify(productRepository, never()).save(any(Product.class));
+            }
+
+            @Test
+            @DisplayName("Throws when custom product has no file")
+            void testUpdateProductImageCustom_WithoutFile_shouldThrowBadRequestException() {
+
+                BadRequestException exception = assertThrows(BadRequestException.class, () -> productService.updateProductImage(productCustom, null, null));
+
+                assertEquals("Custom products require an image file", exception.getMessage());
+                verify(productRepository, never()).save(any(Product.class));
+            }
+        }
     }
 
-    @Test
-    @DisplayName("Updates custom product image and deletes previous local image")
-    void testUpdateProductImageCustomSuccess() {
-        MultipartFile file = Mockito.mock(MultipartFile.class);
-        when(file.isEmpty()).thenReturn(false);
+    // ==================== checkUniqueBarcode Tests ====================ç
 
-        productCustom.setImageUrl("uploads/images/old-custom.png");
-        when(fileStorageService.saveCustomProductImage(file)).thenReturn("uploads/images/new-custom.png");
-        when(fileStorageService.isExternalUrl("uploads/images/old-custom.png")).thenReturn(false);
-        when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    @Nested
+    @DisplayName("Tests for checkUniqueBarcode and checkUniqueBarcodeCustom methods")
+    class CheckUniqueBarcodeTests {
 
-        Product result = productService.updateProductImage(productCustom, file, null);
+        @Nested
+        @DisplayName("Success cases")
+        class SuccessCases {
 
-        assertThat(result.getImageUrl()).isEqualTo("uploads/images/new-custom.png");
-        verify(fileStorageService).deleteProductImage("uploads/images/old-custom.png");
-        verify(productRepository).save(productCustom);
-    }
+            @Test
+            @DisplayName("checkUniqueBarcode - succeeds when barcode does not exist")
+            void testCheckUniqueBarcode_ValidBarcode_Succeess() {
+                String barcode = "1111111111111";
 
-    
+                when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, user1.getId()))
+                        .thenReturn(Optional.empty());
 
-    @Test
-    @DisplayName("Throws when non-custom product has blank image URL")
-    void testUpdateProductImageNonCustomWithoutUrlThrows() {
-        assertThatThrownBy(() -> productService.updateProductImage(productNoCustom, null, "   "))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("Non-custom products require an image URL");
+                productService.checkUniqueBarcode(barcode, user1.getId());
 
-        verify(productRepository, never()).save(any(Product.class));
-    }
+                verify(productRepository).findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, user1.getId());
+            }
 
-    @Test
-    @DisplayName("Updates non-custom image URL and deletes previous local image")
-    void testUpdateProductImageNonCustomSuccess() {
-        productNoCustom.setImageUrl("uploads/images/old-catalog.png");
-        String newImageUrl = "https://cdn.example.com/new-catalog.png";
+                        @Test
+            @DisplayName("checkUniqueBarcodeCustom - succeeds when barcode does not exist anywhere")
+            void testCheckUniqueBarcodeCustom_ValidBarcode_Succeeds() throws IOException {
+                String barcode = "2222222222222";
+                UUID userId = user1.getId();
 
-        when(fileStorageService.isExternalUrl("uploads/images/old-catalog.png")).thenReturn(false);
-        when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
+                when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
+                        .thenReturn(Optional.empty());
+                doReturn(Optional.empty()).when(productService).findProductInOpenFoodFacts(barcode);
 
-        Product result = productService.updateProductImage(productNoCustom, null, newImageUrl);
+                productService.checkUniqueBarcodeCustom(barcode, userId);
 
-        assertThat(result.getImageUrl()).isEqualTo(newImageUrl);
-        verify(fileStorageService).deleteProductImage("uploads/images/old-catalog.png");
-        verify(productRepository).save(productNoCustom);
-    }
+                verify(productRepository).findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId);
+                verify(productService).findProductInOpenFoodFacts(barcode);
+            }
+        }
 
-    @Test
-    @DisplayName("Throws when custom product has empty file")
-    void testUpdateProductImageCustomWithEmptyFileThrows() {
-        MultipartFile file = Mockito.mock(MultipartFile.class);
-        when(file.isEmpty()).thenReturn(true);
+        @Nested
+        @DisplayName("Failure cases")
+        class FailureCases {
 
-        assertThatThrownBy(() -> productService.updateProductImage(productCustom, file, null))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("Custom products require an image file");
+            @Test
+            @DisplayName("checkUniqueBarcode - throws when barcode exists in catalog")
+            void testCheckUniqueBarcode_ExistingBarcode_ThrowsConflictException() {
+                String barcode = "9876543210123";
 
-        verify(productRepository, never()).save(any(Product.class));
-    }
+                Product existingProduct = new Product();
+                existingProduct.setBarcode(barcode);
+                existingProduct.setIsCustom(false);
 
-    @Test
-    @DisplayName("Updates custom product with external URL - does not delete")
-    void testUpdateProductImageCustomWithExternalUrlDoesNotDelete() {
-        MultipartFile file = Mockito.mock(MultipartFile.class);
-        when(file.isEmpty()).thenReturn(false);
+                when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, user1.getId()))
+                        .thenReturn(Optional.of(existingProduct));
 
-        productCustom.setImageUrl("https://external.cdn.com/old-image.png");
-        when(fileStorageService.saveCustomProductImage(file)).thenReturn("uploads/images/new-custom.png");
-        when(fileStorageService.isExternalUrl("https://external.cdn.com/old-image.png")).thenReturn(true);
-        when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
+                ConflictException exception = assertThrows(ConflictException.class, () -> productService.checkUniqueBarcode(barcode, user1.getId()));
+                assertEquals("A product with this barcode already exists.", exception.getMessage());
+            }
 
-        Product result = productService.updateProductImage(productCustom, file, null);
+            @Test
+            @DisplayName("checkUniqueBarcodeCustom - throws when barcode exists in database")
+            void testCheckUniqueBarcodeCustom_ExistingBarcode_ThrowsConflictException() {
+                String barcode = "3333333333333";
+                UUID userId = user1.getId();
 
-        assertThat(result.getImageUrl()).isEqualTo("uploads/images/new-custom.png");
-        verify(fileStorageService, never()).deleteProductImage(any());
-        verify(productRepository).save(productCustom);
-    }
+                Product existingProduct = new Product();
+                existingProduct.setBarcode(barcode);
 
-    @Test
-    @DisplayName("Updates custom product without previous image")
-    void testUpdateProductImageCustomWithoutPreviousImage() {
-        MultipartFile file = Mockito.mock(MultipartFile.class);
-        when(file.isEmpty()).thenReturn(false);
+                when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
+                        .thenReturn(Optional.of(existingProduct));
 
-        productCustom.setImageUrl(null);
-        when(fileStorageService.saveCustomProductImage(file)).thenReturn("uploads/images/new-custom.png");
-        when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
+                ConflictException exception = assertThrows(ConflictException.class, () -> productService.checkUniqueBarcodeCustom(barcode, userId));
+                assertEquals("A product with this barcode already exists.", exception.getMessage());
 
-        Product result = productService.updateProductImage(productCustom, file, null);
+                // No debe llamar a la API si ya existe en la base de datos
+                verify(productService, never()).findProductInOpenFoodFacts(any());
+            }
 
-        assertThat(result.getImageUrl()).isEqualTo("uploads/images/new-custom.png");
-        verify(fileStorageService, never()).deleteProductImage(any());
-        verify(productRepository).save(productCustom);
-    }
+            @Test
+            @DisplayName("checkUniqueBarcodeCustom - throws when barcode exists in Open Food Facts")
+            void testCheckUniqueBarcodeCustom_ExistingBarcodeInAPI_ThrowsConflictException() throws IOException {
+                String barcode = "4444444444444";
+                UUID userId = user1.getId();
 
-    @Test
-    @DisplayName("Throws when non-custom product has null image URL")
-    void testUpdateProductImageNonCustomWithNullUrlThrows() {
-        assertThatThrownBy(() -> productService.updateProductImage(productNoCustom, null, null))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("Non-custom products require an image URL");
+                Product apiProduct = new Product();
+                apiProduct.setBarcode(barcode);
+                apiProduct.setIsCustom(false);
 
-        verify(productRepository, never()).save(any(Product.class));
-    }
+                when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
+                        .thenReturn(Optional.empty());
+                doReturn(Optional.of(apiProduct)).when(productService).findProductInOpenFoodFacts(barcode);
 
-    @Test
-    @DisplayName("Updates non-custom with external URL - does not delete previous external")
-    void testUpdateProductImageNonCustomWithExternalUrlDoesNotDelete() {
-        productNoCustom.setImageUrl("https://cdn.openfoodfacts.org/old-image.png");
-        String newImageUrl = "https://cdn.example.com/new-catalog.png";
+                ConflictException exception = assertThrows(ConflictException.class, () -> productService.checkUniqueBarcodeCustom(barcode, userId));
+                assertEquals("A product with this barcode already exists in the external catalog.", exception.getMessage());
 
-        when(fileStorageService.isExternalUrl("https://cdn.openfoodfacts.org/old-image.png")).thenReturn(true);
-        when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        Product result = productService.updateProductImage(productNoCustom, null, newImageUrl);
-
-        assertThat(result.getImageUrl()).isEqualTo(newImageUrl);
-        verify(fileStorageService, never()).deleteProductImage(any());
-        verify(productRepository).save(productNoCustom);
-    }
-
-    @Test
-    @DisplayName("Updates non-custom without previous image")
-    void testUpdateProductImageNonCustomWithoutPreviousImage() {
-        productNoCustom.setImageUrl(null);
-        String newImageUrl = "https://cdn.example.com/new-catalog.png";
-
-        when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        Product result = productService.updateProductImage(productNoCustom, null, newImageUrl);
-
-        assertThat(result.getImageUrl()).isEqualTo(newImageUrl);
-        verify(fileStorageService, never()).deleteProductImage(any());
-        verify(productRepository).save(productNoCustom);
-    }
-
-    // ==================== checkUniqueBarcode Tests ====================
-
-    @Test
-    @DisplayName("checkUniqueBarcode - succeeds when barcode does not exist")
-    void testCheckUniqueBarcodeSuccess() {
-        String barcode = "1111111111111";
-
-        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, user1.getId()))
-                .thenReturn(Optional.empty());
-
-        productService.checkUniqueBarcode(barcode, user1.getId());
-
-        verify(productRepository).findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, user1.getId());
-    }
-
-    @Test
-    @DisplayName("checkUniqueBarcode - throws when barcode exists in catalog")
-    void testCheckUniqueBarcodeThrowsWhenExists() {
-        String barcode = "9876543210123";
-
-        Product existingProduct = new Product();
-        existingProduct.setBarcode(barcode);
-        existingProduct.setIsCustom(false);
-
-        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, user1.getId()))
-                .thenReturn(Optional.of(existingProduct));
-
-        assertThatThrownBy(() -> productService.checkUniqueBarcode(barcode, user1.getId()))
-                .isInstanceOf(ConflictException.class)
-                .hasMessage("A product with this barcode already exists.");
-    }
-
-    @Test
-    @DisplayName("checkUniqueBarcodeCustom - succeeds when barcode does not exist anywhere")
-    void testCheckUniqueBarcodeCustomSuccess() throws IOException {
-        String barcode = "2222222222222";
-        UUID userId = user1.getId();
-
-        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
-                .thenReturn(Optional.empty());
-        doReturn(Optional.empty()).when(productService).findProductInOpenFoodFacts(barcode);
-
-        productService.checkUniqueBarcodeCustom(barcode, userId);
-
-        verify(productRepository).findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId);
-        verify(productService).findProductInOpenFoodFacts(barcode);
-    }
-
-    @Test
-    @DisplayName("checkUniqueBarcodeCustom - throws when barcode exists in database")
-    void testCheckUniqueBarcodeCustomThrowsWhenExistsInDb() {
-        String barcode = "3333333333333";
-        UUID userId = user1.getId();
-
-        Product existingProduct = new Product();
-        existingProduct.setBarcode(barcode);
-
-        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
-                .thenReturn(Optional.of(existingProduct));
-
-        assertThatThrownBy(() -> productService.checkUniqueBarcodeCustom(barcode, userId))
-                .isInstanceOf(ConflictException.class)
-                .hasMessage("A product with this barcode already exists.");
-
-        // No debe llamar a la API si ya existe en la base de datos
-        verify(productService, never()).findProductInOpenFoodFacts(any());
-    }
-
-    @Test
-    @DisplayName("checkUniqueBarcodeCustom - throws when barcode exists in Open Food Facts")
-    void testCheckUniqueBarcodeCustomThrowsWhenExistsInAPI() throws IOException {
-        String barcode = "4444444444444";
-        UUID userId = user1.getId();
-
-        Product apiProduct = new Product();
-        apiProduct.setBarcode(barcode);
-        apiProduct.setIsCustom(false);
-
-        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
-                .thenReturn(Optional.empty());
-        doReturn(Optional.of(apiProduct)).when(productService).findProductInOpenFoodFacts(barcode);
-
-        assertThatThrownBy(() -> productService.checkUniqueBarcodeCustom(barcode, userId))
-                .isInstanceOf(ConflictException.class)
-                .hasMessage("A product with this barcode already exists in the external catalog.");
-
-        verify(productRepository).findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId);
-        verify(productService).findProductInOpenFoodFacts(barcode);
+                verify(productRepository).findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId);
+                verify(productService).findProductInOpenFoodFacts(barcode);
+            }
+        }
     }
 
     // ==================== createProductCustom Tests ====================
 
-    @Test
-    @DisplayName("createProductCustom - orchestrates checkUniqueBarcodeCustom and updateProductImage correctly")
-    void testCreateProductCustomSuccess() throws IOException {
-        MultipartFile image = Mockito.mock(MultipartFile.class);
-        when(image.isEmpty()).thenReturn(false);
+    @Nested
+    @DisplayName("Tests for createProductCustom method")
+    class CreateProductCustomTests {
 
-        String barcode = "5555555555555";
-        productCustom.setBarcode(barcode);
-        UUID userId = user1.getId();
+        @Nested
+        @DisplayName("Success cases")
+        class SuccessCases {
 
-        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
-                .thenReturn(Optional.empty());
-        doReturn(Optional.empty()).when(productService).findProductInOpenFoodFacts(barcode);
+            @Test
+            @DisplayName("createProductCustom - orchestrates checkUniqueBarcodeCustom and updateProductImage correctly")
+            void testCreateProductCustom_ValidProduct_ReturnsSavedProduct() throws IOException {
+                MultipartFile image = Mockito.mock(MultipartFile.class);
+                when(image.isEmpty()).thenReturn(false);
 
-        when(fileStorageService.saveCustomProductImage(image)).thenReturn("uploads/images/custom-new.png");
-        when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
+                String barcode = "5555555555555";
+                productCustom.setBarcode(barcode);
+                UUID userId = user1.getId();
 
-        Product result = productService.createProductCustom(productCustom, image);
+                when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
+                        .thenReturn(Optional.empty());
+                doReturn(Optional.empty()).when(productService).findProductInOpenFoodFacts(barcode);
 
-        verify(productRepository).findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId);
-        verify(productService).findProductInOpenFoodFacts(barcode);
-        verify(fileStorageService).saveCustomProductImage(image);
-        verify(productRepository).save(productCustom);
+                when(fileStorageService.saveCustomProductImage(image)).thenReturn("uploads/images/custom-new.png");
+                when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        assertThat(result.getImageUrl()).isEqualTo("uploads/images/custom-new.png");
-        assertThat(result.getBarcode()).isEqualTo(barcode);
-    }
+                Product result = productService.createProductCustom(productCustom, image);
 
-    @Test
-    @DisplayName("createProductCustom - stops execution when checkUniqueBarcodeCustom throws exception")
-    void testCreateProductCustomStopsWhenValidationFails() {
-        MultipartFile image = Mockito.mock(MultipartFile.class);
+                verify(productRepository).findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId);
+                verify(productService).findProductInOpenFoodFacts(barcode);
+                verify(fileStorageService).saveCustomProductImage(image);
+                verify(productRepository).save(productCustom);
 
-        String barcode = "6666666666666";
-        productCustom.setBarcode(barcode);
-        UUID userId = user1.getId();
+                assertEquals("uploads/images/custom-new.png", result.getImageUrl());
+                assertEquals(barcode, result.getBarcode());
+            }
+        }
 
-        // Simular que el barcode ya existe en BD
-        Product existingProduct = new Product();
-        existingProduct.setBarcode(barcode);
+        @Nested
+        @DisplayName("Failure cases")
+        class FailureCases {
 
-        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
-                .thenReturn(Optional.of(existingProduct));
+            @Test
+            @DisplayName("createProductCustom - stops execution when checkUniqueBarcodeCustom throws exception")
+            void testCreateProductCustom_StopsWhenBarcodeExists_ShouldThrowConflictException() {
+                MultipartFile image = Mockito.mock(MultipartFile.class);
 
-        // Debe lanzar excepción de checkUniqueBarcodeCustom
-        assertThatThrownBy(() -> productService.createProductCustom(productCustom, image))
-                .isInstanceOf(ConflictException.class)
-                .hasMessage("A product with this barcode already exists.");
+                String barcode = "6666666666666";
+                productCustom.setBarcode(barcode);
+                UUID userId = user1.getId();
 
-        // Verificar que updateProductImage NO se ejecutó
-        verify(fileStorageService, never()).saveCustomProductImage(any());
-        verify(productRepository, never()).save(any(Product.class));
+                // Simular que el barcode ya existe en BD
+                Product existingProduct = new Product();
+                existingProduct.setBarcode(barcode);
+
+                when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
+                        .thenReturn(Optional.of(existingProduct));
+
+                // Debe lanzar excepción de checkUniqueBarcodeCustom
+                ConflictException exception = assertThrows(ConflictException.class, () -> productService.createProductCustom(productCustom, image));
+                assertEquals("A product with this barcode already exists.", exception.getMessage());
+
+                // Verificar que updateProductImage NO se ejecutó
+                verify(fileStorageService, never()).saveCustomProductImage(any());
+                verify(productRepository, never()).save(any(Product.class));
+            }
+        }
     }
 
     // ==================== createProductOpenFoodFacts Tests ====================
 
-    @Test
-    @DisplayName("createProductOpenFoodFacts - orchestrates checkUniqueBarcode, findProductInOpenFoodFacts and updateProductImage correctly")
-    void testCreateProductOpenFoodFactsSuccess() throws IOException {
-        String barcode = "7777777777777";
-        UUID userId = user1.getId();
+    @Nested
+    @DisplayName("Tests for createProductOpenFoodFacts method")
+    class CreateProductOpenFoodFactsTests {
 
-        Product apiProduct = new Product();
-        apiProduct.setBarcode(barcode);
-        apiProduct.setName("Producto API");
-        apiProduct.setBrand("Marca API");
-        apiProduct.setImageUrl("https://api.example.com/image.png");
-        apiProduct.setIsCustom(false);
+        @Nested
+        @DisplayName("Success cases")
+        class SuccessCases {
 
-        // Mock checkUniqueBarcode (no lanza excepción)
-        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
-                .thenReturn(Optional.empty());
+            @Test
+            @DisplayName("createProductOpenFoodFacts - orchestrates checkUniqueBarcode, findProductInOpenFoodFacts and updateProductImage correctly")
+            void testCreateProductOpenFoodFacts_ValidBarcode_Success() throws IOException {
+                String barcode = "7777777777777";
+                UUID userId = user1.getId();
 
-        // Mock findProductInOpenFoodFacts
-        doReturn(Optional.of(apiProduct)).when(productService).findProductInOpenFoodFacts(barcode);
+                Product apiProduct = new Product();
+                apiProduct.setBarcode(barcode);
+                apiProduct.setName("Producto API");
+                apiProduct.setBrand("Marca API");
+                apiProduct.setImageUrl("https://api.example.com/image.png");
+                apiProduct.setIsCustom(false);
 
-        // Mock updateProductImage
-        when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
+                // Mock checkUniqueBarcode (no lanza excepción)
+                when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
+                        .thenReturn(Optional.empty());
 
-        Product result = productService.createProductOpenFoodFacts(barcode, userId);
+                // Mock findProductInOpenFoodFacts
+                doReturn(Optional.of(apiProduct)).when(productService).findProductInOpenFoodFacts(barcode);
 
-        // Verificar que se llamaron los métodos en orden
-        verify(productRepository).findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId);
-        verify(productService).findProductInOpenFoodFacts(barcode);
-        verify(productRepository).save(apiProduct);
+                // Mock updateProductImage
+                when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // Verificar resultado
-        assertThat(result.getBarcode()).isEqualTo(barcode);
-        assertThat(result.getIsCustom()).isFalse();
-        assertThat(result.getImageUrl()).isEqualTo("https://api.example.com/image.png");
-    }
+                Product result = productService.createProductOpenFoodFacts(barcode, userId);
 
-    @Test
-    @DisplayName("createProductOpenFoodFacts - stops execution when checkUniqueBarcode throws exception")
-    void testCreateProductOpenFoodFactsStopsWhenBarcodeExists() {
-        String barcode = "8888888888888";
-        UUID userId = user1.getId();
+                // Verificar que se llamaron los métodos en orden
+                verify(productRepository).findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId);
+                verify(productService).findProductInOpenFoodFacts(barcode);
+                verify(productRepository).save(apiProduct);
 
-        // Simular que el barcode ya existe en catálogo
-        Product existingProduct = new Product();
-        existingProduct.setBarcode(barcode);
-        existingProduct.setIsCustom(false);
+                // Verificar resultado
+                assertEquals(barcode, result.getBarcode());
+                assertFalse(result.getIsCustom());
+                assertEquals("https://api.example.com/image.png", result.getImageUrl());
+            }
+        }
 
-        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
-                .thenReturn(Optional.of(existingProduct));
+        @Nested
+        @DisplayName("Failure cases")
+        class FailureCases {
 
-        // Debe lanzar excepción de checkUniqueBarcode
-        assertThatThrownBy(() -> productService.createProductOpenFoodFacts(barcode, userId))
-                .isInstanceOf(ConflictException.class)
-                .hasMessage("A product with this barcode already exists.");
+            @Test
+            @DisplayName("createProductOpenFoodFacts - stops execution when checkUniqueBarcode throws exception")
+            void testCreateProductOpenFoodFacts_StopsWhenBarcodeExists_shouldThrowConflictException() {
+                String barcode = "8888888888888";
+                UUID userId = user1.getId();
 
-        // Verificar que findProductInOpenFoodFacts y updateProductImage NO se ejecutaron
-        verify(productService, never()).findProductInOpenFoodFacts(any());
-        verify(productRepository, never()).save(any(Product.class));
-    }
+                // Simular que el barcode ya existe en catálogo
+                Product existingProduct = new Product();
+                existingProduct.setBarcode(barcode);
+                existingProduct.setIsCustom(false);
 
-    @Test
-    @DisplayName("createProductOpenFoodFacts - throws ResourceNotFoundException when product not found in API")
-    void testCreateProductOpenFoodFactsThrowsWhenNotFoundInAPI() throws IOException {
-        String barcode = "9999999999999";
-        UUID userId = user1.getId();
+                when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
+                        .thenReturn(Optional.of(existingProduct));
 
-        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
-                .thenReturn(Optional.empty());
+                // Debe lanzar excepción de checkUniqueBarcode
+                ConflictException exception = assertThrows(ConflictException.class, () -> productService.createProductOpenFoodFacts(barcode, userId));
+                assertEquals("A product with this barcode already exists.", exception.getMessage());
 
-        doReturn(Optional.empty()).when(productService).findProductInOpenFoodFacts(barcode);
+                // Verificar que findProductInOpenFoodFacts y updateProductImage NO se ejecutaron
+                verify(productService, never()).findProductInOpenFoodFacts(any());
+                verify(productRepository, never()).save(any(Product.class));
+            }
 
-        assertThatThrownBy(() -> productService.createProductOpenFoodFacts(barcode, userId))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("Product with barcode " + barcode + " not found in Open Food Facts external catalog. Consider creating it as a custom product.");
+            @Test
+            @DisplayName("createProductOpenFoodFacts - throws ResourceNotFoundException when product not found in API")
+            void testCreateProductOpenFoodFacts_StopExecutionWhenNotFoundInAPI_shouldThrowResourceNotFoundException() throws IOException {
+                String barcode = "9999999999999";
+                UUID userId = user1.getId();
 
-        verify(productRepository, never()).save(any(Product.class));
+                when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
+                        .thenReturn(Optional.empty());
+
+                doReturn(Optional.empty()).when(productService).findProductInOpenFoodFacts(barcode);
+
+                ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> productService.createProductOpenFoodFacts(barcode, userId));
+                assertEquals("Product with barcode " + barcode + " not found in Open Food Facts external catalog. Consider creating it as a custom product.", exception.getMessage());
+
+                verify(productRepository, never()).save(any(Product.class));
+            }
+        }
     }
 
     // ==================== validateBarcodes Tests ====================
 
-    @Test
-    @DisplayName("validateBarcodes - returns empty lists when input is empty")
-    void testValidateBarcodesEmptyList() {
-        List<String> barcodes = List.of();
-        UUID userId = user1.getId();
+    @Nested
+    @DisplayName("Tests for validateBarcodes method")
+    class ValidateBarcodesTests {
 
-        BatchValidationResponse result = productService.validateBarcodes(barcodes, userId);
+        @Nested
+        @DisplayName("Success cases")
+        class SuccessCases {
 
-        assertThat(result.valid()).isEmpty();
-        assertThat(result.notFound()).isEmpty();
-    }
+            @Test
+            @DisplayName("validateBarcodes - returns empty lists when input is empty")
+            void testValidateBarcodes_EmptyInput_ReturnsEmptyLists() {
+                List<String> barcodes = List.of();
+                UUID userId = user1.getId();
 
-    @Test
-    @DisplayName("validateBarcodes - correctly classifies mixed scenarios")
-    void testValidateBarcodesMixedScenarios() throws IOException {
-        List<String> barcodes = List.of("1111111111111", "3333333333333", "5555555555555");
-        UUID userId = user1.getId();
+                BatchValidationResponse result = productService.validateBarcodes(barcodes, userId);
 
-        Product dbProduct = new Product();
-        dbProduct.setBarcode("1111111111111");
+                assertTrue(result.valid().isEmpty());
+                assertTrue(result.notFound().isEmpty());
+            }
 
-        Product apiProduct = new Product();
-        apiProduct.setBarcode("3333333333333");
+            @Test
+            @DisplayName("validateBarcodes - correctly classifies mixed scenarios")
+            void testValidateBarcodes_MixedScenarios_shouldSuccess() throws IOException {
+                List<String> barcodes = List.of("1111111111111", "3333333333333", "5555555555555");
+                UUID userId = user1.getId();
 
-        // Barcode 1 en BD
-        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById("1111111111111", userId))
-                .thenReturn(Optional.of(dbProduct));
+                Product dbProduct = new Product();
+                dbProduct.setBarcode("1111111111111");
 
-        // Barcode 3 no en BD pero sí en API
-        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById("3333333333333", userId))
-                .thenReturn(Optional.empty());
-        doReturn(Optional.of(apiProduct)).when(productService).findProductInOpenFoodFacts("3333333333333");
+                Product apiProduct = new Product();
+                apiProduct.setBarcode("3333333333333");
 
-        // Barcode 5 no existe en ningún sitio
-        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById("5555555555555", userId))
-                .thenReturn(Optional.empty());
-        doReturn(Optional.empty()).when(productService).findProductInOpenFoodFacts("5555555555555");
+                // Barcode 1 en BD
+                when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById("1111111111111", userId))
+                        .thenReturn(Optional.of(dbProduct));
 
-        BatchValidationResponse result = productService.validateBarcodes(barcodes, userId);
+                // Barcode 3 no en BD pero sí en API
+                when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById("3333333333333", userId))
+                        .thenReturn(Optional.empty());
+                doReturn(Optional.of(apiProduct)).when(productService).findProductInOpenFoodFacts("3333333333333");
 
-        assertThat(result.valid()).containsExactlyInAnyOrder("1111111111111", "3333333333333");
-        assertThat(result.notFound()).containsExactly("5555555555555");
+                // Barcode 5 no existe en ningún sitio
+                when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById("5555555555555", userId))
+                        .thenReturn(Optional.empty());
+                doReturn(Optional.empty()).when(productService).findProductInOpenFoodFacts("5555555555555");
 
-        // Verificar que solo se llamó a la API para los que no estaban en BD
-        verify(productService, never()).findProductInOpenFoodFacts("1111111111111");
-        verify(productService).findProductInOpenFoodFacts("3333333333333");
-        verify(productService).findProductInOpenFoodFacts("5555555555555");
+                BatchValidationResponse result = productService.validateBarcodes(barcodes, userId);
+
+                assertIterableEquals(
+                List.of("1111111111111", "3333333333333"),
+                result.valid()
+                );
+
+                assertIterableEquals(
+                        List.of("5555555555555"),
+                        result.notFound()
+                );
+
+                // Verificar que solo se llamó a la API para los que no estaban en BD
+                verify(productService, never()).findProductInOpenFoodFacts("1111111111111");
+                verify(productService).findProductInOpenFoodFacts("3333333333333");
+                verify(productService).findProductInOpenFoodFacts("5555555555555");
+            }
+        }
     }
 
     // ==================== findInternalProductByBarcode Tests ====================
 
-    @Test
-    @DisplayName("findInternalProductByBarcode - returns product when found")
-    void testFindInternalProductByBarcodeSuccess() {
-        String barcode = "1111111111111";
-        UUID userId = user1.getId();
+    @Nested
+    @DisplayName("Tests for findInternalProductByBarcode method")
+    class FindInternalProductByBarcodeTests {
 
-        Product existingProduct = new Product();
-        existingProduct.setBarcode(barcode);
+        @Nested
+        @DisplayName("Success cases")
+        class SuccessCases {
 
-        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
-                .thenReturn(Optional.of(existingProduct));
+            @Test
+            @DisplayName("findInternalProductByBarcode - returns product when found")
+            void testFindInternalProductByBarcode_ValidBarcode_ReturnsProduct() {
+                String barcode = "1111111111111";
+                UUID userId = user1.getId();
 
-        Product result = productService.findInternalProductByBarcode(barcode, userId);
+                Product existingProduct = new Product();
+                existingProduct.setBarcode(barcode);
 
-        assertThat(result).isNotNull();
-        assertThat(result.getBarcode()).isEqualTo(barcode);
-    }
+                when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
+                        .thenReturn(Optional.of(existingProduct));
 
-    @Test
-    @DisplayName("findInternalProductByBarcode - throws ResourceNotFoundException when not found")
-    void testFindInternalProductByBarcodeNotFound() {
-        String barcode = "2222222222222";
-        UUID userId = user1.getId();
+                Product result = productService.findInternalProductByBarcode(barcode, userId);
 
-        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
-                .thenReturn(Optional.empty());
+                assertNotNull(result);
+                assertEquals(barcode, result.getBarcode());
+            }
+        }
 
-        assertThatThrownBy(() -> productService.findInternalProductByBarcode(barcode, userId))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessage("No product found in the internal catalog with barcode: " + barcode);
+        @Nested
+        @DisplayName("Failure cases")
+        class FailureCases {
+
+            @Test
+            @DisplayName("findInternalProductByBarcode - throws ResourceNotFoundException when not found")
+            void testFindInternalProductByBarcode_InvalidBarcode_ThrowsResourceNotFoundException() {
+                String barcode = "2222222222222";
+                UUID userId = user1.getId();
+
+                when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
+                        .thenReturn(Optional.empty());
+
+                ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> productService.findInternalProductByBarcode(barcode, userId));
+                assertEquals("No product found in the internal catalog with barcode: " + barcode, exception.getMessage());
+            }
+        }
     }
 
     // ==================== getOrCreateProductByBarcode Tests ====================
 
-    @Test
-    @DisplayName("getOrCreateProductByBarcode - returns existing product if found")
-    void testGetOrCreateProductByBarcodeReturnsExisting() {
-        String barcode = "1111111111111";
-        UUID userId = user1.getId();
+    @Nested
+    @DisplayName("Tests for getOrCreateProductByBarcode method")
+    class GetOrCreateProductByBarcodeTests {
 
-        Product existingProduct = new Product();
-        existingProduct.setBarcode(barcode);
+        @Nested
+        @DisplayName("Success cases")
+        class SuccessCases {
 
-        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
-                .thenReturn(Optional.of(existingProduct));
+            @Test
+            @DisplayName("getOrCreateProductByBarcode - returns existing product if found")
+            void testGetOrCreateProductByBarcode_ValidBarcode_ReturnsExisting() {
+                String barcode = "1111111111111";
+                UUID userId = user1.getId();
 
-        Product result = productService.getOrCreateProductByBarcode(barcode, userId);
+                Product existingProduct = new Product();
+                existingProduct.setBarcode(barcode);
 
-        assertThat(result).isNotNull();
-        assertThat(result.getBarcode()).isEqualTo(barcode);
+                when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
+                        .thenReturn(Optional.of(existingProduct));
 
-        verify(productService, never()).createProductOpenFoodFacts(any(), any());
+                Product result = productService.getOrCreateProductByBarcode(barcode, userId);
+
+                assertNotNull(result);
+                assertEquals(barcode, result.getBarcode());
+
+                verify(productService, never()).createProductOpenFoodFacts(any(), any());
+            }
+
+            @Test
+            @DisplayName("getOrCreateProductByBarcode - creates new product when not found")
+            void testGetOrCreateProductByBarcode_ValidBarcodeButNotInDatabase_CreatesNew() throws IOException {
+                String barcode = "2222222222222";
+                UUID userId = user1.getId();
+
+                Product apiProduct = new Product();
+                apiProduct.setBarcode(barcode);
+                apiProduct.setName("Producto API");
+                apiProduct.setBrand("Marca API");
+                apiProduct.setImageUrl("https://api.example.com/image.png");
+                apiProduct.setIsCustom(false);
+
+                when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
+                        .thenReturn(Optional.empty());
+
+                doReturn(Optional.of(apiProduct)).when(productService).findProductInOpenFoodFacts(barcode);
+                when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+                Product result = productService.getOrCreateProductByBarcode(barcode, userId);
+
+                assertNotNull(result);
+                assertEquals(barcode, result.getBarcode());
+                assertEquals("Producto API", result.getName());
+                assertEquals("Marca API", result.getBrand());
+                assertEquals("https://api.example.com/image.png", result.getImageUrl());
+
+                verify(productService).createProductOpenFoodFacts(barcode, userId);
+            }
+        }
     }
-
-     @Test
-    @DisplayName("getOrCreateProductByBarcode - creates new product when not found")
-    void testGetOrCreateProductByBarcodeCreatesNew() throws IOException {
-        String barcode = "2222222222222";
-        UUID userId = user1.getId();
-
-        Product apiProduct = new Product();
-        apiProduct.setBarcode(barcode);
-        apiProduct.setName("Producto API");
-        apiProduct.setBrand("Marca API");
-        apiProduct.setImageUrl("https://api.example.com/image.png");
-        apiProduct.setIsCustom(false);
-
-        when(productRepository.findByBarcodeAndIsCustomFalseOrBarcodeAndIsCustomTrueAndCreatedById(barcode, userId))
-                .thenReturn(Optional.empty());
-
-        doReturn(Optional.of(apiProduct)).when(productService).findProductInOpenFoodFacts(barcode);
-        when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        Product result = productService.getOrCreateProductByBarcode(barcode, userId);
-
-        assertThat(result).isNotNull();
-        assertThat(result.getBarcode()).isEqualTo(barcode);
-        assertThat(result.getName()).isEqualTo("Producto API");
-
-        verify(productService).createProductOpenFoodFacts(barcode, userId);
-    }
-
 }

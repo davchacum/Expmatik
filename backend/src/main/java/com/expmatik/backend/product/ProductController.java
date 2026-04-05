@@ -50,7 +50,7 @@ public class ProductController {
         Product product = productService.findById(id);
         User currentUser = userService.getUserProfile();
         if(currentUser.getRole().equals(Role.ADMINISTRATOR) && product.getIsCustom() && !product.getCreatedBy().getId().equals(currentUser.getId())) {
-            return ResponseEntity.badRequest().body("You are not authorized to view this product.");
+            return ResponseEntity.status(403).body("You are not authorized to view this product.");
         }
         ProductResponse productResponseDTO = ProductResponse.fromProduct(productService.findById(id));
         return ResponseEntity.ok(productResponseDTO);
@@ -139,6 +139,7 @@ public class ProductController {
     }
 
     @GetMapping("/openfoodfacts/{barcode}")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     @Operation(summary = "Obtener producto de OpenFoodFacts por código de barras", description = "Busca un producto en la API de OpenFoodFacts utilizando su código de barras. Devuelve los datos del producto si se encuentra, o un error si no se encuentra o si el código de barras no es válido.")
     public ResponseEntity<?> findProductInOpenFoodFacts(@PathVariable @ValidBarcode String barcode) {
         Optional<Product> product = productService.findProductInOpenFoodFacts(barcode);
@@ -150,6 +151,7 @@ public class ProductController {
     }
 
     @GetMapping("/validate-barcode/{barcode}")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     @Operation(summary = "Validar existencia de producto por código de barras", description = "Verifica si un producto existe en la base de datos utilizando su código de barras. Devuelve un indicador de existencia.")
     public ResponseEntity<?> validateProduct(@PathVariable @ValidBarcode String barcode) {
         User currentUser = userService.getUserProfile();
