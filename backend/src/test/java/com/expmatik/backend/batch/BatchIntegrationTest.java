@@ -132,7 +132,7 @@ public class BatchIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
-            void testCreateBatch_NonExistingProduct_ShouldThrowResourceNotFoundException() throws Exception {
+            void testCreateBatch_NonExistingProduct_ShouldReturnBadRequest() throws Exception {
 
                 BatchCreate batchCreate = new BatchCreate(
                     LocalDate.now().plusDays(10),
@@ -154,7 +154,7 @@ public class BatchIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
-            void testCreateBatch_NonExistingInvoice_ShouldThrowResourceNotFoundException() throws Exception {
+            void testCreateBatch_NonExistingInvoice_ShouldReturnBadRequest() throws Exception {
 
                 BatchCreate batchCreate = new BatchCreate(
                     LocalDate.now().plusDays(10),
@@ -176,7 +176,7 @@ public class BatchIntegrationTest {
 
             @Test
             @WithUserDetails("admin2@expmatik.com")
-            void testCreateBatch_InvoiceNotOwned_ShouldThrowAccessDeniedException() throws Exception {
+            void testCreateBatch_InvoiceNotOwned_ShouldReturnForbidden() throws Exception {
 
                 BatchCreate batchCreate = new BatchCreate(
                     LocalDate.now().plusDays(10),
@@ -198,7 +198,7 @@ public class BatchIntegrationTest {
 
             @Test
             @WithUserDetails("repo@expmatik.com")
-            void testCreateBatch_UnauthorizedUser_ShouldThrowAccessDeniedException() throws Exception {
+            void testCreateBatch_UnauthorizedUser_ShouldReturnForbidden() throws Exception {
 
                 BatchCreate batchCreate = new BatchCreate(
                     LocalDate.now().plusDays(10),
@@ -220,7 +220,7 @@ public class BatchIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
-            void testCreateBatch_WithPerishableProductAndMissingExpirationDate_ShouldThrowConflictException() throws Exception {
+            void testCreateBatch_WithPerishableProductAndMissingExpirationDate_ShouldReturnConflict() throws Exception {
 
                 BatchCreate batchCreate = new BatchCreate(
                     null,
@@ -242,7 +242,7 @@ public class BatchIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
-            void testCreateBatch_WithNonPerishableProductAndProvidedExpirationDate_ShouldThrowConflictException() throws Exception {
+            void testCreateBatch_WithNonPerishableProductAndProvidedExpirationDate_ShouldReturnConflict() throws Exception {
 
                 BatchCreate batchCreate = new BatchCreate(
                     LocalDate.now().plusDays(10),
@@ -264,7 +264,7 @@ public class BatchIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
-            void testCreateBatch_WithNonPendingInvoice_ShouldThrowConflictException() throws Exception {
+            void testCreateBatch_WithNonPendingInvoice_ShouldReturnConflict() throws Exception {
 
                 BatchCreate batchUpdate = new BatchCreate(
                     LocalDate.now().plusDays(10),
@@ -379,7 +379,7 @@ public class BatchIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
-            void testUpdateBatch_WithNonExistentProduct_shouldThrowBadRequestException() throws Exception {
+            void testUpdateBatch_WithNonExistentProduct_shouldReturnBadRequest() throws Exception {
 
                 BatchCreate batchUpdate = new BatchCreate(
                     LocalDate.now().plusDays(10),
@@ -400,7 +400,7 @@ public class BatchIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
-            void testUpdateBatch_WithNonExistentBatch_shouldThrowResourceNotFoundException() throws Exception {
+            void testUpdateBatch_WithNonExistentBatch_shouldReturnNotFound() throws Exception {
 
                 BatchCreate batchUpdate = new BatchCreate(
                     LocalDate.now().plusDays(10),
@@ -421,7 +421,7 @@ public class BatchIntegrationTest {
 
             @Test
             @WithUserDetails("admin2@expmatik.com")
-            void testUpdateBatch_InvoiceNotOwned_shouldThrowAccessDeniedException() throws Exception {
+            void testUpdateBatch_InvoiceNotOwned_shouldReturnForbidden() throws Exception {
 
                 BatchCreate batchUpdate = new BatchCreate(
                     LocalDate.now().plusDays(10),
@@ -442,7 +442,7 @@ public class BatchIntegrationTest {
 
             @Test
             @WithUserDetails("repo@expmatik.com")
-            void testUpdateBatch_WithUnauthorizedUser_shouldThrowAccessDeniedException() throws Exception {
+            void testUpdateBatch_WithUnauthorizedUser_shouldReturnForbidden() throws Exception {
 
                 BatchCreate batchUpdate = new BatchCreate(
                     LocalDate.now().plusDays(10),
@@ -463,7 +463,7 @@ public class BatchIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
-            void testUpdateBatch_WithPerishableProductAndMissingExpirationDate_shouldThrowConflictException() throws Exception {
+            void testUpdateBatch_WithPerishableProductAndMissingExpirationDate_shouldReturnConflict() throws Exception {
 
                 BatchCreate batchUpdate = new BatchCreate(
                     null,
@@ -484,7 +484,7 @@ public class BatchIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
-            void testUpdateBatch_WithNonPerishableProductAndProvidedExpirationDate_shouldThrowConflictException() throws Exception {
+            void testUpdateBatch_WithNonPerishableProductAndProvidedExpirationDate_shouldReturnConflict() throws Exception {
 
                 BatchCreate batchUpdate = new BatchCreate(
                     LocalDate.now().plusDays(10),
@@ -505,7 +505,7 @@ public class BatchIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
-            void testUpdateBatch_WithNonPendingInvoice_shouldThrowConflictException() throws Exception {
+            void testUpdateBatch_WithNonPendingInvoice_shouldReturnConflict() throws Exception {
 
                 BatchCreate batchUpdate = new BatchCreate(
                     LocalDate.now().plusDays(10),
@@ -552,7 +552,7 @@ public class BatchIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
-            void testDeleteBatch_WithNonExistentBatch_shouldThrowResourceNotFoundException() throws Exception {
+            void testDeleteBatch_WithNonExistentBatch_shouldReturnNotFound() throws Exception {
                 UUID batchId = UUID.fromString("99000000-0000-0000-0000-000000000001");
 
                 mockMvc.perform(MockMvcRequestBuilders.delete("/api/batches/" + batchId))
@@ -561,7 +561,7 @@ public class BatchIntegrationTest {
 
             @Test
             @WithUserDetails("admin2@expmatik.com")
-            void testDeleteBatch_NotOwnedBatch_shouldThrowForbiddenException() throws Exception {
+            void testDeleteBatch_NotOwnedBatch_shouldReturnForbidden() throws Exception {
                 UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
                 mockMvc.perform(MockMvcRequestBuilders.delete("/api/batches/" + batchId))
@@ -570,7 +570,7 @@ public class BatchIntegrationTest {
 
             @Test
             @WithUserDetails("repo@expmatik.com")
-            void testDeleteBatch_WithUnauthorizedUser_shouldThrowForbiddenException() throws Exception {
+            void testDeleteBatch_WithUnauthorizedUser_shouldReturnForbidden() throws Exception {
                 UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
                 mockMvc.perform(MockMvcRequestBuilders.delete("/api/batches/" + batchId))
@@ -579,7 +579,7 @@ public class BatchIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
-            void testDeleteBatch_WithNonPendingInvoice_shouldThrowConflictException() throws Exception {
+            void testDeleteBatch_WithNonPendingInvoice_shouldReturnConflict() throws Exception {
                 UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000003");
 
                 mockMvc.perform(MockMvcRequestBuilders.delete("/api/batches/" + batchId))
@@ -588,7 +588,7 @@ public class BatchIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
-            void testDeleteBatch_WithOnlyOneBatchInInvoice_shouldThrowConflictException() throws Exception {
+            void testDeleteBatch_WithOnlyOneBatchInInvoice_shouldReturnConflict() throws Exception {
                 UUID batchId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
                 mockMvc.perform(MockMvcRequestBuilders.delete("/api/batches/" + batchId))

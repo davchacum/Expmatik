@@ -76,7 +76,7 @@ public class AuthIntegrationTest {
                 class FailureCases {
 
                         @Test
-                        void testRegister_UserExists_shouldThrowConflictException() throws Exception {
+                        void testRegister_UserExists_shouldReturnConflict() throws Exception {
 
                                 AuthRequest request = new AuthRequest(
                                         "duplicate@email.com",
@@ -178,7 +178,7 @@ public class AuthIntegrationTest {
                 class FailureCases {
 
                         @Test
-                        void testLogin_WrongPassword_shouldThrowUnauthorizedException() throws Exception {
+                        void testLogin_WrongPassword_shouldReturnUnauthorized() throws Exception {
 
                                 // primero registrar
                                 AuthRequest register = new AuthRequest(
@@ -207,7 +207,7 @@ public class AuthIntegrationTest {
                         }
 
                         @Test
-                        void testLogin_UnregisteredUser_shouldThrowResourceNotFoundException() throws Exception {
+                        void testLogin_UnregisteredUser_shouldReturnNotFound() throws Exception {
 
                                 AuthRequestLogin login = new AuthRequestLogin(
                                         "unregistered@email.com",
@@ -222,7 +222,7 @@ public class AuthIntegrationTest {
                         }
 
                         @Test
-                        void testLogin_InvalidRequest_shouldThrowBadRequestException() throws Exception {
+                        void testLogin_InvalidRequest_shouldReturnBadRequest() throws Exception {
 
                                 AuthRequestLogin login = new AuthRequestLogin(
                                         "",
@@ -286,7 +286,7 @@ public class AuthIntegrationTest {
                 class FailureCases {
 
                         @Test
-                        void testRefresh_CookieMissing_shouldThrowBadRequestException() throws Exception {
+                        void testRefresh_CookieMissing_shouldReturnBadRequest() throws Exception {
 
                                 RefreshTokenRequest request = new RefreshTokenRequest("device1");
 
@@ -297,7 +297,7 @@ public class AuthIntegrationTest {
                         }
 
                         @Test
-                        void testRefresh_TokenInvalid_shouldThrowUnauthorizedException() throws Exception {
+                        void testRefresh_TokenInvalid_shouldReturnUnauthorized() throws Exception {
 
                                 Cookie fakeCookie = new Cookie("refresh_token", "invalidToken");
 
@@ -311,7 +311,7 @@ public class AuthIntegrationTest {
                         }
 
                         @Test
-                        void testRefresh_DeviceIdMismatch_shouldThrowUnauthorizedException() throws Exception {
+                        void testRefresh_DeviceIdMismatch_shouldReturnUnauthorized() throws Exception {
 
                                 AuthRequest register = new AuthRequest(
                                         "device@test.com",
@@ -402,7 +402,7 @@ public class AuthIntegrationTest {
                 class FailureCases {
 
                         @Test
-                        void testLogout_InvalidRefreshToken_shouldThrowUnauthorizedException() throws Exception {
+                        void testLogout_InvalidRefreshToken_shouldReturnUnauthorized() throws Exception {
 
                                 // Creamos una cookie con un token falso
                                 Cookie fakeCookie = new Cookie("refresh_token", "invalidToken");
@@ -418,7 +418,7 @@ public class AuthIntegrationTest {
                         }
 
                         @Test
-                        void testLogout_DeviceIdMismatch_shouldThrowUnauthorizedException() throws Exception {
+                        void testLogout_DeviceIdMismatch_shouldReturnUnauthorized() throws Exception {
 
                                 //Registrar usuario y obtener refresh token real
                                 AuthRequest register = new AuthRequest(
@@ -460,7 +460,7 @@ public class AuthIntegrationTest {
                 @DisplayName("Success cases")
                 class SuccessCases {
 
-                                                @Test
+                        @Test
                         void testValidateToken_ValidToken_shouldReturnValid() throws Exception {
 
                                 //Registrar usuario y obtener access token
@@ -496,7 +496,7 @@ public class AuthIntegrationTest {
                 class FailureCases {
 
                         @Test
-                        void testValidateToken_MissingHeader_shouldReturnBadRequestException() throws Exception {
+                        void testValidateToken_MissingHeader_shouldReturnBadRequest() throws Exception {
                                 mockMvc.perform(get("/api/auth/validate"))
                                         .andExpect(status().isBadRequest())
                                         .andExpect(jsonPath("$.authenticated").value(false))
@@ -504,7 +504,7 @@ public class AuthIntegrationTest {
                         }
 
                         @Test
-                        void testValidateToken_HeaderMalformed_shouldReturnBadRequestException() throws Exception {
+                        void testValidateToken_HeaderMalformed_shouldReturnBadRequest() throws Exception {
                                 mockMvc.perform(get("/api/auth/validate")
                                                 .header("Authorization", "Token xyz"))
                                         .andExpect(status().isBadRequest())
@@ -574,13 +574,13 @@ public class AuthIntegrationTest {
                 class FailureCases {
                                 
                         @Test
-                        void testGetProfile_NoToken_shouldReturnUnauthorizedException() throws Exception {
+                        void testGetProfile_NoToken_shouldReturnUnauthorized() throws Exception {
                                 mockMvc.perform(get("/api/auth/profile"))
                                         .andExpect(status().isUnauthorized());
                         }
 
                         @Test
-                        void testGetProfile_InvalidToken_shouldReturnUnauthorizedException() throws Exception {
+                        void testGetProfile_InvalidToken_shouldReturnUnauthorized() throws Exception {
                                 String fakeToken = "this.is.not.valid";
                                 mockMvc.perform(get("/api/auth/profile")
                                                 .header("Authorization", "Bearer " + fakeToken))
