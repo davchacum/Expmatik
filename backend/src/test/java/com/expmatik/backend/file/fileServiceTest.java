@@ -1,7 +1,10 @@
 package com.expmatik.backend.file;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -87,13 +90,13 @@ public class fileServiceTest {
                 MultipartFile validImageFile = createMockMultipartFile("test.jpg", "image/jpeg", validImageBytes);
                 String result = fileStorageService.saveCustomProductImage(validImageFile);
 
-                assertThat(result).isNotNull();
-                assertThat(result).startsWith("/uploads/images/");
-                assertThat(result).endsWith(".jpg");
+                assertNotNull(result);
+                assertTrue(result.startsWith("/uploads/images/"));
+                assertTrue(result.endsWith(".jpg"));
 
                 String fileName = result.substring(result.lastIndexOf("/") + 1);
                 Path savedFile = tempDir.resolve("images").resolve(fileName);
-                assertThat(Files.exists(savedFile)).isTrue();
+                assertTrue(Files.exists(savedFile));
             }
 
                         @Test
@@ -103,20 +106,20 @@ public class fileServiceTest {
 
                 String result = fileStorageService.saveCustomProductImage(jpegFile);
 
-                assertThat(result).isNotNull();
-                assertThat(result).startsWith("/uploads/images/");
+                assertNotNull(result);
+                assertTrue(result.startsWith("/uploads/images/"));
             }
 
             @Test
             @DisplayName("Should create upload directory if it doesn't exist")
             void testSaveCustomProductImage_CreatesDirectory_shouldCreateDirectory() throws IOException {
                 Path imagesDir = tempDir.resolve("images");
-                assertThat(Files.exists(imagesDir)).isFalse();
+                assertFalse(Files.exists(imagesDir));
 
                 MultipartFile validImageFile = createMockMultipartFile("test.jpg", "image/jpeg", validImageBytes);
                 fileStorageService.saveCustomProductImage(validImageFile);
 
-                assertThat(Files.exists(imagesDir)).isTrue();
+                assertTrue(Files.exists(imagesDir));
             }
         }
 
@@ -127,9 +130,12 @@ public class fileServiceTest {
             @Test
             @DisplayName("Should throw BadRequestException when custom product image is null")
             void testSaveCustomProductImage_NullFile_shouldThrowBadRequestException() {
-                assertThatThrownBy(() -> fileStorageService.saveCustomProductImage(null))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("File is empty");
+
+                BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                    fileStorageService.saveCustomProductImage(null)
+                );
+
+                assertEquals("File is empty", exception.getMessage());
             }
 
             @Test
@@ -137,9 +143,11 @@ public class fileServiceTest {
             void testSaveCustomProductImage_EmptyFile_shouldThrowBadRequestException() {
                 MultipartFile emptyFile = createMockMultipartFile("test.jpg", "image/jpeg", new byte[0]);
 
-                assertThatThrownBy(() -> fileStorageService.saveCustomProductImage(emptyFile))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("File is empty");
+                BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                    fileStorageService.saveCustomProductImage(emptyFile)
+                );
+
+                assertEquals("File is empty", exception.getMessage());
             }
 
             @Test
@@ -147,9 +155,11 @@ public class fileServiceTest {
             void testSaveCustomProductImage_ExceedsSizeLimit_shouldThrowFileSizeExceededException() {
                 MultipartFile largeImage = createMockMultipartFile("large.jpg", "image/jpeg", largeImageBytes);
 
-                assertThatThrownBy(() -> fileStorageService.saveCustomProductImage(largeImage))
-                    .isInstanceOf(FileSizeExceededException.class)
-                    .hasMessage("File size exceeds 2MB limit");
+                FileSizeExceededException exception = assertThrows(FileSizeExceededException.class, () ->
+                    fileStorageService.saveCustomProductImage(largeImage)
+                );
+
+                assertEquals("File size exceeds 2MB limit", exception.getMessage());
             }
 
             @Test
@@ -157,9 +167,11 @@ public class fileServiceTest {
             void testSaveCustomProductImage_InvalidExtension_shouldThrowBadRequestException() {
                 MultipartFile invalidFile = createMockMultipartFile("test.gif", "image/gif", validImageBytes);
 
-                assertThatThrownBy(() -> fileStorageService.saveCustomProductImage(invalidFile))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessageContaining("File type is not allowed");
+                BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                    fileStorageService.saveCustomProductImage(invalidFile)
+                );
+
+                assertEquals("File type is not allowed", exception.getMessage());
             }
 
             @Test
@@ -168,9 +180,11 @@ public class fileServiceTest {
                 byte[] notAnImage = "this is not an image".getBytes();
                 MultipartFile invalidFile = createMockMultipartFile("test.jpg", "image/jpeg", notAnImage);
 
-                assertThatThrownBy(() -> fileStorageService.saveCustomProductImage(invalidFile))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessageContaining("not a valid image");
+                BadRequestException exception = assertThrows(BadRequestException.class, () ->
+                    fileStorageService.saveCustomProductImage(invalidFile)
+                );
+
+                assertEquals("The file content is not a valid image.", exception.getMessage());
             }
 
             @Test
@@ -184,9 +198,11 @@ public class fileServiceTest {
                     .thenReturn(new ByteArrayInputStream(validImageBytes))
                     .thenThrow(new IOException("Stream error"));
 
-                assertThatThrownBy(() -> fileStorageService.saveCustomProductImage(problematicFile))
-                    .isInstanceOf(RuntimeException.class)
-                    .hasMessageContaining("Could not store image");
+                RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                    fileStorageService.saveCustomProductImage(problematicFile)
+                );
+
+                assertEquals("Could not store image", exception.getMessage());
             }
         }
     }
@@ -211,8 +227,7 @@ public class fileServiceTest {
                 Files.write(testFile, "test content".getBytes());
 
                 fileStorageService.deleteProductImage("/uploads/products/test-image.jpg");
-
-                assertThat(Files.exists(testFile)).isFalse();
+                assertFalse(Files.exists(testFile));
             }
 
             @Test
@@ -226,7 +241,7 @@ public class fileServiceTest {
 
                 fileStorageService.deleteProductImage("/uploads/images/test-image.jpg");
 
-                assertThat(Files.exists(testFile)).isFalse();
+                assertFalse(Files.exists(testFile));
             }
         }
 
@@ -253,7 +268,7 @@ public class fileServiceTest {
                 fileStorageService.deleteProductImage("http://example.com/external.jpg");
 
 
-                assertThat(Files.exists(testFile)).isTrue();
+                assertTrue(Files.exists(testFile));
             }
 
             @Test
@@ -287,13 +302,13 @@ public class fileServiceTest {
             @Test
             @DisplayName("Should identify HTTP URLs as external")
             void testIsExternalUrl_Http() {
-                assertThat(fileStorageService.isExternalUrl("http://example.com/image.jpg")).isTrue();
+                assertTrue(fileStorageService.isExternalUrl("http://example.com/image.jpg"));
             }
 
             @Test
             @DisplayName("Should identify HTTPS URLs as external")
             void testIsExternalUrl_Https() {
-                assertThat(fileStorageService.isExternalUrl("https://example.com/image.jpg")).isTrue();
+                assertTrue(fileStorageService.isExternalUrl("https://example.com/image.jpg"));
             }
         }
 
@@ -304,19 +319,19 @@ public class fileServiceTest {
             @Test
             @DisplayName("Should identify relative URLs as not external")
             void testIsExternalUrl_Relative() {
-                assertThat(fileStorageService.isExternalUrl("/uploads/images/image.jpg")).isFalse();
+                assertFalse(fileStorageService.isExternalUrl("/uploads/images/image.jpg"));
             }
 
             @Test
             @DisplayName("Should identify null as not external")
             void testIsExternalUrl_Null() {
-                assertThat(fileStorageService.isExternalUrl(null)).isFalse();
+                assertFalse(fileStorageService.isExternalUrl(null));
             }
 
             @Test
             @DisplayName("Should identify empty string as not external")
             void testIsExternalUrl_Empty() {
-                assertThat(fileStorageService.isExternalUrl("")).isFalse();
+                assertFalse(fileStorageService.isExternalUrl(""));
             }
         }
     }      
