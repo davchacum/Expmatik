@@ -11,6 +11,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -66,141 +67,180 @@ public class ExpirationBatchServiceTest {
 
     // == Test getExpirationBatchesByVendingSlotId ==
 
-    @Test
-    @DisplayName("getExpirationBatchesByVendingSlotId should return expiration batches for a valid vending slot ID and authorized user")
-    public void testGetExpirationBatchesByVendingSlotId_ValidIdAndAuthorizedUser_shouldReturnExpirationBatches() {
-        UUID vendingSlotId = vendingSlot.getId();
-        List<ExpirationBatch> expectedBatches = List.of(batch1, batch2);
-        
-        when(expirationBatchRepository.findAllByVendingSlotIdOrderByExpirationDateAsc(vendingSlotId)).thenReturn(expectedBatches);
+    @Nested
+    @DisplayName("getExpirationBatchesByVendingSlotId")
+    class GetExpirationBatchesByVendingSlotId {
 
-        List<ExpirationBatch> actualBatches = expirationBatchService.getExpirationBatchesByVendingSlotId(vendingSlotId, user);
+        @Nested
+        @DisplayName("Success Cases")
+        class SuccessCases {
 
-        assertEquals(expectedBatches, actualBatches);
-    }
+            @Test
+            @DisplayName("getExpirationBatchesByVendingSlotId should return expiration batches for a valid vending slot ID and authorized user")
+            public void testGetExpirationBatchesByVendingSlotId_ValidIdAndAuthorizedUser_shouldReturnExpirationBatches() {
+                UUID vendingSlotId = vendingSlot.getId();
+                List<ExpirationBatch> expectedBatches = List.of(batch1, batch2);
+                
+                when(expirationBatchRepository.findAllByVendingSlotIdOrderByExpirationDateAsc(vendingSlotId)).thenReturn(expectedBatches);
 
-    @Test
-    @DisplayName("getExpirationBatchesByVendingSlotId should return empty list for a valid vending slot ID with no expiration batches")
-    public void testGetExpirationBatchesByVendingSlotId_ValidIdWithNoBatches_shouldReturnEmptyList() {
-        UUID vendingSlotId = vendingSlot.getId();
+                List<ExpirationBatch> actualBatches = expirationBatchService.getExpirationBatchesByVendingSlotId(vendingSlotId, user);
 
-        when(expirationBatchRepository.findAllByVendingSlotIdOrderByExpirationDateAsc(vendingSlotId)).thenReturn(List.of());
+                assertEquals(expectedBatches, actualBatches);
+            }
 
-        List<ExpirationBatch> actualBatches = expirationBatchService.getExpirationBatchesByVendingSlotId(vendingSlotId, user);
+            @Test
+            @DisplayName("getExpirationBatchesByVendingSlotId should return empty list for a valid vending slot ID with no expiration batches")
+            public void testGetExpirationBatchesByVendingSlotId_ValidIdWithNoBatches_shouldReturnEmptyList() {
+                UUID vendingSlotId = vendingSlot.getId();
 
-        assertEquals(List.of(), actualBatches);
-    }
+                when(expirationBatchRepository.findAllByVendingSlotIdOrderByExpirationDateAsc(vendingSlotId)).thenReturn(List.of());
 
-    @Test
-    @DisplayName("getExpirationBatchesByVendingSlotId should throw AccessDeniedException for unauthorized user")
-    public void testGetExpirationBatchesByVendingSlotId_UnauthorizedUser_shouldThrowAccessDeniedException() {
-        UUID vendingSlotId = vendingSlot.getId();
-        User unauthorizedUser = new User();
-        unauthorizedUser.setId(UUID.randomUUID());
-        List<ExpirationBatch> expectedBatches = List.of(batch1, batch2);
-        when(expirationBatchRepository.findAllByVendingSlotIdOrderByExpirationDateAsc(vendingSlotId)).thenReturn(expectedBatches);
+                List<ExpirationBatch> actualBatches = expirationBatchService.getExpirationBatchesByVendingSlotId(vendingSlotId, user);
 
-        assertThrows(AccessDeniedException.class, () -> {
-            expirationBatchService.getExpirationBatchesByVendingSlotId(vendingSlotId, unauthorizedUser);
-        });
+                assertEquals(List.of(), actualBatches);
+            }
+        }
+
+        @Nested
+        @DisplayName("Failure Cases")
+        class FailureCases {
+
+            @Test
+            @DisplayName("getExpirationBatchesByVendingSlotId should throw AccessDeniedException for unauthorized user")
+            public void testGetExpirationBatchesByVendingSlotId_UnauthorizedUser_shouldThrowAccessDeniedException() {
+                UUID vendingSlotId = vendingSlot.getId();
+                User unauthorizedUser = new User();
+                unauthorizedUser.setId(UUID.randomUUID());
+                List<ExpirationBatch> expectedBatches = List.of(batch1, batch2);
+                when(expirationBatchRepository.findAllByVendingSlotIdOrderByExpirationDateAsc(vendingSlotId)).thenReturn(expectedBatches);
+
+                assertThrows(AccessDeniedException.class, () -> {
+                    expirationBatchService.getExpirationBatchesByVendingSlotId(vendingSlotId, unauthorizedUser);
+                });
+            }
+        }
     }
 
     // == Test pushExpirationBatch ==
 
-    @Test
-    @DisplayName("pushExpirationBatch should add new expiration batch when there is no existing batch with the same expiration date")
-    public void testPushExpirationBatch_NoExistingBatch_shouldAddNewBatch() {
-        UUID vendingSlotId = vendingSlot.getId();
-        LocalDate expirationDate = LocalDate.now().plusDays(30);
-        Integer quantity = 5;
-        Integer initialStock = vendingSlot.getCurrentStock();
+    @Nested
+    @DisplayName("pushExpirationBatch")
+    class PushExpirationBatch {
 
-        when(expirationBatchRepository.findFirstByVendingSlotIdAndExpirationDate(vendingSlotId, expirationDate))
-            .thenReturn(Optional.empty());
+        @Nested
+        @DisplayName("Success Cases")
+        class SuccessCases {
 
-        expirationBatchService.pushExpirationBatch(vendingSlot, expirationDate, quantity, user);
+            @Test
+            @DisplayName("pushExpirationBatch should add new expiration batch when there is no existing batch with the same expiration date")
+            public void testPushExpirationBatch_NoExistingBatch_shouldAddNewBatch() {
+                UUID vendingSlotId = vendingSlot.getId();
+                LocalDate expirationDate = LocalDate.now().plusDays(30);
+                Integer quantity = 5;
+                Integer initialStock = vendingSlot.getCurrentStock();
 
-        assertEquals(initialStock + quantity, vendingSlot.getCurrentStock());
-    }
+                when(expirationBatchRepository.findFirstByVendingSlotIdAndExpirationDate(vendingSlotId, expirationDate))
+                    .thenReturn(Optional.empty());
 
-    @Test
-    @DisplayName("pushExpirationBatch should update existing expiration batch when there is a batch with the same expiration date")
-    public void testPushExpirationBatch_ExistingBatch_shouldUpdateBatch() {
-        UUID vendingSlotId = vendingSlot.getId();
-        LocalDate expirationDate = batch1.getExpirationDate();
-        Integer quantity = 2;
-        Integer initialStock = vendingSlot.getCurrentStock();
-        batch1.setQuantity(5);
+                expirationBatchService.pushExpirationBatch(vendingSlot, expirationDate, quantity, user);
+
+                assertEquals(initialStock + quantity, vendingSlot.getCurrentStock());
+            }
+
+            @Test
+            @DisplayName("pushExpirationBatch should update existing expiration batch when there is a batch with the same expiration date")
+            public void testPushExpirationBatch_ExistingBatch_shouldUpdateBatch() {
+                UUID vendingSlotId = vendingSlot.getId();
+                LocalDate expirationDate = batch1.getExpirationDate();
+                Integer quantity = 2;
+                Integer initialStock = vendingSlot.getCurrentStock();
+                batch1.setQuantity(5);
 
 
-        when(expirationBatchRepository.findFirstByVendingSlotIdAndExpirationDate(vendingSlotId, expirationDate))
-            .thenReturn(Optional.of(batch1));
+                when(expirationBatchRepository.findFirstByVendingSlotIdAndExpirationDate(vendingSlotId, expirationDate))
+                    .thenReturn(Optional.of(batch1));
 
-        expirationBatchService.pushExpirationBatch(vendingSlot, expirationDate, quantity, user);
+                expirationBatchService.pushExpirationBatch(vendingSlot, expirationDate, quantity, user);
 
-        assertEquals(initialStock + quantity, batch1.getQuantity());
-        assertEquals(initialStock + quantity, vendingSlot.getCurrentStock());
+                assertEquals(initialStock + quantity, batch1.getQuantity());
+                assertEquals(initialStock + quantity, vendingSlot.getCurrentStock());
+            }
+        }
     }
 
     // == Test popUnitExpirationBatch ==
 
-    @Test
-    @DisplayName("popUnitExpirationBatch should remove one unit from the earliest expiration batch")
-    public void testPopUnitExpirationBatch_ShouldRemoveOneUnitFromEarliestBatch() {
-        UUID vendingSlotId = vendingSlot.getId();
-        Integer initialBatchStock = batch1.getQuantity();
-        Integer initialSlotStock = vendingSlot.getCurrentStock();
+    @Nested
+    @DisplayName("popUnitExpirationBatch")
+    class PopUnitExpirationBatch {
 
-        when(expirationBatchRepository.findAllByVendingSlotIdOrderByExpirationDateAsc(vendingSlotId))
-            .thenReturn(List.of(batch1, batch2));
+        @Nested
+        @DisplayName("Success Cases")
+        class SuccessCases {
 
-        expirationBatchService.popUnitExpirationBatch(vendingSlot, user);
+            @Test
+            @DisplayName("popUnitExpirationBatch should remove one unit from the earliest expiration batch")
+            public void testPopUnitExpirationBatch_ShouldRemoveOneUnitFromEarliestBatch() {
+                UUID vendingSlotId = vendingSlot.getId();
+                Integer initialBatchStock = batch1.getQuantity();
+                Integer initialSlotStock = vendingSlot.getCurrentStock();
 
-        assertEquals(initialBatchStock - 1, batch1.getQuantity());
-        assertEquals(initialSlotStock - 1, vendingSlot.getCurrentStock());
+                when(expirationBatchRepository.findAllByVendingSlotIdOrderByExpirationDateAsc(vendingSlotId))
+                    .thenReturn(List.of(batch1, batch2));
+
+                expirationBatchService.popUnitExpirationBatch(vendingSlot, user);
+
+                assertEquals(initialBatchStock - 1, batch1.getQuantity());
+                assertEquals(initialSlotStock - 1, vendingSlot.getCurrentStock());
+            }
+
+            @Test
+            @DisplayName("popUnitExpirationBatch should remove batch from repository when quantity reaches zero")
+            public void testPopUnitExpirationBatch_QuantityReachesZero_shouldRemoveBatchFromRepository() {
+                UUID vendingSlotId = vendingSlot.getId();
+                batch1.setQuantity(1);
+
+
+                when(expirationBatchRepository.findAllByVendingSlotIdOrderByExpirationDateAsc(vendingSlotId))
+                    .thenReturn(List.of(batch1));
+
+                expirationBatchService.popUnitExpirationBatch(vendingSlot, user);
+
+                assertEquals(0, batch1.getQuantity());
+            }
+        }
+
+        @Nested
+        @DisplayName("Failure Cases")
+        class FailureCases {
+
+            @Test
+            @DisplayName("popUnitExpirationBatch should throw OutOfStockException when there is no stock with the specified expiration date")
+            public void testPopUnitExpirationBatch_NoStockWithSpecifiedExpirationDate_shouldThrowOutOfStockException() {
+                UUID vendingSlotId = vendingSlot.getId();
+                batch1.setQuantity(0);
+
+                when(expirationBatchRepository.findAllByVendingSlotIdOrderByExpirationDateAsc(vendingSlotId))
+                    .thenReturn(List.of(batch1, batch2));
+
+                assertThrows(OutOfStockException.class, () -> {
+                    expirationBatchService.popUnitExpirationBatch(vendingSlot, user);
+                });
+            }
+
+            @Test
+            @DisplayName("popUnitExpirationBatch should throw ExpiredProductException when the earliest batch is expired")
+            public void testPopUnitExpirationBatch_EarliestBatchExpired_shouldThrowExpiredProductException() {
+                UUID vendingSlotId = vendingSlot.getId();
+                batch1.setExpirationDate(LocalDate.now().minusDays(1));
+
+                when(expirationBatchRepository.findAllByVendingSlotIdOrderByExpirationDateAsc(vendingSlotId))
+                    .thenReturn(List.of(batch1, batch2));
+
+                assertThrows(ExpiredProductException.class, () -> {
+                    expirationBatchService.popUnitExpirationBatch(vendingSlot, user);
+                });
+            }
+        }
     }
-
-        @Test
-    @DisplayName("popUnitExpirationBatch should remove batch from repository when quantity reaches zero")
-    public void testPopUnitExpirationBatch_QuantityReachesZero_shouldRemoveBatchFromRepository() {
-        UUID vendingSlotId = vendingSlot.getId();
-        batch1.setQuantity(1);
-
-
-        when(expirationBatchRepository.findAllByVendingSlotIdOrderByExpirationDateAsc(vendingSlotId))
-            .thenReturn(List.of(batch1));
-
-        expirationBatchService.popUnitExpirationBatch(vendingSlot, user);
-
-        assertEquals(0, batch1.getQuantity());
-    }
-
-    @Test
-    @DisplayName("popUnitExpirationBatch should throw OutOfStockException when there is no stock with the specified expiration date")
-    public void testPopUnitExpirationBatch_NoStockWithSpecifiedExpirationDate_shouldThrowOutOfStockException() {
-        UUID vendingSlotId = vendingSlot.getId();
-        batch1.setQuantity(0);
-
-        when(expirationBatchRepository.findAllByVendingSlotIdOrderByExpirationDateAsc(vendingSlotId))
-            .thenReturn(List.of(batch1, batch2));
-
-        assertThrows(OutOfStockException.class, () -> {
-            expirationBatchService.popUnitExpirationBatch(vendingSlot, user);
-        });
-    }
-
-    @Test
-    @DisplayName("popUnitExpirationBatch should throw ExpiredProductException when the earliest batch is expired")
-    public void testPopUnitExpirationBatch_EarliestBatchExpired_shouldThrowExpiredProductException() {
-        UUID vendingSlotId = vendingSlot.getId();
-        batch1.setExpirationDate(LocalDate.now().minusDays(1));
-
-        when(expirationBatchRepository.findAllByVendingSlotIdOrderByExpirationDateAsc(vendingSlotId))
-            .thenReturn(List.of(batch1, batch2));
-
-        assertThrows(ExpiredProductException.class, () -> {
-            expirationBatchService.popUnitExpirationBatch(vendingSlot, user);
-        });
-    }
-
 }

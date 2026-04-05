@@ -1,6 +1,6 @@
 package com.expmatik.backend.vendingSlot;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -17,6 +17,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -102,580 +103,687 @@ public class VendingSlotServiceTest {
 
     // == Test getVendingSlotById ==
 
-    @Test
-    @DisplayName("getVendingSlotById - valid ID and authorized user")
-    void testGetVendingSlotById_validIdAndAuthorizedUser_shouldReturnVendingSlot() {
-        UUID vendingSlotId = vendingSlot.getId();
+    @Nested
+    @DisplayName("getVendingSlotById")
+    class GetVendingSlotById {
 
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
-        VendingSlot result = vendingSlotService.getVendingSlotById(vendingSlotId, user);
-        assertThat(result).isEqualTo(vendingSlot);
-        verify(vendingSlotRepository).findById(vendingSlotId);
-    }
+        @Nested
+        @DisplayName("Success Cases")
+        class SuccessCases {
 
-    @Test
-    @DisplayName("getVendingSlotById - valid ID but unauthorized user")
-    void testGetVendingSlotById_validIdButUnauthorizedUser_shouldThrowUnauthorizedAccessException() {
-        UUID vendingSlotId = vendingSlot.getId();
-        User unauthorizedUser = new User();
-        unauthorizedUser.setId(UUID.randomUUID());
+            @Test
+            @DisplayName("getVendingSlotById - valid ID and authorized user")
+            void testGetVendingSlotById_validIdAndAuthorizedUser_shouldReturnVendingSlot() {
+                UUID vendingSlotId = vendingSlot.getId();
 
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+                VendingSlot result = vendingSlotService.getVendingSlotById(vendingSlotId, user);
+                assertEquals(vendingSlot, result);
+                verify(vendingSlotRepository).findById(vendingSlotId);
+            }
+        }
 
-        assertThrows(AccessDeniedException.class, () -> {
-            vendingSlotService.getVendingSlotById(vendingSlotId, unauthorizedUser);
-        });
-    }
+        @Nested
+        @DisplayName("Failure Cases")
+        class FailureCases {
 
-    @Test
-    @DisplayName("getVendingSlotById - invalid ID")
-    void testGetVendingSlotById_invalidId_shouldThrowResourceNotFoundException() {
-        UUID invalidId = UUID.randomUUID();
+            @Test
+            @DisplayName("getVendingSlotById - valid ID but unauthorized user")
+            void testGetVendingSlotById_validIdButUnauthorizedUser_shouldThrowUnauthorizedAccessException() {
+                UUID vendingSlotId = vendingSlot.getId();
+                User unauthorizedUser = new User();
+                unauthorizedUser.setId(UUID.randomUUID());
 
-        when(vendingSlotRepository.findById(invalidId)).thenReturn(Optional.empty());
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
 
-        assertThrows(ResourceNotFoundException.class, () -> {
-            vendingSlotService.getVendingSlotById(invalidId, user);
-        });
+                assertThrows(AccessDeniedException.class, () -> {
+                    vendingSlotService.getVendingSlotById(vendingSlotId, unauthorizedUser);
+                });
+            }
+
+            @Test
+            @DisplayName("getVendingSlotById - invalid ID")
+            void testGetVendingSlotById_invalidId_shouldThrowResourceNotFoundException() {
+                UUID invalidId = UUID.randomUUID();
+
+                when(vendingSlotRepository.findById(invalidId)).thenReturn(Optional.empty());
+
+                assertThrows(ResourceNotFoundException.class, () -> {
+                    vendingSlotService.getVendingSlotById(invalidId, user);
+                });
+            }
+        }
     }
 
     // == Test getVendingSlotsByUserIdAndMachineId ==
 
-    @Test
-    @DisplayName("getVendingSlotsByUserIdAndMachineId - valid machine ID and authorized user")
-    void testGetVendingSlotsByUserIdAndMachineId_validMachineIdAndAuthorizedUser_shouldReturnVendingSlots() {
-        UUID machineId = vendingMachine.getId();
+    @Nested
+    @DisplayName("getVendingSlotsByUserIdAndMachineId")
+    class GetVendingSlotsByUserIdAndMachineId {
 
-        when(vendingSlotRepository.findAllByVendingMachineId(machineId)).thenReturn(List.of(vendingSlot));
-        List<VendingSlot> result = vendingSlotService.getVendingSlotsByUserIdAndMachineId(machineId, user);
-        assertThat(result).containsExactly(vendingSlot);
-        verify(vendingSlotRepository).findAllByVendingMachineId(machineId);
-    }
+        @Nested
+        @DisplayName("Success Cases")
+        class SuccessCases {
 
-    @Test
-    @DisplayName("getVendingSlotsByUserIdAndMachineId - valid machine ID but unauthorized user")
-    void testGetVendingSlotsByUserIdAndMachineId_validMachineIdButUnauthorizedUser_shouldThrowUnauthorizedAccessException() {
-        UUID machineId = vendingMachine.getId();
-        User unauthorizedUser = new User();
-        unauthorizedUser.setId(UUID.randomUUID());
+            @Test
+            @DisplayName("getVendingSlotsByUserIdAndMachineId - valid machine ID and authorized user")
+            void testGetVendingSlotsByUserIdAndMachineId_validMachineIdAndAuthorizedUser_shouldReturnVendingSlots() {
+                UUID machineId = vendingMachine.getId();
 
-        when(vendingSlotRepository.findAllByVendingMachineId(machineId)).thenReturn(List.of(vendingSlot));
+                when(vendingSlotRepository.findAllByVendingMachineId(machineId)).thenReturn(List.of(vendingSlot));
+                List<VendingSlot> result = vendingSlotService.getVendingSlotsByUserIdAndMachineId(machineId, user);
+                assertEquals(List.of(vendingSlot), result);
+                verify(vendingSlotRepository).findAllByVendingMachineId(machineId);
+            }
+        }
 
-        assertThrows(AccessDeniedException.class, () -> {
-            vendingSlotService.getVendingSlotsByUserIdAndMachineId(machineId, unauthorizedUser);
-        });
-    }
+        @Nested
+        @DisplayName("Failure Cases")
+        class FailureCases {
 
-    @Test
-    @DisplayName("getVendingSlotsByUserIdAndMachineId - invalid machine ID")
-    void testGetVendingSlotsByUserIdAndMachineId_invalidMachineId_shouldThrowResourceNotFoundException() {
-        UUID invalidMachineId = UUID.randomUUID();
+            @Test
+            @DisplayName("getVendingSlotsByUserIdAndMachineId - valid machine ID but unauthorized user")
+            void testGetVendingSlotsByUserIdAndMachineId_validMachineIdButUnauthorizedUser_shouldThrowUnauthorizedAccessException() {
+                UUID machineId = vendingMachine.getId();
+                User unauthorizedUser = new User();
+                unauthorizedUser.setId(UUID.randomUUID());
 
-        when(vendingSlotRepository.findAllByVendingMachineId(invalidMachineId)).thenThrow(ResourceNotFoundException.class);
+                when(vendingSlotRepository.findAllByVendingMachineId(machineId)).thenReturn(List.of(vendingSlot));
 
-        assertThrows(ResourceNotFoundException.class, () -> {
-            vendingSlotService.getVendingSlotsByUserIdAndMachineId(invalidMachineId, user);
-        });
-    }
+                assertThrows(AccessDeniedException.class, () -> {
+                    vendingSlotService.getVendingSlotsByUserIdAndMachineId(machineId, unauthorizedUser);
+                });
+            }
 
-    @Test
-    @DisplayName("getVendingSlotsByUserIdAndMachineId - valid machine ID but empty vending slots")
-    void testGetVendingSlotsByUserIdAndMachineId_validMachineIdButEmptyVendingSlots_shouldThrowResourceNotFoundException() {
-        UUID machineId = vendingMachine.getId();
+            @Test
+            @DisplayName("getVendingSlotsByUserIdAndMachineId - invalid machine ID")
+            void testGetVendingSlotsByUserIdAndMachineId_invalidMachineId_shouldThrowResourceNotFoundException() {
+                UUID invalidMachineId = UUID.randomUUID();
 
-        when(vendingSlotRepository.findAllByVendingMachineId(machineId)).thenReturn(List.of());
+                when(vendingSlotRepository.findAllByVendingMachineId(invalidMachineId)).thenThrow(ResourceNotFoundException.class);
 
-        assertThrows(ResourceNotFoundException.class, () -> {
-            vendingSlotService.getVendingSlotsByUserIdAndMachineId(machineId, user);
-        });
+                assertThrows(ResourceNotFoundException.class, () -> {
+                    vendingSlotService.getVendingSlotsByUserIdAndMachineId(invalidMachineId, user);
+                });
+            }
+        }
     }
 
     // == Test assignProductToVendingSlot ==
 
-    @Test
-    @DisplayName("assignProductToVendingSlot - valid vending slot ID, valid barcode, and authorized user")
-    void testAssignProductToVendingSlot_validVendingSlotIdValidBarcodeAndAuthorizedUser_shouldAssignProductToVendingSlot() {
-        UUID vendingSlotId = vendingSlot.getId();
-        vendingSlot.setCurrentStock(0);
-        vendingSlot.setIsBlocked(false);
-        String barcode = "1234567890";
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
-        when(productService.findInternalProductByBarcode(barcode, user.getId())).thenReturn(product);
-        when(vendingSlotRepository.save(vendingSlot)).thenReturn(vendingSlot);
+    @Nested
+    @DisplayName("assignProductToVendingSlot")
+    class AssignProductToVendingSlot {
 
-        VendingSlot result = vendingSlotService.assignProductToVendingSlot(vendingSlotId, barcode, user);
-        assertThat(result).isEqualTo(vendingSlot);
-        verify(productService).findInternalProductByBarcode(barcode, user.getId());
-        verify(vendingSlotRepository).save(vendingSlot);
-    }
+        @Nested
+        @DisplayName("Success Cases")
+        class SuccessCases {
 
-    @Test
-    @DisplayName("assignProductToVendingSlot - valid vending slot ID, null barcode, and authorized user")
-    void testAssignProductToVendingSlot_validVendingSlotIdNullBarcodeAndAuthorizedUser_shouldUnassignProductFromVendingSlot() {
-        UUID vendingSlotId = vendingSlot.getId();
-        vendingSlot.setCurrentStock(0);
-        vendingSlot.setIsBlocked(false);
-        String barcode = null;
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
-        when(vendingSlotRepository.save(vendingSlot)).thenReturn(vendingSlot);
+            @Test
+            @DisplayName("assignProductToVendingSlot - valid vending slot ID, valid barcode, and authorized user")
+            void testAssignProductToVendingSlot_validVendingSlotIdValidBarcodeAndAuthorizedUser_shouldAssignProductToVendingSlot() {
+                UUID vendingSlotId = vendingSlot.getId();
+                vendingSlot.setCurrentStock(0);
+                vendingSlot.setIsBlocked(false);
+                String barcode = "1234567890";
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+                when(productService.findInternalProductByBarcode(barcode, user.getId())).thenReturn(product);
+                when(vendingSlotRepository.save(vendingSlot)).thenReturn(vendingSlot);
 
-        VendingSlot result = vendingSlotService.assignProductToVendingSlot(vendingSlotId, barcode, user);
-        assertThat(result).isEqualTo(vendingSlot);
-        assertThat(vendingSlot.getProduct()).isNull();
-        verify(vendingSlotRepository).save(vendingSlot);
-    }
+                VendingSlot result = vendingSlotService.assignProductToVendingSlot(vendingSlotId, barcode, user);
+                assertEquals(vendingSlot, result);
+                verify(productService).findInternalProductByBarcode(barcode, user.getId());
+                verify(vendingSlotRepository).save(vendingSlot);
+            }
 
-    @Test
-    @DisplayName("assignProductToVendingSlot - valid vending slot ID, valid barcode but blocked vending slot")
-    void testAssignProductToVendingSlot_validVendingSlotIdValidBarcodeButBlockedVendingSlot_shouldThrowConflictException() {
-        UUID vendingSlotId = vendingSlot.getId();
-        vendingSlot.setIsBlocked(true);
-        String barcode = "1234567890";
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+            @Test
+            @DisplayName("assignProductToVendingSlot - valid vending slot ID, null barcode, and authorized user")
+            void testAssignProductToVendingSlot_validVendingSlotIdNullBarcodeAndAuthorizedUser_shouldUnassignProductFromVendingSlot() {
+                UUID vendingSlotId = vendingSlot.getId();
+                vendingSlot.setCurrentStock(0);
+                vendingSlot.setIsBlocked(false);
+                String barcode = null;
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+                when(vendingSlotRepository.save(vendingSlot)).thenReturn(vendingSlot);
 
-        assertThrows(ConflictException.class, () -> {
-            vendingSlotService.assignProductToVendingSlot(vendingSlotId, barcode, user);
-        });
-    }
+                VendingSlot result = vendingSlotService.assignProductToVendingSlot(vendingSlotId, barcode, user);
+                assertEquals(vendingSlot, result);
+                assertEquals(null, vendingSlot.getProduct());
+                verify(vendingSlotRepository).save(vendingSlot);
+            }
+        }
 
-    @Test
-    @DisplayName("assignProductToVendingSlot - valid vending slot ID, valid barcode but vending slot with stock")
-    void testAssignProductToVendingSlot_validVendingSlotIdValidBarcodeButVendingSlotWithStock_shouldThrowConflictException() {
-        UUID vendingSlotId = vendingSlot.getId();
-        vendingSlot.setCurrentStock(5);
-        vendingSlot.setIsBlocked(false);
-        String barcode = "1234567890";
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+        @Nested
+        @DisplayName("Failure Cases")
+        class FailureCases {
 
-        assertThrows(ConflictException.class, () -> {
-            vendingSlotService.assignProductToVendingSlot(vendingSlotId, barcode, user);
-        });
-    }
+            @Test
+            @DisplayName("assignProductToVendingSlot - valid vending slot ID, valid barcode but blocked vending slot and have products with stock should throw ConflictException")
+            void testAssignProductToVendingSlot_validVendingSlotIdValidBarcodeButBlockedVendingSlotAndHaveProducts_shouldThrowConflictException() {
+                UUID vendingSlotId = vendingSlot.getId();
+                vendingSlot.setIsBlocked(true);
+                String barcode = "1234567890";
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
 
-    @Test
-    @DisplayName("assignProductToVendingSlot - valid vending slot ID, valid barcode but unauthorized user")
-    void testAssignProductToVendingSlot_validVendingSlotIdValidBarcodeButUnauthorizedUser_shouldThrowUnauthorizedAccessException() {
-        UUID vendingSlotId = vendingSlot.getId();
-        User unauthorizedUser = new User();
-        unauthorizedUser.setId(UUID.randomUUID());
-        vendingSlot.setCurrentStock(0);
-        vendingSlot.setIsBlocked(false);
-        String barcode = "1234567890";
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+                ConflictException exception = assertThrows(ConflictException.class, () -> {
+                    vendingSlotService.assignProductToVendingSlot(vendingSlotId, barcode, user);
+                });
 
-        assertThrows(AccessDeniedException.class, () -> {
-            vendingSlotService.assignProductToVendingSlot(vendingSlotId, barcode, unauthorizedUser);
-        });
-    }
+                assertEquals("The vending slot is not empty.", exception.getMessage());
+            }
 
-    @Test
-    @DisplayName("assignProductToVendingSlot - valid vending slot ID, but slot is blocked for maintenance")
-    void testAssignProductToVendingSlot_validVendingSlotIdButSlotBlockedForMaintenance_shouldThrowConflictException() {
-        UUID vendingSlotId = vendingSlot.getId();
-        String barcode = "1234567890";
-        vendingSlot.setIsBlocked(true);
-        vendingSlot.setCurrentStock(0);
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+            @Test
+            @DisplayName("assignProductToVendingSlot - valid vending slot ID, valid barcode but vending slot with stock")
+            void testAssignProductToVendingSlot_validVendingSlotIdValidBarcodeButVendingSlotWithStock_shouldThrowConflictException() {
+                UUID vendingSlotId = vendingSlot.getId();
+                vendingSlot.setCurrentStock(5);
+                vendingSlot.setIsBlocked(false);
+                String barcode = "1234567890";
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
 
-        assertThrows(ConflictException.class, () -> {
-            vendingSlotService.assignProductToVendingSlot(vendingSlotId, barcode, user);
-        });
+                ConflictException exception = assertThrows(ConflictException.class, () -> {
+                    vendingSlotService.assignProductToVendingSlot(vendingSlotId, barcode, user);
+                });
+
+                assertEquals("The vending slot is not empty.", exception.getMessage());
+            }
+
+            @Test
+            @DisplayName("assignProductToVendingSlot - valid vending slot ID, valid barcode but unauthorized user")
+            void testAssignProductToVendingSlot_validVendingSlotIdValidBarcodeButUnauthorizedUser_shouldThrowUnauthorizedAccessException() {
+                UUID vendingSlotId = vendingSlot.getId();
+                User unauthorizedUser = new User();
+                unauthorizedUser.setId(UUID.randomUUID());
+                vendingSlot.setCurrentStock(0);
+                vendingSlot.setIsBlocked(false);
+                String barcode = "1234567890";
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+
+                assertThrows(AccessDeniedException.class, () -> {
+                    vendingSlotService.assignProductToVendingSlot(vendingSlotId, barcode, unauthorizedUser);
+                });
+            }
+
+            @Test
+            @DisplayName("assignProductToVendingSlot - valid vending slot ID, but slot is blocked for maintenance")
+            void testAssignProductToVendingSlot_validVendingSlotIdButSlotBlockedForMaintenance_shouldThrowConflictException() {
+                UUID vendingSlotId = vendingSlot.getId();
+                String barcode = "1234567890";
+                vendingSlot.setIsBlocked(true);
+                vendingSlot.setCurrentStock(0);
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+
+                ConflictException exception = assertThrows(ConflictException.class, () -> {
+                    vendingSlotService.assignProductToVendingSlot(vendingSlotId, barcode, user);
+                });
+
+                assertEquals("Cannot assign a product to a vending slot that is blocked for maintenance.", exception.getMessage());
+            }
+        }
     }
 
     // == Test cases for updateBlockStatus ==
 
-    @Test
-    @DisplayName("updateBlockStatus - valid vending slot ID, valid block status, and authorized user")
-    void testUpdateBlockStatus_validVendingSlotIdValidBlockStatusAndAuthorizedUser_shouldUpdateBlockStatus() {
-        UUID vendingSlotId = vendingSlot.getId();
-        Boolean newBlockStatus = true;
-        vendingSlot.setIsBlocked(false);
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
-        when(vendingSlotRepository.save(vendingSlot)).thenReturn(vendingSlot);
+    @Nested
+    @DisplayName("updateBlockStatus")
+    class UpdateBlockStatus {
 
-        VendingSlot result = vendingSlotService.updateBlockStatus(vendingSlotId, newBlockStatus, user);
-        assertThat(result).isEqualTo(vendingSlot);
-        assertThat(vendingSlot.getIsBlocked()).isEqualTo(newBlockStatus);
-        verify(vendingSlotRepository).save(vendingSlot);
-    }
+        @Nested
+        @DisplayName("Success Cases")
+        class SuccessCases {
 
-    @Test
-    @DisplayName("updateBlockStatus - same true block status, valid vending slot ID, and authorized user")
-    void testUpdateBlockStatus_sameTrueBlockStatusValidVendingSlotIdAndAuthorizedUser_shouldUpdateBlockStatus() {
-        UUID vendingSlotId = vendingSlot.getId();
-        Boolean newBlockStatus = true;
-        vendingSlot.setIsBlocked(true);
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
-        when(vendingSlotRepository.save(vendingSlot)).thenReturn(vendingSlot);
+            @Test
+            @DisplayName("updateBlockStatus - valid vending slot ID, valid block status, and authorized user")
+            void testUpdateBlockStatus_validVendingSlotIdValidBlockStatusAndAuthorizedUser_shouldUpdateBlockStatus() {
+                UUID vendingSlotId = vendingSlot.getId();
+                Boolean newBlockStatus = true;
+                vendingSlot.setIsBlocked(false);
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+                when(vendingSlotRepository.save(vendingSlot)).thenReturn(vendingSlot);
 
-        VendingSlot result = vendingSlotService.updateBlockStatus(vendingSlotId, newBlockStatus, user);
-        assertThat(result).isEqualTo(vendingSlot);
-        assertThat(vendingSlot.getIsBlocked()).isEqualTo(newBlockStatus);
-        verify(vendingSlotRepository).save(vendingSlot);
-    }
+                VendingSlot result = vendingSlotService.updateBlockStatus(vendingSlotId, newBlockStatus, user);
+                assertEquals(vendingSlot, result);
+                assertEquals(newBlockStatus, vendingSlot.getIsBlocked());
+                verify(vendingSlotRepository).save(vendingSlot);
+            }
 
-    @Test
-    @DisplayName("updateBlockStatus - same false block status, valid vending slot ID, and authorized user")
-    void testUpdateBlockStatus_sameFalseBlockStatusValidVendingSlotIdAndAuthorizedUser_shouldUpdateBlockStatus() {
-        UUID vendingSlotId = vendingSlot.getId();
-        Boolean newBlockStatus = false;
-        vendingSlot.setIsBlocked(false);
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
-        when(vendingSlotRepository.save(vendingSlot)).thenReturn(vendingSlot);
+            @Test
+            @DisplayName("updateBlockStatus - same true block status, valid vending slot ID, and authorized user")
+            void testUpdateBlockStatus_sameTrueBlockStatusValidVendingSlotIdAndAuthorizedUser_shouldUpdateBlockStatus() {
+                UUID vendingSlotId = vendingSlot.getId();
+                Boolean newBlockStatus = true;
+                vendingSlot.setIsBlocked(true);
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+                when(vendingSlotRepository.save(vendingSlot)).thenReturn(vendingSlot);
 
-        VendingSlot result = vendingSlotService.updateBlockStatus(vendingSlotId, newBlockStatus, user);
-        assertThat(result).isEqualTo(vendingSlot);
-        assertThat(vendingSlot.getIsBlocked()).isEqualTo(newBlockStatus);
-        verify(vendingSlotRepository).save(vendingSlot);
-    }
+                VendingSlot result = vendingSlotService.updateBlockStatus(vendingSlotId, newBlockStatus, user);
+                assertEquals(vendingSlot, result);
+                assertEquals(newBlockStatus, vendingSlot.getIsBlocked());
+                verify(vendingSlotRepository).save(vendingSlot);
+            }
 
-    @Test
-    @DisplayName("updateBlockStatus - expiration batch empty")
-    void testUpdateBlockStatus_expirationBatchEmpty_shouldUpdateBlockStatus() {
-        UUID vendingSlotId = vendingSlot.getId();
-        Boolean newBlockStatus = false;
-        vendingSlot.setIsBlocked(true);
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
-        when(expirationBatchService.getExpirationBatchesByVendingSlotId(vendingSlotId, user)).thenReturn(List.of());
-        when(vendingSlotRepository.save(vendingSlot)).thenReturn(vendingSlot);
+            @Test
+            @DisplayName("updateBlockStatus - same false block status, valid vending slot ID, and authorized user")
+            void testUpdateBlockStatus_sameFalseBlockStatusValidVendingSlotIdAndAuthorizedUser_shouldUpdateBlockStatus() {
+                UUID vendingSlotId = vendingSlot.getId();
+                Boolean newBlockStatus = false;
+                vendingSlot.setIsBlocked(false);
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+                when(vendingSlotRepository.save(vendingSlot)).thenReturn(vendingSlot);
 
-        VendingSlot result = vendingSlotService.updateBlockStatus(vendingSlotId, newBlockStatus, user);
-        assertThat(result).isEqualTo(vendingSlot);
-        assertThat(vendingSlot.getIsBlocked()).isEqualTo(newBlockStatus);
-        verify(vendingSlotRepository).save(vendingSlot);
-    }
+                VendingSlot result = vendingSlotService.updateBlockStatus(vendingSlotId, newBlockStatus, user);
+                assertEquals(vendingSlot, result);
+                assertEquals(newBlockStatus, vendingSlot.getIsBlocked());
+                verify(vendingSlotRepository).save(vendingSlot);
+            }
 
-    @Test
-    @DisplayName("updateBlockStatus - with non-expired products")
-    void testUpdateBlockStatus_withExpiredProducts_shouldUpdateBlockStatus() {
-        UUID vendingSlotId = vendingSlot.getId();
-        Boolean newBlockStatus = false;
-        vendingSlot.setIsBlocked(true);
-        ExpirationBatch expiredBatch = new ExpirationBatch();
-        expiredBatch.setExpirationDate(LocalDate.now().plusDays(1));
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
-        when(expirationBatchService.getExpirationBatchesByVendingSlotId(vendingSlotId, user)).thenReturn(List.of(expiredBatch));
-        when(vendingSlotRepository.save(vendingSlot)).thenReturn(vendingSlot);
+            @Test
+            @DisplayName("updateBlockStatus - expiration batch empty")
+            void testUpdateBlockStatus_expirationBatchEmpty_shouldUpdateBlockStatus() {
+                UUID vendingSlotId = vendingSlot.getId();
+                Boolean newBlockStatus = false;
+                vendingSlot.setIsBlocked(true);
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+                when(expirationBatchService.getExpirationBatchesByVendingSlotId(vendingSlotId, user)).thenReturn(List.of());
+                when(vendingSlotRepository.save(vendingSlot)).thenReturn(vendingSlot);
 
-        VendingSlot result = vendingSlotService.updateBlockStatus(vendingSlotId, newBlockStatus, user);
-        assertThat(result).isEqualTo(vendingSlot);
-        assertThat(vendingSlot.getIsBlocked()).isEqualTo(newBlockStatus);
-        verify(vendingSlotRepository).save(vendingSlot);
-    }
-        
+                VendingSlot result = vendingSlotService.updateBlockStatus(vendingSlotId, newBlockStatus, user);
+                assertEquals(vendingSlot, result);
+                assertEquals(newBlockStatus, vendingSlot.getIsBlocked());
+                verify(vendingSlotRepository).save(vendingSlot);
+            }
 
-    @Test
-    @DisplayName("updateBlockStatus - valid vending slot ID, but unauthorized user")
-    void testUpdateBlockStatus_validVendingSlotIdButUnauthorizedUser_shouldThrowUnauthorizedAccessException() {
-        UUID vendingSlotId = vendingSlot.getId();
-        User unauthorizedUser = new User();
-        unauthorizedUser.setId(UUID.randomUUID());
-        Boolean newBlockStatus = true;
-        vendingSlot.setIsBlocked(false);
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+            @Test
+            @DisplayName("updateBlockStatus - with non-expired products")
+            void testUpdateBlockStatus_withExpiredProducts_shouldUpdateBlockStatus() {
+                UUID vendingSlotId = vendingSlot.getId();
+                Boolean newBlockStatus = false;
+                vendingSlot.setIsBlocked(true);
+                ExpirationBatch expiredBatch = new ExpirationBatch();
+                expiredBatch.setExpirationDate(LocalDate.now().plusDays(1));
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+                when(expirationBatchService.getExpirationBatchesByVendingSlotId(vendingSlotId, user)).thenReturn(List.of(expiredBatch));
+                when(vendingSlotRepository.save(vendingSlot)).thenReturn(vendingSlot);
 
-        assertThrows(AccessDeniedException.class, () -> {
-            vendingSlotService.updateBlockStatus(vendingSlotId, newBlockStatus, unauthorizedUser);
-        });
-    }
+                VendingSlot result = vendingSlotService.updateBlockStatus(vendingSlotId, newBlockStatus, user);
+                assertEquals(vendingSlot, result);
+                assertEquals(newBlockStatus, vendingSlot.getIsBlocked());
+                verify(vendingSlotRepository).save(vendingSlot);
+            }
+        }
 
-    @Test
-    @DisplayName("updateBlockStatus - valid vending slot ID, but slot has expired products")
-    void testUpdateBlockStatus_validVendingSlotIdButSlotHasExpiredProducts_shouldThrowConflictException() {
-        UUID vendingSlotId = vendingSlot.getId();
-        Boolean newBlockStatus = false;
-        vendingSlot.setIsBlocked(true);
-        ExpirationBatch expiredBatch = new ExpirationBatch();
-        expiredBatch.setExpirationDate(LocalDate.now().minusDays(1));
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
-        when(expirationBatchService.getExpirationBatchesByVendingSlotId(vendingSlotId, user)).thenReturn(List.of(expiredBatch));
+        @Nested
+        @DisplayName("Failure Cases")
+        class FailureCases {
 
-        assertThrows(ConflictException.class, () -> {
-            vendingSlotService.updateBlockStatus(vendingSlotId, newBlockStatus, user);
-        });
+            @Test
+            @DisplayName("updateBlockStatus - valid vending slot ID, but unauthorized user")
+            void testUpdateBlockStatus_validVendingSlotIdButUnauthorizedUser_shouldThrowUnauthorizedAccessException() {
+                UUID vendingSlotId = vendingSlot.getId();
+                User unauthorizedUser = new User();
+                unauthorizedUser.setId(UUID.randomUUID());
+                Boolean newBlockStatus = true;
+                vendingSlot.setIsBlocked(false);
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+
+                assertThrows(AccessDeniedException.class, () -> {
+                    vendingSlotService.updateBlockStatus(vendingSlotId, newBlockStatus, unauthorizedUser);
+                });
+            }
+
+            @Test
+            @DisplayName("updateBlockStatus - valid vending slot ID, but slot has expired products")
+            void testUpdateBlockStatus_validVendingSlotIdButSlotHasExpiredProducts_shouldThrowConflictException() {
+                UUID vendingSlotId = vendingSlot.getId();
+                Boolean newBlockStatus = false;
+                vendingSlot.setIsBlocked(true);
+                ExpirationBatch expiredBatch = new ExpirationBatch();
+                expiredBatch.setExpirationDate(LocalDate.now().minusDays(1));
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+                when(expirationBatchService.getExpirationBatchesByVendingSlotId(vendingSlotId, user)).thenReturn(List.of(expiredBatch));
+
+                ConflictException conflictException = assertThrows(ConflictException.class, () -> {
+                    vendingSlotService.updateBlockStatus(vendingSlotId, newBlockStatus, user);
+                });
+
+                assertEquals("Cannot unblock a vending slot with expired products.", conflictException.getMessage());
+            }
+        }
     }
 
     // == Test addStockToVendingSlot ==
 
-    @Test
-    @DisplayName("addStockToVendingSlot - valid vending slot ID, valid quantity, valid expiration date, and authorized user")
-    void testAddStockToVendingSlot_validVendingSlotIdValidQuantityValidExpirationDateAndAuthorizedUser_shouldAddStockToVendingSlot() {
-        UUID vendingSlotId = vendingSlot.getId();
-        Integer quantityToAdd = 3;
-        LocalDate expirationDate = LocalDate.now().plusDays(5);
-        vendingSlot.setIsBlocked(false);
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
-        when(vendingSlotRepository.save(vendingSlot)).thenReturn(vendingSlot);
+    @Nested
+    @DisplayName("addStockToVendingSlot")
+    class AddStockToVendingSlot {
 
-        VendingSlot result = vendingSlotService.addStockToVendingSlot(vendingSlotId, quantityToAdd, expirationDate, user);
-        assertThat(result).isEqualTo(vendingSlot);
-        verify(expirationBatchService).pushExpirationBatch(vendingSlot, expirationDate, quantityToAdd, user);
-        verify(vendingSlotRepository).save(vendingSlot);
-    }
+        @Nested
+        @DisplayName("Success Cases")
+        class SuccessCases {
 
-    @Test
-    @DisplayName("addStockToVendingSlot - valid vending slot ID, but slot is blocked for maintenance")
-    void testAddStockToVendingSlot_validVendingSlotIdButSlotBlockedForMaintenance_shouldThrowSlotBlockedException() {
-        UUID vendingSlotId = vendingSlot.getId();
-        Integer quantityToAdd = 3;
-        LocalDate expirationDate = LocalDate.now().plusDays(5);
-        vendingSlot.setIsBlocked(true);
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+            @Test
+            @DisplayName("addStockToVendingSlot - valid vending slot ID, valid quantity, valid expiration date, and authorized user")
+            void testAddStockToVendingSlot_validVendingSlotIdValidQuantityValidExpirationDateAndAuthorizedUser_shouldAddStockToVendingSlot() {
+                UUID vendingSlotId = vendingSlot.getId();
+                Integer quantityToAdd = 3;
+                LocalDate expirationDate = LocalDate.now().plusDays(5);
+                vendingSlot.setIsBlocked(false);
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+                when(vendingSlotRepository.save(vendingSlot)).thenReturn(vendingSlot);
 
-        assertThrows(SlotBlockedException.class, () -> {
-            vendingSlotService.addStockToVendingSlot(vendingSlotId, quantityToAdd, expirationDate, user);
-        });
+                VendingSlot result = vendingSlotService.addStockToVendingSlot(vendingSlotId, quantityToAdd, expirationDate, user);
+                assertEquals(vendingSlot, result);
+                verify(expirationBatchService).pushExpirationBatch(vendingSlot, expirationDate, quantityToAdd, user);
+                verify(vendingSlotRepository).save(vendingSlot);
+            }
 
-    }
+            @Test
+            @DisplayName("createVendingSlotsForMachine - valid machine, row count, column count, and max capacity per slot")
+            void testCreateVendingSlotsForMachine_validMachineRowCountColumnCountAndMaxCapacityPerSlot_shouldCreateVendingSlotsForMachine() {
+                VendingMachine machine = new VendingMachine();
+                machine.setId(UUID.randomUUID());
+                machine.setUser(user);
+                Integer rowCount = 2;
+                Integer columnCount = 3;
+                Integer maxCapacityPerSlot = 10;
 
-    @Test
-    @DisplayName("addStockToVendingSlot - valid vending slot ID, but no assigned product")
-    void testAddStockToVendingSlot_validVendingSlotIdButNoAssignedProduct_shouldThrowConflictException() {
-        UUID vendingSlotId = vendingSlot.getId();
-        Integer quantityToAdd = 3;
-        LocalDate expirationDate = LocalDate.now().plusDays(5);
-        vendingSlot.setProduct(null);
-        vendingSlot.setIsBlocked(false);
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+                vendingSlotService.createVendingSlotsForMachine(machine, rowCount, columnCount, maxCapacityPerSlot);
 
-        assertThrows(ConflictException.class, () -> {
-            vendingSlotService.addStockToVendingSlot(vendingSlotId, quantityToAdd, expirationDate, user);
-        });
-    }
+                verify(vendingSlotRepository, times(rowCount * columnCount)).save(any(VendingSlot.class));
+            }
+        }
 
-    @Test
-    @DisplayName("addStockToVendingSlot - valid vending slot ID, but quantity exceeds maximum capacity")
-    void testAddStockToVendingSlot_validVendingSlotIdButQuantityExceedsMaximumCapacity_shouldThrowConflictException() {
-        UUID vendingSlotId = vendingSlot.getId();
-        Integer quantityToAdd = 6;
-        LocalDate expirationDate = LocalDate.now().plusDays(5);
-        vendingSlot.setCurrentStock(5);
-        vendingSlot.setIsBlocked(false);
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+        @Nested
+        @DisplayName("Failure Cases")
+        class FailureCases {
 
-        assertThrows(ConflictException.class, () -> {
-            vendingSlotService.addStockToVendingSlot(vendingSlotId, quantityToAdd, expirationDate, user);
-        });
-    }
+            @Test
+            @DisplayName("addStockToVendingSlot - valid vending slot ID, but slot is blocked for maintenance")
+            void testAddStockToVendingSlot_validVendingSlotIdButSlotBlockedForMaintenance_shouldThrowSlotBlockedException() {
+                UUID vendingSlotId = vendingSlot.getId();
+                Integer quantityToAdd = 3;
+                LocalDate expirationDate = LocalDate.now().plusDays(5);
+                vendingSlot.setIsBlocked(true);
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
 
-    @Test
-    @DisplayName("addStockToVendingSlot - valid vending slot ID, but expiration date in the past")
-    void testAddStockToVendingSlot_validVendingSlotIdButInvalidExpirationDate_shouldThrowExpiredProductException() {
-        UUID vendingSlotId = vendingSlot.getId();
-        Integer quantityToAdd = 3;
-        LocalDate expirationDate = LocalDate.now().minusDays(1);
-        vendingSlot.setIsBlocked(false);
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+                assertThrows(SlotBlockedException.class, () -> {
+                    vendingSlotService.addStockToVendingSlot(vendingSlotId, quantityToAdd, expirationDate, user);
+                });
 
-        assertThrows(ExpiredProductException.class, () -> {
-            vendingSlotService.addStockToVendingSlot(vendingSlotId, quantityToAdd, expirationDate, user);
-        });
-    }
+            }
 
-    @Test
-    @DisplayName("createVendingSlotsForMachine - valid machine, row count, column count, and max capacity per slot")
-    void testCreateVendingSlotsForMachine_validMachineRowCountColumnCountAndMaxCapacityPerSlot_shouldCreateVendingSlotsForMachine() {
-        VendingMachine machine = new VendingMachine();
-        machine.setId(UUID.randomUUID());
-        machine.setUser(user);
-        Integer rowCount = 2;
-        Integer columnCount = 3;
-        Integer maxCapacityPerSlot = 10;
+            @Test
+            @DisplayName("addStockToVendingSlot - valid vending slot ID, but no assigned product")
+            void testAddStockToVendingSlot_validVendingSlotIdButNoAssignedProduct_shouldThrowConflictException() {
+                UUID vendingSlotId = vendingSlot.getId();
+                Integer quantityToAdd = 3;
+                LocalDate expirationDate = LocalDate.now().plusDays(5);
+                vendingSlot.setProduct(null);
+                vendingSlot.setIsBlocked(false);
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
 
-        vendingSlotService.createVendingSlotsForMachine(machine, rowCount, columnCount, maxCapacityPerSlot);
+                ConflictException exception = assertThrows(ConflictException.class, () -> {
+                    vendingSlotService.addStockToVendingSlot(vendingSlotId, quantityToAdd, expirationDate, user);
+                });
 
-        verify(vendingSlotRepository, times(rowCount * columnCount)).save(any(VendingSlot.class));
+                assertEquals("Cannot add stock to a vending slot that does not have an assigned product.", exception.getMessage());
+            }
+
+            @Test
+            @DisplayName("addStockToVendingSlot - valid vending slot ID, but quantity exceeds maximum capacity")
+            void testAddStockToVendingSlot_validVendingSlotIdButQuantityExceedsMaximumCapacity_shouldThrowConflictException() {
+                UUID vendingSlotId = vendingSlot.getId();
+                Integer quantityToAdd = 6;
+                LocalDate expirationDate = LocalDate.now().plusDays(5);
+                vendingSlot.setCurrentStock(5);
+                vendingSlot.setIsBlocked(false);
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+
+                ConflictException exception = assertThrows(ConflictException.class, () -> {
+                    vendingSlotService.addStockToVendingSlot(vendingSlotId, quantityToAdd, expirationDate, user);
+                });
+
+                assertEquals("Cannot add stock to a vending slot that exceeds its maximum capacity.", exception.getMessage());
+            }
+
+            @Test
+            @DisplayName("addStockToVendingSlot - valid vending slot ID, but expiration date in the past")
+            void testAddStockToVendingSlot_validVendingSlotIdButInvalidExpirationDate_shouldThrowExpiredProductException() {
+                UUID vendingSlotId = vendingSlot.getId();
+                Integer quantityToAdd = 3;
+                LocalDate expirationDate = LocalDate.now().minusDays(1);
+                vendingSlot.setIsBlocked(false);
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+
+                assertThrows(ExpiredProductException.class, () -> {
+                    vendingSlotService.addStockToVendingSlot(vendingSlotId, quantityToAdd, expirationDate, user);
+                });
+            }
+        }
     }
 
     // == Test popStockFromVendingSlot ==
 
-    @Test
-    @DisplayName("popStockFromVendingSlot - valid vending slot ID, and authorized user")
-    void testPopStockFromVendingSlot_validVendingSlotIdAndAuthorizedUser_shouldPopStockFromVendingSlot() {
-        UUID vendingSlotId = vendingSlot.getId();
-        vendingSlot.setCurrentStock(5);
-        vendingSlot.setIsBlocked(false);
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
-        when(vendingSlotRepository.save(vendingSlot)).thenReturn(vendingSlot);
+    @Nested
+    @DisplayName("popStockFromVendingSlot")
+    class PopStockFromVendingSlot {
 
-        VendingSlot result = vendingSlotService.popStockFromVendingSlot(vendingSlotId, user);
-        assertThat(result).isEqualTo(vendingSlot);
-        verify(expirationBatchService).popUnitExpirationBatch(vendingSlot, user);
-        verify(vendingSlotRepository).save(vendingSlot);
-    }
+        @Nested
+        @DisplayName("Success Cases")
+        class SuccessCases {
 
-    @Test
-    @DisplayName("popStockFromVendingSlot - valid vending slot ID, but unauthorized user")
-    void testPopStockFromVendingSlot_validVendingSlotIdButUnauthorizedUser_shouldThrowUnauthorizedAccessException() {
-        UUID vendingSlotId = vendingSlot.getId();
-        User unauthorizedUser = new User();
-        unauthorizedUser.setId(UUID.randomUUID());
-        vendingSlot.setCurrentStock(5);
-        vendingSlot.setIsBlocked(false);
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+            @Test
+            @DisplayName("popStockFromVendingSlot - valid vending slot ID, and authorized user")
+            void testPopStockFromVendingSlot_validVendingSlotIdAndAuthorizedUser_shouldPopStockFromVendingSlot() {
+                UUID vendingSlotId = vendingSlot.getId();
+                vendingSlot.setCurrentStock(5);
+                vendingSlot.setIsBlocked(false);
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+                when(vendingSlotRepository.save(vendingSlot)).thenReturn(vendingSlot);
 
-        assertThrows(AccessDeniedException.class, () -> {
-            vendingSlotService.popStockFromVendingSlot(vendingSlotId, unauthorizedUser);
-        });
-    }
+                VendingSlot result = vendingSlotService.popStockFromVendingSlot(vendingSlotId, user);
+                assertEquals(vendingSlot, result);
+                verify(expirationBatchService).popUnitExpirationBatch(vendingSlot, user);
+                verify(vendingSlotRepository).save(vendingSlot);
+            }
+        }
+        
+        @Nested
+        @DisplayName("Failure Cases")
+        class FailureCases {
+        
+            @Test
+            @DisplayName("popStockFromVendingSlot - valid vending slot ID, but unauthorized user")
+            void testPopStockFromVendingSlot_validVendingSlotIdButUnauthorizedUser_shouldThrowUnauthorizedAccessException() {
+                UUID vendingSlotId = vendingSlot.getId();
+                User unauthorizedUser = new User();
+                unauthorizedUser.setId(UUID.randomUUID());
+                vendingSlot.setCurrentStock(5);
+                vendingSlot.setIsBlocked(false);
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
 
-    @Test
-    @DisplayName("popStockFromVendingSlot - valid vending slot ID, but no assigned product")
-    void testPopStockFromVendingSlot_validVendingSlotIdButNoAssignedProduct_shouldThrowConflictException() {
-        UUID vendingSlotId = vendingSlot.getId();
-        vendingSlot.setProduct(null);
-        vendingSlot.setCurrentStock(5);
-        vendingSlot.setIsBlocked(false);
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+                assertThrows(AccessDeniedException.class, () -> {
+                    vendingSlotService.popStockFromVendingSlot(vendingSlotId, unauthorizedUser);
+                });
+            }
 
-        assertThrows(ConflictException.class, () -> {
-            vendingSlotService.popStockFromVendingSlot(vendingSlotId, user);
-        });
-    }
+            @Test
+            @DisplayName("popStockFromVendingSlot - valid vending slot ID, but no assigned product")
+            void testPopStockFromVendingSlot_validVendingSlotIdButNoAssignedProduct_shouldThrowConflictException() {
+                UUID vendingSlotId = vendingSlot.getId();
+                vendingSlot.setProduct(null);
+                vendingSlot.setCurrentStock(5);
+                vendingSlot.setIsBlocked(false);
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
 
-    @Test
-    @DisplayName("popStockFromVendingSlot - valid vending slot ID, but vending slot is empty")
-    void testPopStockFromVendingSlot_validVendingSlotIdButVendingSlotEmpty_shouldThrowOutOfStockException() {
-        UUID vendingSlotId = vendingSlot.getId();
-        vendingSlot.setCurrentStock(0);
-        vendingSlot.setIsBlocked(false);
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+                ConflictException exception = assertThrows(ConflictException.class, () -> {
+                    vendingSlotService.popStockFromVendingSlot(vendingSlotId, user);
+                });
+                assertEquals("Cannot register sale because the vending slot does not have a product assigned.", exception.getMessage());
+            }
 
-        assertThrows(OutOfStockException.class, () -> {
-            vendingSlotService.popStockFromVendingSlot(vendingSlotId, user);
-        });
-    }
+            @Test
+            @DisplayName("popStockFromVendingSlot - valid vending slot ID, but vending slot is empty")
+            void testPopStockFromVendingSlot_validVendingSlotIdButVendingSlotEmpty_shouldThrowOutOfStockException() {
+                UUID vendingSlotId = vendingSlot.getId();
+                vendingSlot.setCurrentStock(0);
+                vendingSlot.setIsBlocked(false);
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
 
-    @Test
-    @DisplayName("popStockFromVendingSlot - valid vending slot ID, but vending slot is blocked for maintenance")
-    void testPopStockFromVendingSlot_validVendingSlotIdButVendingSlotBlockedForMaintenance_shouldThrowSlotBlockedException() {
-        UUID vendingSlotId = vendingSlot.getId();
-        vendingSlot.setCurrentStock(5);
-        vendingSlot.setIsBlocked(false);
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
-        doAnswer(invocation -> {
-            vendingSlot.setCurrentStock(vendingSlot.getCurrentStock() - 1);
-            vendingSlot.setIsBlocked(true);
-            return null;
-        }).when(expirationBatchService).popUnitExpirationBatch(vendingSlot, user);
+                assertThrows(OutOfStockException.class, () -> {
+                    vendingSlotService.popStockFromVendingSlot(vendingSlotId, user);
+                });
+            }
 
-        assertThrows(SlotBlockedException.class, () -> {
-            vendingSlotService.popStockFromVendingSlot(vendingSlotId, user);
-        });
-    }
+            @Test
+            @DisplayName("popStockFromVendingSlot - valid vending slot ID, but vending slot is blocked for maintenance")
+            void testPopStockFromVendingSlot_validVendingSlotIdButVendingSlotBlockedForMaintenance_shouldThrowSlotBlockedException() {
+                UUID vendingSlotId = vendingSlot.getId();
+                vendingSlot.setCurrentStock(5);
+                vendingSlot.setIsBlocked(false);
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+                doAnswer(invocation -> {
+                    vendingSlot.setCurrentStock(vendingSlot.getCurrentStock() - 1);
+                    vendingSlot.setIsBlocked(true);
+                    return null;
+                }).when(expirationBatchService).popUnitExpirationBatch(vendingSlot, user);
 
-    // Test adicionales para verificar que se envían notificaciones cuando el stock llega a 3 o a 0
+                assertThrows(SlotBlockedException.class, () -> {
+                    vendingSlotService.popStockFromVendingSlot(vendingSlotId, user);
+                });
+            }
+        }
 
-    @Test
-    @DisplayName("popStockFromVendingSlot - stock reaches 3, should send low stock notification")
-    void testPopStockFromVendingSlot_stockReaches3_shouldSendLowStockNotification() {
-        UUID vendingSlotId = vendingSlot.getId();
-        vendingSlot.setCurrentStock(4);
-        vendingSlot.setIsBlocked(false);
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
-        when(vendingSlotRepository.save(vendingSlot)).thenReturn(vendingSlot);
-        doAnswer(invocation -> {
-            vendingSlot.setCurrentStock(vendingSlot.getCurrentStock() - 1);
-            return null;
-        }).when(expirationBatchService).popUnitExpirationBatch(vendingSlot, user);
+        @Nested
+        @DisplayName("Notification Cases")
+        class NotificationCases {
+            @Test
+            @DisplayName("popStockFromVendingSlot - stock reaches 3, should send low stock notification")
+            void testPopStockFromVendingSlot_stockReaches3_shouldSendLowStockNotification() {
+                UUID vendingSlotId = vendingSlot.getId();
+                vendingSlot.setCurrentStock(4);
+                vendingSlot.setIsBlocked(false);
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+                when(vendingSlotRepository.save(vendingSlot)).thenReturn(vendingSlot);
+                doAnswer(invocation -> {
+                    vendingSlot.setCurrentStock(vendingSlot.getCurrentStock() - 1);
+                    return null;
+                }).when(expirationBatchService).popUnitExpirationBatch(vendingSlot, user);
 
-        vendingSlotService.popStockFromVendingSlot(vendingSlotId, user);
-        verify(notificationService).createNotification(
-            eq(NotificationType.PRODUCT_LOW_STOCK),
-            any(String.class),
-            any(String.class),
-            eq(user)
-        );
-    }
+                vendingSlotService.popStockFromVendingSlot(vendingSlotId, user);
+                verify(notificationService).createNotification(
+                    eq(NotificationType.PRODUCT_LOW_STOCK),
+                    any(String.class),
+                    any(String.class),
+                    eq(user)
+                );
+            }
 
-    @Test
-    @DisplayName("popStockFromVendingSlot - stock reaches 0, should send out-of-stock notification")
-    void testPopStockFromVendingSlot_stockReaches0_shouldSendOutOfStockNotification() {
-        UUID vendingSlotId = vendingSlot.getId();
-        vendingSlot.setCurrentStock(1);
-        vendingSlot.setIsBlocked(false);
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
-        when(vendingSlotRepository.save(vendingSlot)).thenReturn(vendingSlot);
-        doAnswer(invocation -> {
-            vendingSlot.setCurrentStock(vendingSlot.getCurrentStock() - 1);
-            return null;
-        }).when(expirationBatchService).popUnitExpirationBatch(vendingSlot, user);
+            @Test
+            @DisplayName("popStockFromVendingSlot - stock reaches 0, should send out-of-stock notification")
+            void testPopStockFromVendingSlot_stockReaches0_shouldSendOutOfStockNotification() {
+                UUID vendingSlotId = vendingSlot.getId();
+                vendingSlot.setCurrentStock(1);
+                vendingSlot.setIsBlocked(false);
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+                when(vendingSlotRepository.save(vendingSlot)).thenReturn(vendingSlot);
+                doAnswer(invocation -> {
+                    vendingSlot.setCurrentStock(vendingSlot.getCurrentStock() - 1);
+                    return null;
+                }).when(expirationBatchService).popUnitExpirationBatch(vendingSlot, user);
 
-        vendingSlotService.popStockFromVendingSlot(vendingSlotId, user);
+                vendingSlotService.popStockFromVendingSlot(vendingSlotId, user);
 
-        verify(notificationService).createNotification(
-            eq(NotificationType.PRODUCT_OUT_OF_STOCK),
-            any(String.class),
-            any(String.class),
-            any(User.class)
-        );
-    }
+                verify(notificationService).createNotification(
+                    eq(NotificationType.PRODUCT_OUT_OF_STOCK),
+                    any(String.class),
+                    any(String.class),
+                    any(User.class)
+                );
+            }
 
-    @Test
-    @DisplayName("popStockFromVendingSlot - stock does not reach threshold, should not send stock notification")
-    void testPopStockFromVendingSlot_stockWithoutThreshold_shouldNotSendStockNotification() {
-        UUID vendingSlotId = vendingSlot.getId();
-        vendingSlot.setCurrentStock(5);
-        vendingSlot.setIsBlocked(false);
-        when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
-        when(vendingSlotRepository.save(vendingSlot)).thenReturn(vendingSlot);
-        doAnswer(invocation -> {
-            vendingSlot.setCurrentStock(vendingSlot.getCurrentStock() - 1);
-            return null;
-        }).when(expirationBatchService).popUnitExpirationBatch(vendingSlot, user);
+            @Test
+            @DisplayName("popStockFromVendingSlot - stock does not reach threshold, should not send stock notification")
+            void testPopStockFromVendingSlot_stockWithoutThreshold_shouldNotSendStockNotification() {
+                UUID vendingSlotId = vendingSlot.getId();
+                vendingSlot.setCurrentStock(5);
+                vendingSlot.setIsBlocked(false);
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+                when(vendingSlotRepository.save(vendingSlot)).thenReturn(vendingSlot);
+                doAnswer(invocation -> {
+                    vendingSlot.setCurrentStock(vendingSlot.getCurrentStock() - 1);
+                    return null;
+                }).when(expirationBatchService).popUnitExpirationBatch(vendingSlot, user);
 
-        vendingSlotService.popStockFromVendingSlot(vendingSlotId, user);
+                vendingSlotService.popStockFromVendingSlot(vendingSlotId, user);
 
-        verify(notificationService, never()).createNotification(
-            any(NotificationType.class),
-            any(String.class),
-            any(String.class),
-            any(User.class)
-        );
+                verify(notificationService, never()).createNotification(
+                    any(NotificationType.class),
+                    any(String.class),
+                    any(String.class),
+                    any(User.class)
+                );
+            }
+        }
     }
 
     // == Test getVendingSlotByMachineNameAndRowAndColumn ==
 
-    @Test
-    @DisplayName("getVendingSlotByMachineNameAndRowAndColumn - valid machine name, row, column, and authorized user")
-    void testGetVendingSlotByMachineNameAndRowAndColumn_validMachineNameRowColumnAndAuthorizedUser_shouldReturnVendingSlot() {
-        String machineName = vendingMachine.getName();
-        Integer row = vendingSlot.getRowNumber();
-        Integer column = vendingSlot.getColumnNumber();
+    @Nested
+    @DisplayName("getVendingSlotByMachineNameAndRowAndColumn")
+    class GetVendingSlotByMachineNameAndRowAndColumn {
 
-        when(vendingSlotRepository.findByVendingMachineNameAndRowAndColumn(machineName, row, column)).thenReturn(Optional.of(vendingSlot));
-        VendingSlot result = vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(machineName, row, column, user);
-        assertThat(result).isEqualTo(vendingSlot);
-        verify(vendingSlotRepository).findByVendingMachineNameAndRowAndColumn(machineName, row, column);
-    }
+        @Nested
+        @DisplayName("Success Cases")
+        class SuccessCases {
 
-    @Test
-    @DisplayName("getVendingSlotByMachineNameAndRowAndColumn - valid machine name, row, column but unauthorized user")
-    void testGetVendingSlotByMachineNameAndRowAndColumn_validMachineNameRowColumnButUnauthorizedUser_shouldThrowUnauthorizedAccessException() {
-        String machineName = vendingMachine.getName();
-        Integer row = vendingSlot.getRowNumber();
-        Integer column = vendingSlot.getColumnNumber();
-        User unauthorizedUser = new User();
-        unauthorizedUser.setId(UUID.randomUUID());
+            @Test
+            @DisplayName("getVendingSlotByMachineNameAndRowAndColumn - valid machine name, row, column, and authorized user")
+            void testGetVendingSlotByMachineNameAndRowAndColumn_validMachineNameRowColumnAndAuthorizedUser_shouldReturnVendingSlot() {
+                String machineName = vendingMachine.getName();
+                Integer row = vendingSlot.getRowNumber();
+                Integer column = vendingSlot.getColumnNumber();
 
-        when(vendingSlotRepository.findByVendingMachineNameAndRowAndColumn(machineName, row, column)).thenReturn(Optional.of(vendingSlot));
+                when(vendingSlotRepository.findByVendingMachineNameAndRowAndColumn(machineName, row, column)).thenReturn(Optional.of(vendingSlot));
+                VendingSlot result = vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(machineName, row, column, user);
+                assertEquals(vendingSlot, result);
+                verify(vendingSlotRepository).findByVendingMachineNameAndRowAndColumn(machineName, row, column);
+            }
+        }
 
-        assertThrows(AccessDeniedException.class, () -> {
-            vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(machineName, row, column, unauthorizedUser);
-        });
-    }
+        @Nested
+        @DisplayName("Failure Cases")
+        class FailureCases {
 
-    @Test
-    @DisplayName("getVendingSlotByMachineNameAndRowAndColumn - notFound case")
-    void testGetVendingSlotByMachineNameAndRowAndColumn_notFoundCase_shouldThrowResourceNotFoundException() {
-        String machineName = vendingMachine.getName();
-        Integer row = vendingSlot.getRowNumber();
-        Integer column = vendingSlot.getColumnNumber();
+            @Test
+            @DisplayName("getVendingSlotByMachineNameAndRowAndColumn - valid machine name, row, column but unauthorized user")
+            void testGetVendingSlotByMachineNameAndRowAndColumn_validMachineNameRowColumnButUnauthorizedUser_shouldThrowUnauthorizedAccessException() {
+                String machineName = vendingMachine.getName();
+                Integer row = vendingSlot.getRowNumber();
+                Integer column = vendingSlot.getColumnNumber();
+                User unauthorizedUser = new User();
+                unauthorizedUser.setId(UUID.randomUUID());
 
-        when(vendingSlotRepository.findByVendingMachineNameAndRowAndColumn(machineName, row, column)).thenReturn(Optional.empty());
+                when(vendingSlotRepository.findByVendingMachineNameAndRowAndColumn(machineName, row, column)).thenReturn(Optional.of(vendingSlot));
 
-        assertThrows(ResourceNotFoundException.class, () -> {
-            vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(machineName, row, column, user);
-        });
+                assertThrows(AccessDeniedException.class, () -> {
+                    vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(machineName, row, column, unauthorizedUser);
+                });
+            }
+
+            @Test
+            @DisplayName("getVendingSlotByMachineNameAndRowAndColumn - notFound case")
+            void testGetVendingSlotByMachineNameAndRowAndColumn_notFoundCase_shouldThrowResourceNotFoundException() {
+                String machineName = vendingMachine.getName();
+                Integer row = vendingSlot.getRowNumber();
+                Integer column = vendingSlot.getColumnNumber();
+
+                when(vendingSlotRepository.findByVendingMachineNameAndRowAndColumn(machineName, row, column)).thenReturn(Optional.empty());
+
+                assertThrows(ResourceNotFoundException.class, () -> {
+                    vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(machineName, row, column, user);
+                });
+            }
+        }
     }
 }
