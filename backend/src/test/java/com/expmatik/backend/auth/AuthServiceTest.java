@@ -18,6 +18,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -79,195 +80,253 @@ public class AuthServiceTest {
 
     // == Test register ==
 
-    @Test
-    @DisplayName("register should return AuthResult when user is new")
-    void register_shouldReturnAuthResultWhenUserIsNew() {
-        when(userService.findByEmail(user.getEmail())).thenReturn(Optional.empty());
-        when(passwordEncoder.encode("password")).thenReturn("hashedPassword");
-        when(jwtService.generateAccessTokenFromEmail(user.getEmail())).thenReturn("accessToken");
-        when(jwtService.generateRefreshTokenFromEmail(user.getEmail())).thenReturn("refreshToken");
-        when(jwtService.getExpirarationFromToken("refreshToken")).thenReturn(new Date());
+    @Nested
+    @DisplayName("Register")
+    class RegisterTests {
 
-        AuthResult result = authService.register(
-                user.getEmail(), "password", "device1", Role.ADMINISTRATOR, "John", "Doe"
-        );
+        @Nested
+        @DisplayName("Success cases")
+        class SuccessCases {
 
-        assertNotNull(result);
-        assertEquals("accessToken", result.accessToken());
-        assertEquals("refreshToken", result.refreshToken());
-        assertEquals("ADMINISTRATOR", result.role());
+            @Test
+            @DisplayName("register should return AuthResult when user is new")
+            void testRegister_UserIsNew_ShouldReturnAuthResult() {
+                when(userService.findByEmail(user.getEmail())).thenReturn(Optional.empty());
+                when(passwordEncoder.encode("password")).thenReturn("hashedPassword");
+                when(jwtService.generateAccessTokenFromEmail(user.getEmail())).thenReturn("accessToken");
+                when(jwtService.generateRefreshTokenFromEmail(user.getEmail())).thenReturn("refreshToken");
+                when(jwtService.getExpirarationFromToken("refreshToken")).thenReturn(new Date());
 
-        verify(userService).save(any(User.class));
-        verify(refreshTokenService).save(any(RefreshToken.class));
-    }
+                AuthResult result = authService.register(
+                        user.getEmail(), "password", "device1", Role.ADMINISTRATOR, "John", "Doe"
+                );
 
-    @Test
-    @DisplayName("register should throw UserExistsException when user already exists")
-    void register_shouldThrowExceptionWhenUserExists() {
-        when(userService.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+                assertNotNull(result);
+                assertEquals("accessToken", result.accessToken());
+                assertEquals("refreshToken", result.refreshToken());
+                assertEquals("ADMINISTRATOR", result.role());
 
-        assertThrows(UserExistsException.class, () ->
-                authService.register(user.getEmail(), "password", "device1", Role.ADMINISTRATOR, "John", "Doe")
-        );
+                verify(userService).save(any(User.class));
+                verify(refreshTokenService).save(any(RefreshToken.class));
+            }
+        }
+
+        @Nested
+        @DisplayName("Failure cases")
+        class FailureCases {
+
+            @Test
+            @DisplayName("register should throw UserExistsException when user already exists")
+            void testRegister_UserAlreadyExists_ShouldThrowUserExistsException() {
+                when(userService.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+
+                assertThrows(UserExistsException.class, () ->
+                        authService.register(user.getEmail(), "password", "device1", Role.ADMINISTRATOR, "John", "Doe")
+                );
+            }
+        }
     }
 
     // == Test login ==
 
-    @Test
-    @DisplayName("login should return AuthResult when password is correct")
-    void login_shouldReturnAuthResultWhenPasswordIsCorrect() {
-        when(userService.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("password", user.getPassword())).thenReturn(true);
-        when(jwtService.generateAccessTokenFromEmail(user.getEmail())).thenReturn("accessToken");
-        when(jwtService.generateRefreshTokenFromEmail(user.getEmail())).thenReturn("refreshToken");
-        when(refreshTokenService.findByUserAndDeviceId(user, "device1")).thenReturn(new RefreshToken());
-        when(jwtService.getExpirarationFromToken("refreshToken")).thenReturn(new Date());
+    @Nested
+    @DisplayName("Login")
+    class LoginTests {
 
-        AuthResult result = authService.login(user.getEmail(), "password", "device1");
+        @Nested
+        @DisplayName("Success cases")
+        class SuccessCases {
 
-        assertNotNull(result);
-        assertEquals("accessToken", result.accessToken());
-        assertEquals("refreshToken", result.refreshToken());
-    }
+            @Test
+            @DisplayName("login should return AuthResult when password is correct")
+            void testLogin_PasswordIsCorrect_ShouldReturnAuthResult() {
+                when(userService.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+                when(passwordEncoder.matches("password", user.getPassword())).thenReturn(true);
+                when(jwtService.generateAccessTokenFromEmail(user.getEmail())).thenReturn("accessToken");
+                when(jwtService.generateRefreshTokenFromEmail(user.getEmail())).thenReturn("refreshToken");
+                when(refreshTokenService.findByUserAndDeviceId(user, "device1")).thenReturn(new RefreshToken());
+                when(jwtService.getExpirarationFromToken("refreshToken")).thenReturn(new Date());
 
-    @Test
-    @DisplayName("login should throw InvalidPasswordException when password is incorrect")
-    void login_shouldThrowExceptionWhenPasswordIncorrect() {
-        when(userService.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("wrongPassword", user.getPassword())).thenReturn(false);
+                AuthResult result = authService.login(user.getEmail(), "password", "device1");
 
-        assertThrows(InvalidPasswordException.class, () ->
-                authService.login(user.getEmail(), "wrongPassword", "device1")
-        );
-    }
+                assertNotNull(result);
+                assertEquals("accessToken", result.accessToken());
+                assertEquals("refreshToken", result.refreshToken());
+            }
+        }
 
-    @Test
-    @DisplayName("login should throw ResourceNotFoundException when user not found")
-    void login_shouldThrowExceptionWhenUserNotFound() {
-        when(userService.findByEmail(user.getEmail())).thenReturn(Optional.empty());
+        @Nested
+        @DisplayName("Failure cases")
+        class FailureCases {
 
-        assertThrows(ResourceNotFoundException.class, () ->
-                authService.login(user.getEmail(), "password", "device1")
-        );
+            @Test
+            @DisplayName("login should throw InvalidPasswordException when password is incorrect")
+            void testLogin_PasswordIsIncorrect_ShouldThrowInvalidPasswordException() {
+                when(userService.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+                when(passwordEncoder.matches("wrongPassword", user.getPassword())).thenReturn(false);
+
+                assertThrows(InvalidPasswordException.class, () ->
+                        authService.login(user.getEmail(), "wrongPassword", "device1")
+                );
+            }
+
+            @Test
+            @DisplayName("login should throw ResourceNotFoundException when user not found")
+            void testLogin_UserNotFound_ShouldThrowResourceNotFoundException() {
+                when(userService.findByEmail(user.getEmail())).thenReturn(Optional.empty());
+
+                assertThrows(ResourceNotFoundException.class, () ->
+                        authService.login(user.getEmail(), "password", "device1")
+                );
+            }
+        }
     }
 
     // == Test refreshToken ==
 
-    @Test
-    @DisplayName("refreshToken should return new tokens when refresh token is valid")
-    void refreshToken_shouldReturnNewTokensWhenValid() {
-        RefreshToken storedToken = new RefreshToken();
-        storedToken.setToken(hashToken("oldRefreshToken"));
-        storedToken.setExpiration(new Date(System.currentTimeMillis() + 10000)); // no expirado
+    @Nested
+    @DisplayName("Refresh Token")
+    class RefreshTokenTests {
 
-        when(jwtService.verifyToken("oldRefreshToken")).thenReturn(true);
-        when(jwtService.getEmailFromToken("oldRefreshToken")).thenReturn(user.getEmail());
-        when(userService.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
-        when(refreshTokenService.findByUserAndDeviceId(user, "device1")).thenReturn(storedToken);
-        when(jwtService.generateAccessTokenFromEmail(user.getEmail())).thenReturn("newAccessToken");
-        when(jwtService.generateRefreshTokenFromEmail(user.getEmail())).thenReturn("newRefreshToken");
-        when(jwtService.getExpirarationFromToken("newRefreshToken")).thenReturn(new Date(System.currentTimeMillis() + 10000));
+        @Nested
+        @DisplayName("Success cases")
+        class SuccessCases {
 
-        AuthResult result = authService.refreshToken("oldRefreshToken", "device1");
+            @Test
+            @DisplayName("refreshToken should return new tokens when refresh token is valid")
+            void testRefreshToken_RefreshTokenIsValid_ShouldReturnNewTokens() {
+                RefreshToken storedToken = new RefreshToken();
+                storedToken.setToken(hashToken("oldRefreshToken"));
+                storedToken.setExpiration(new Date(System.currentTimeMillis() + 10000)); // no expirado
 
-        assertEquals("newAccessToken", result.accessToken());
-        assertEquals("newRefreshToken", result.refreshToken());
-    }
+                when(jwtService.verifyToken("oldRefreshToken")).thenReturn(true);
+                when(jwtService.getEmailFromToken("oldRefreshToken")).thenReturn(user.getEmail());
+                when(userService.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+                when(refreshTokenService.findByUserAndDeviceId(user, "device1")).thenReturn(storedToken);
+                when(jwtService.generateAccessTokenFromEmail(user.getEmail())).thenReturn("newAccessToken");
+                when(jwtService.generateRefreshTokenFromEmail(user.getEmail())).thenReturn("newRefreshToken");
+                when(jwtService.getExpirarationFromToken("newRefreshToken")).thenReturn(new Date(System.currentTimeMillis() + 10000));
 
-    @Test
-    @DisplayName("refreshToken should throw InvalidRefreshTokenException when token is invalid")
-    void refreshToken_shouldThrowWhenTokenInvalid() {
-        when(jwtService.verifyToken("invalidToken")).thenReturn(false);
+                AuthResult result = authService.refreshToken("oldRefreshToken", "device1");
 
-        assertThrows(InvalidRefreshTokenException.class, () ->
-                authService.refreshToken("invalidToken", "device1")
-        );
-    }
+                assertEquals("newAccessToken", result.accessToken());
+                assertEquals("newRefreshToken", result.refreshToken());
+            }
 
-    @Test
-    @DisplayName("refreshToken should throw InvalidRefreshTokenException when token does not match records")
-    void refreshToken_shouldThrowWhenTokenMismatch() {
-        RefreshToken storedToken = new RefreshToken();
-        storedToken.setToken(hashToken("someOtherToken")); // hash diferente
-        storedToken.setExpiration(new Date(System.currentTimeMillis() + 10000));
+            @Test
+            @DisplayName("refreshToken should throw InvalidRefreshTokenException when token is invalid")
+            void testRefreshToken_RefreshTokenIsInvalid_ShouldThrowInvalidRefreshTokenException() {
+                when(jwtService.verifyToken("invalidToken")).thenReturn(false);
 
-        when(jwtService.verifyToken("validToken")).thenReturn(true);
-        when(jwtService.getEmailFromToken("validToken")).thenReturn(user.getEmail());
-        when(userService.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
-        when(refreshTokenService.findByUserAndDeviceId(user, "device1")).thenReturn(storedToken);
+                assertThrows(InvalidRefreshTokenException.class, () ->
+                        authService.refreshToken("invalidToken", "device1")
+                );
+            }
+        }
 
-        assertThrows(InvalidRefreshTokenException.class, () ->
-                authService.refreshToken("validToken", "device1")
-        );
-    }
+        @Nested
+        @DisplayName("Failure cases")
+        class FailureCases {
 
-    @Test
-    @DisplayName("refreshToken should throw InvalidRefreshTokenException when token is expired")
-    void refreshToken_shouldThrowWhenTokenExpired() {
-        RefreshToken storedToken = new RefreshToken();
-        storedToken.setToken(hashToken("validToken"));
-        storedToken.setExpiration(new Date(System.currentTimeMillis() - 1000)); // ya expirado
+            @Test
+            @DisplayName("refreshToken should throw InvalidRefreshTokenException when token does not match records")
+            void testRefreshToken_TokenDoesNotMatchRecords_ShouldThrowInvalidRefreshTokenException() {
+                RefreshToken storedToken = new RefreshToken();
+                storedToken.setToken(hashToken("someOtherToken")); // hash diferente
+                storedToken.setExpiration(new Date(System.currentTimeMillis() + 10000));
 
-        when(jwtService.verifyToken("validToken")).thenReturn(true);
-        when(jwtService.getEmailFromToken("validToken")).thenReturn(user.getEmail());
-        when(userService.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
-        when(refreshTokenService.findByUserAndDeviceId(user, "device1")).thenReturn(storedToken);
+                when(jwtService.verifyToken("validToken")).thenReturn(true);
+                when(jwtService.getEmailFromToken("validToken")).thenReturn(user.getEmail());
+                when(userService.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+                when(refreshTokenService.findByUserAndDeviceId(user, "device1")).thenReturn(storedToken);
 
-        assertThrows(InvalidRefreshTokenException.class, () ->
-                authService.refreshToken("validToken", "device1")
-        );
+                assertThrows(InvalidRefreshTokenException.class, () ->
+                        authService.refreshToken("validToken", "device1")
+                );
+            }
 
-        verify(refreshTokenService).delete(storedToken); // se elimina token expirado
+            @Test
+            @DisplayName("refreshToken should throw InvalidRefreshTokenException when token is expired")
+            void testRefreshToken_TokenIsExpired_ShouldThrowInvalidRefreshTokenException() {
+                RefreshToken storedToken = new RefreshToken();
+                storedToken.setToken(hashToken("validToken"));
+                storedToken.setExpiration(new Date(System.currentTimeMillis() - 1000)); // ya expirado
+
+                when(jwtService.verifyToken("validToken")).thenReturn(true);
+                when(jwtService.getEmailFromToken("validToken")).thenReturn(user.getEmail());
+                when(userService.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+                when(refreshTokenService.findByUserAndDeviceId(user, "device1")).thenReturn(storedToken);
+
+                assertThrows(InvalidRefreshTokenException.class, () ->
+                        authService.refreshToken("validToken", "device1")
+                );
+
+                verify(refreshTokenService).delete(storedToken); // se elimina token expirado
+            }
+        }
     }
 
     // == Test logout ==
 
-    @Test
-    @DisplayName("logout should delete refresh token when valid")
-    void logout_shouldDeleteRefreshTokenWhenValid() {
-        RefreshToken storedToken = new RefreshToken();
-        storedToken.setToken(hashToken("refreshToken"));
+    @Nested
+    @DisplayName("Logout")
+    class LogoutTests {
 
-        when(jwtService.verifyToken("refreshToken")).thenReturn(true);
-        when(jwtService.getEmailFromToken("refreshToken")).thenReturn(user.getEmail());
-        when(userService.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
-        when(refreshTokenService.findByUserAndDeviceId(user, "device1")).thenReturn(storedToken);
+        @Nested
+        @DisplayName("Success cases")
+        class SuccessCases {
 
-        authService.logout("refreshToken", "device1");
+            @Test
+            @DisplayName("logout should delete refresh token when valid")
+            void testLogout_RefreshTokenIsValid_ShouldDeleteRefreshToken() {
+                RefreshToken storedToken = new RefreshToken();
+                storedToken.setToken(hashToken("refreshToken"));
 
-        verify(refreshTokenService).delete(storedToken);
+                when(jwtService.verifyToken("refreshToken")).thenReturn(true);
+                when(jwtService.getEmailFromToken("refreshToken")).thenReturn(user.getEmail());
+                when(userService.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+                when(refreshTokenService.findByUserAndDeviceId(user, "device1")).thenReturn(storedToken);
+
+                authService.logout("refreshToken", "device1");
+
+                verify(refreshTokenService).delete(storedToken);
+            }
+        }
+
+        @Nested
+        @DisplayName("Failure cases")
+        class FailureCases {
+
+            @Test
+            @DisplayName("logout should throw InvalidRefreshTokenException when token is invalid")
+            void testLogout_RefreshTokenIsInvalid_ShouldThrowInvalidRefreshTokenException() {
+                when(jwtService.verifyToken("invalidToken")).thenReturn(false);
+
+                assertThrows(InvalidRefreshTokenException.class, () ->
+                        authService.logout("invalidToken", "device1")
+                );
+
+                verify(userService, never()).findByEmail(anyString());
+                verify(refreshTokenService, never()).delete(any());
+            }
+
+            @Test
+            @DisplayName("logout should throw InvalidRefreshTokenException when token does not match records")
+            void testLogout_TokenDoesNotMatchRecords_ShouldThrowInvalidRefreshTokenException() {
+                RefreshToken storedToken = new RefreshToken();
+                storedToken.setToken(hashToken("otherToken")); // hash distinto
+
+                when(jwtService.verifyToken("validToken")).thenReturn(true);
+                when(jwtService.getEmailFromToken("validToken")).thenReturn(user.getEmail());
+                when(userService.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+                when(refreshTokenService.findByUserAndDeviceId(user, "device1")).thenReturn(storedToken);
+
+                assertThrows(InvalidRefreshTokenException.class, () ->
+                        authService.logout("validToken", "device1")
+                );
+
+                verify(refreshTokenService, never()).delete(storedToken);
+            }
+        }
     }
-
-    @Test
-    @DisplayName("logout should throw InvalidRefreshTokenException when token is invalid")
-    void logout_shouldThrowWhenTokenInvalid() {
-        when(jwtService.verifyToken("invalidToken")).thenReturn(false);
-
-        assertThrows(InvalidRefreshTokenException.class, () ->
-                authService.logout("invalidToken", "device1")
-        );
-
-        verify(userService, never()).findByEmail(anyString());
-        verify(refreshTokenService, never()).delete(any());
-    }
-
-    @Test
-    @DisplayName("logout should throw InvalidRefreshTokenException when token does not match records")
-    void logout_shouldThrowWhenTokenMismatch() {
-        RefreshToken storedToken = new RefreshToken();
-        storedToken.setToken(hashToken("otherToken")); // hash distinto
-
-        when(jwtService.verifyToken("validToken")).thenReturn(true);
-        when(jwtService.getEmailFromToken("validToken")).thenReturn(user.getEmail());
-        when(userService.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
-        when(refreshTokenService.findByUserAndDeviceId(user, "device1")).thenReturn(storedToken);
-
-        assertThrows(InvalidRefreshTokenException.class, () ->
-                authService.logout("validToken", "device1")
-        );
-
-        verify(refreshTokenService, never()).delete(storedToken);
-    }
-
-
 }
