@@ -1,6 +1,6 @@
 package com.expmatik.backend.notification;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -68,9 +68,9 @@ public class NotificationServiceTest {
 
                 Notification result = notificationService.findById(UUID.randomUUID(), user);
 
-                assertThat(result.getMessage()).isEqualTo("Test notification");
-                assertThat(result.getType()).isEqualTo(NotificationType.ASSIGNED_RESTOCKING);
-                assertThat(result.getLink()).isEqualTo("/test-link");
+                assertEquals(result.getMessage(), "Test notification");
+                assertEquals(result.getType(), NotificationType.ASSIGNED_RESTOCKING);
+                assertEquals(result.getLink(), "/test-link");
                 verify(notificationRepository).findById(any(UUID.class));
             }
         }
@@ -118,10 +118,10 @@ public class NotificationServiceTest {
 
                 Notification result = notificationService.createNotification(NotificationType.ASSIGNED_RESTOCKING, "Test message", "/test-link", user);
 
-                assertThat(result.getMessage()).isEqualTo("Test notification");
-                assertThat(result.getType()).isEqualTo(NotificationType.ASSIGNED_RESTOCKING);
-                assertThat(result.getLink()).isEqualTo("/test-link");
-                assertThat(result.getUser()).isEqualTo(user);
+                assertEquals(result.getMessage(), "Test notification");
+                assertEquals(result.getType(), NotificationType.ASSIGNED_RESTOCKING);
+                assertEquals(result.getLink(), "/test-link");
+                assertEquals(result.getUser(), user);
                 verify(notificationRepository).save(any(Notification.class));
             }
         }
@@ -147,7 +147,7 @@ public class NotificationServiceTest {
 
                 Notification result = notificationService.markAsRead(UUID.randomUUID(), user);
 
-                assertThat(result.getIsRead()).isTrue();
+                assertEquals(result.getIsRead(), true);
                 verify(notificationRepository).findById(any(UUID.class));
                 verify(notificationRepository).save(any(Notification.class));
             }
@@ -198,7 +198,7 @@ public class NotificationServiceTest {
 
                 verify(notificationRepository).searchNotifications(any(UUID.class), eq(false), isNull(), isNull(), isNull(), any());
                 verify(notificationRepository).save(notification);
-                assertThat(notification.getIsRead()).isTrue();
+                assertEquals(notification.getIsRead(), true);
             }
         }
     }

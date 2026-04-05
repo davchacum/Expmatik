@@ -64,7 +64,7 @@ public class NotificationIntegrationTest {
             @Test
             @DisplayName("When notification does not exist, should return 404")
             @WithUserDetails("admin@expmatik.com")
-            void testGetNotificationById_NotValidId_shouldThrowResourceNotFoundException() throws Exception {
+            void testGetNotificationById_NotValidId_shouldReturnNotFound() throws Exception {
                 UUID notificationId = UUID.fromString("00000000-0000-0000-0000-000000000099");
 
                 mockMvc.perform(get("/api/notifications/{id}", notificationId))
@@ -74,7 +74,7 @@ public class NotificationIntegrationTest {
             @Test
             @DisplayName("When notification belongs to another user, should return 403")
             @WithUserDetails("admin2@expmatik.com")
-            void testGetNotificationById_ValidIdButBelongsToAnotherUser_shouldThrowAccessDeniedException() throws Exception {
+            void testGetNotificationById_ValidIdButBelongsToAnotherUser_shouldReturnForbidden() throws Exception {
                 UUID notificationId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
                 mockMvc.perform(get("/api/notifications/{id}", notificationId))
@@ -130,7 +130,7 @@ public class NotificationIntegrationTest {
             @Test
             @DisplayName("When notification does not exist, should return 404")
             @WithUserDetails("admin@expmatik.com")
-            void testMarkNotificationAsRead_NotValidId_shouldThrowResourceNotFoundException() throws Exception {
+            void testMarkNotificationAsRead_NotValidId_shouldReturnNotFound() throws Exception {
                 UUID notificationId = UUID.fromString("00000000-0000-0000-0000-000000000099");
                 mockMvc.perform(patch("/api/notifications/{id}/mark-as-read", notificationId))
                         .andExpect(status().isNotFound());
@@ -139,7 +139,7 @@ public class NotificationIntegrationTest {
             @Test
             @DisplayName("When notification belongs to another user, should return 403")
             @WithUserDetails("admin2@expmatik.com")
-            void testMarkNotificationAsRead_ValidIdButBelongsToAnotherUser_shouldThrowAccessDeniedException() throws Exception {
+            void testMarkNotificationAsRead_ValidIdButBelongsToAnotherUser_shouldReturnForbidden() throws Exception {
                 UUID notificationId = UUID.fromString("00000000-0000-0000-0000-000000000001");
                 mockMvc.perform(patch("/api/notifications/{id}/mark-as-read", notificationId))
                         .andExpect(status().isForbidden());
