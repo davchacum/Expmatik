@@ -1,6 +1,6 @@
 package com.expmatik.backend.vendingMachine;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -42,178 +43,244 @@ public class VendingMachineServiceTest {
 
         // == Test cases for createVendingMachine ==
 
-        @Test
-        @DisplayName("createVendingMachine - success")
-                void testCreateVendingMachineSuccess() {
-                User user = new User();
-                user.setId(UUID.randomUUID());
-                Integer maxCapacityPerSlot = 10;
-                Integer rowCount = 3;
-                Integer columnCount = 4;
+        @Nested
+        @DisplayName("createVendingMachine")
+        class CreateVendingMachine {
 
-                VendingMachineCreate dto = new VendingMachineCreate(
-                        "Random","Machine 1", columnCount, rowCount, maxCapacityPerSlot
-                );
+                @Nested
+                @DisplayName("Success Cases")
+                class SuccessCases {
 
-                when(vendingMachineRepository.findByNameAndUserId("Machine 1", user.getId()))
-                        .thenReturn(Optional.empty());
+                        @Test
+                        @DisplayName("createVendingMachine - success")
+                                void testCreateVendingMachine_ValidData_Success() {
+                                User user = new User();
+                                user.setId(UUID.randomUUID());
+                                Integer maxCapacityPerSlot = 10;
+                                Integer rowCount = 3;
+                                Integer columnCount = 4;
 
-                when(vendingMachineRepository.save(any(VendingMachine.class)))
-                        .thenAnswer(invocation -> invocation.getArgument(0));
+                                VendingMachineCreate dto = new VendingMachineCreate(
+                                        "Random","Machine 1", columnCount, rowCount, maxCapacityPerSlot
+                                );
 
-                VendingMachine result = vendingMachineService.createVendingMachine(dto, user);
+                                when(vendingMachineRepository.findByNameAndUserId("Machine 1", user.getId()))
+                                        .thenReturn(Optional.empty());
 
-                assertThat(result.getName()).isEqualTo("Machine 1");
-                assertThat(result.getUser()).isEqualTo(user);
+                                when(vendingMachineRepository.save(any(VendingMachine.class)))
+                                        .thenAnswer(invocation -> invocation.getArgument(0));
 
-                verify(vendingMachineRepository).save(any(VendingMachine.class));
-                verify(vendingMachineRepository).save(argThat(vm ->
-                        vm.getUser().equals(user) &&
-                        vm.getName().equals("Machine 1")
-                ));
-                verify(vendingSlotService).createVendingSlotsForMachine(eq(result), eq(rowCount), eq(columnCount), eq(maxCapacityPerSlot));
-        }
+                                VendingMachine result = vendingMachineService.createVendingMachine(dto, user);
 
-        @Test
-        @DisplayName("createVendingMachine - name conflict")
-                void testCreateVendingMachineNameConflict() {
-                User user = new User();
-                user.setId(UUID.randomUUID());
+                                assertEquals(result.getName(),"Machine 1");
+                                assertEquals(result.getUser(),user);
 
-                VendingMachineCreate dto = new VendingMachineCreate(
-                        "Random","Machine 1", 3, 4, 10
-                );
+                                verify(vendingMachineRepository).save(any(VendingMachine.class));
+                                verify(vendingMachineRepository).save(argThat(vm ->
+                                        vm.getUser().equals(user) &&
+                                        vm.getName().equals("Machine 1")
+                                ));
+                                verify(vendingSlotService).createVendingSlotsForMachine(eq(result), eq(rowCount), eq(columnCount), eq(maxCapacityPerSlot));
+                        }
+                }
 
-                when(vendingMachineRepository.findByNameAndUserId("Machine 1", user.getId()))
-                        .thenReturn(Optional.of(new VendingMachine()));
+                @Nested
+                @DisplayName("Failure Cases")
+                class FailureCases {
 
-                assertThrows(ConflictException.class, () -> {
-                        vendingMachineService.createVendingMachine(dto, user);
-                });
+                        @Test
+                        @DisplayName("createVendingMachine - name conflict")
+                                void testCreateVendingMachine_DuplicateName_ShouldThrowConflictException() {
+                                User user = new User();
+                                user.setId(UUID.randomUUID());
 
-                verify(vendingMachineRepository).findByNameAndUserId("Machine 1", user.getId());
-                verify(vendingMachineRepository).findByNameAndUserId(eq("Machine 1"), eq(user.getId()));
+                                VendingMachineCreate dto = new VendingMachineCreate(
+                                        "Random","Machine 1", 3, 4, 10
+                                );
+
+                                when(vendingMachineRepository.findByNameAndUserId("Machine 1", user.getId()))
+                                        .thenReturn(Optional.of(new VendingMachine()));
+
+                                assertThrows(ConflictException.class, () -> {
+                                        vendingMachineService.createVendingMachine(dto, user);
+                                });
+
+                                verify(vendingMachineRepository).findByNameAndUserId("Machine 1", user.getId());
+                                verify(vendingMachineRepository).findByNameAndUserId(eq("Machine 1"), eq(user.getId()));
+                        }
+                }
         }
 
         // == Test cases for getVendingMachineById ==
 
-        @Test
-        @DisplayName("getVendingMachineById - success")
-                void testGetVendingMachineByIdSuccess() {
-                User user = new User();
-                user.setId(UUID.randomUUID());
+        @Nested
+        @DisplayName("getVendingMachineById")
+        class GetVendingMachineById {
 
-                VendingMachine vendingMachine = new VendingMachine();
-                vendingMachine.setId(UUID.randomUUID());
-                vendingMachine.setUser(user);
+                @Nested
+                @DisplayName("Success Cases")
+                class SuccessCases {
 
-                when(vendingMachineRepository.findById(vendingMachine.getId()))
-                        .thenReturn(Optional.of(vendingMachine));
+                        @Test
+                        @DisplayName("getVendingMachineById - success")
+                                void testGetVendingMachineById_ValidId_ShouldReturnVendingMachine() {
+                                User user = new User();
+                                user.setId(UUID.randomUUID());
 
-                VendingMachine result = vendingMachineService.getVendingMachineById(vendingMachine.getId(), user);
+                                VendingMachine vendingMachine = new VendingMachine();
+                                vendingMachine.setId(UUID.randomUUID());
+                                vendingMachine.setUser(user);
 
-                assertThat(result).isEqualTo(vendingMachine);
-                verify(vendingMachineRepository).findById(vendingMachine.getId());
-        }
+                                when(vendingMachineRepository.findById(vendingMachine.getId()))
+                                        .thenReturn(Optional.of(vendingMachine));
 
-        @Test
-        @DisplayName("getVendingMachineById - not found")
-                void testGetVendingMachineByIdNotFound() {
-                User user = new User();
-                user.setId(UUID.randomUUID());
-                UUID vendingMachineId = UUID.randomUUID();
+                                VendingMachine result = vendingMachineService.getVendingMachineById(vendingMachine.getId(), user);
 
-                when(vendingMachineRepository.findById(vendingMachineId))
-                        .thenReturn(Optional.empty());
+                                assertEquals(result,vendingMachine);
+                                verify(vendingMachineRepository).findById(vendingMachine.getId());
+                        }
+                }
 
-                assertThrows(ResourceNotFoundException.class, () -> {
-                        vendingMachineService.getVendingMachineById(vendingMachineId, user);
-                });
+                @Nested
+                @DisplayName("Failure Cases")
+                class FailureCases {
 
-                verify(vendingMachineRepository).findById(vendingMachineId);
-        }
+                        @Test
+                        @DisplayName("getVendingMachineById - not found")
+                                void testGetVendingMachineById_NotFound_ShouldThrowResourceNotFoundException() {
+                                User user = new User();
+                                user.setId(UUID.randomUUID());
+                                UUID vendingMachineId = UUID.randomUUID();
 
-        @Test
-        @DisplayName("getVendingMachineById - access denied")
-                void testGetVendingMachineByIdAccessDenied() {
-                User user = new User();
-                user.setId(UUID.randomUUID());
+                                when(vendingMachineRepository.findById(vendingMachineId))
+                                        .thenReturn(Optional.empty());
 
-                User otherUser = new User();
-                otherUser.setId(UUID.randomUUID());
+                                assertThrows(ResourceNotFoundException.class, () -> {
+                                        vendingMachineService.getVendingMachineById(vendingMachineId, user);
+                                });
 
-                VendingMachine vendingMachine = new VendingMachine();
-                vendingMachine.setId(UUID.randomUUID());
-                vendingMachine.setUser(otherUser);
+                                verify(vendingMachineRepository).findById(vendingMachineId);
+                        }
 
-                when(vendingMachineRepository.findById(vendingMachine.getId()))
-                        .thenReturn(Optional.of(vendingMachine));
+                        @Test
+                        @DisplayName("getVendingMachineById - access denied")
+                                void testGetVendingMachineById_AccessDenied_ShouldThrowAccessDeniedException() {
+                                User user = new User();
+                                user.setId(UUID.randomUUID());
 
-                assertThrows(AccessDeniedException.class, () -> {
-                        vendingMachineService.getVendingMachineById(vendingMachine.getId(), user);
-                });
+                                User otherUser = new User();
+                                otherUser.setId(UUID.randomUUID());
 
-                verify(vendingMachineRepository).findById(vendingMachine.getId());
+                                VendingMachine vendingMachine = new VendingMachine();
+                                vendingMachine.setId(UUID.randomUUID());
+                                vendingMachine.setUser(otherUser);
+
+                                when(vendingMachineRepository.findById(vendingMachine.getId()))
+                                        .thenReturn(Optional.of(vendingMachine));
+
+                                assertThrows(AccessDeniedException.class, () -> {
+                                        vendingMachineService.getVendingMachineById(vendingMachine.getId(), user);
+                                });
+
+                                verify(vendingMachineRepository).findById(vendingMachine.getId());
+                        }
+                }
         }
 
         // == Test cases for updateVendingMachine ==
 
-        @Test
-        @DisplayName("updateVendingMachine - success")
-        void testUpdateVendingMachineSuccess() {
-                User user = new User();
-                user.setId(UUID.randomUUID());
+        @Nested
+        @DisplayName("updateVendingMachine")
+        class UpdateVendingMachine {
 
-                VendingMachine vendingMachine = new VendingMachine();
-                vendingMachine.setId(UUID.randomUUID());
-                vendingMachine.setUser(user);
-                vendingMachine.setLocation("Old Location");
-                vendingMachine.setName("Old Name");
+                @Nested
+                @DisplayName("Success Cases")
+                class SuccessCases {
 
-                VendingMachineUpdate dto = new VendingMachineUpdate(
-                        "New Location"
-                );
+                        @Test
+                        @DisplayName("updateVendingMachine - success")
+                        void testUpdateVendingMachine_ValidMachine_Success() {
+                                User user = new User();
+                                user.setId(UUID.randomUUID());
 
-                when(vendingMachineRepository.findById(vendingMachine.getId()))
-                        .thenReturn(Optional.of(vendingMachine));
+                                VendingMachine vendingMachine = new VendingMachine();
+                                vendingMachine.setId(UUID.randomUUID());
+                                vendingMachine.setUser(user);
+                                vendingMachine.setLocation("Old Location");
+                                vendingMachine.setName("Old Name");
+
+                                VendingMachineUpdate dto = new VendingMachineUpdate(
+                                        "New Location"
+                                );
+
+                                when(vendingMachineRepository.findById(vendingMachine.getId()))
+                                        .thenReturn(Optional.of(vendingMachine));
 
 
-                when(vendingMachineRepository.save(any(VendingMachine.class)))
-                        .thenAnswer(invocation -> invocation.getArgument(0));
+                                when(vendingMachineRepository.save(any(VendingMachine.class)))
+                                        .thenAnswer(invocation -> invocation.getArgument(0));
 
-                VendingMachine result = vendingMachineService.updateVendingMachine(vendingMachine.getId(), dto, user);
+                                VendingMachine result = vendingMachineService.updateVendingMachine(vendingMachine.getId(), dto, user);
 
-                assertThat(result.getLocation()).isEqualTo("New Location");
-                assertThat(result.getName()).isEqualTo("Old Name");
+                                assertEquals(result.getLocation(),"New Location");
+                                assertEquals(result.getName(),"Old Name");
 
-                verify(vendingMachineRepository).findById(vendingMachine.getId());
-                verify(vendingMachineRepository).save(any(VendingMachine.class));
-        }
+                                verify(vendingMachineRepository).findById(vendingMachine.getId());
+                                verify(vendingMachineRepository).save(any(VendingMachine.class));
+                        }
+                }
 
-        @Test
-        @DisplayName("updateVendingMachine - unauthorized machine ownership")
-        void testUpdateVendingMachineUnauthorized() {
-                User user = new User();
-                user.setId(UUID.randomUUID());
+                @Nested
+                @DisplayName("Failure Cases")
+                class FailureCases {
 
-                User otherUser = new User();
-                otherUser.setId(UUID.randomUUID());
+                        @Test
+                        @DisplayName("updateVendingMachine - unauthorized machine ownership")
+                        void testUpdateVendingMachine_UnauthorizedMachineOwnership_shouldThrowAccessDeniedException() {
+                                User user = new User();
+                                user.setId(UUID.randomUUID());
 
-                VendingMachine vendingMachine = new VendingMachine();
-                vendingMachine.setId(UUID.randomUUID());
-                vendingMachine.setUser(otherUser);
+                                User otherUser = new User();
+                                otherUser.setId(UUID.randomUUID());
 
-                VendingMachineUpdate dto = new VendingMachineUpdate(
-                        "New Location"
-                );
+                                VendingMachine vendingMachine = new VendingMachine();
+                                vendingMachine.setId(UUID.randomUUID());
+                                vendingMachine.setUser(otherUser);
 
-                when(vendingMachineRepository.findById(vendingMachine.getId()))
-                        .thenReturn(Optional.of(vendingMachine));
+                                VendingMachineUpdate dto = new VendingMachineUpdate(
+                                        "New Location"
+                                );
 
-                assertThrows(AccessDeniedException.class, () -> {
-                        vendingMachineService.updateVendingMachine(vendingMachine.getId(), dto, user);
-                });
+                                when(vendingMachineRepository.findById(vendingMachine.getId()))
+                                        .thenReturn(Optional.of(vendingMachine));
 
-                verify(vendingMachineRepository).findById(vendingMachine.getId());
-        }
+                                assertThrows(AccessDeniedException.class, () -> {
+                                        vendingMachineService.updateVendingMachine(vendingMachine.getId(), dto, user);
+                                });
+
+                                verify(vendingMachineRepository).findById(vendingMachine.getId());
+                        }
+
+                        @Test
+                        @DisplayName("updateVendingMachine - machine not found")
+                        void testUpdateVendingMachine_MachineNotFound_shouldThrowResourceNotFoundException() {
+                                User user = new User();
+                                user.setId(UUID.randomUUID());
+                                UUID vendingMachineId = UUID.randomUUID();
+
+                                VendingMachineUpdate dto = new VendingMachineUpdate(
+                                        "New Location"
+                                );
+
+                                when(vendingMachineRepository.findById(vendingMachineId))
+                                        .thenReturn(Optional.empty());
+
+                                assertThrows(ResourceNotFoundException.class, () -> {
+                                        vendingMachineService.updateVendingMachine(vendingMachineId, dto, user);
+                                });
+
+                                verify(vendingMachineRepository).findById(vendingMachineId);
+                        }
+                }
+        }           
 }
