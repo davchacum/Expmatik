@@ -120,9 +120,11 @@ public class AuthServiceTest {
             void testRegister_UserAlreadyExists_ShouldThrowUserExistsException() {
                 when(userService.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
 
-                assertThrows(UserExistsException.class, () ->
+                UserExistsException exception = assertThrows(UserExistsException.class, () ->
                         authService.register(user.getEmail(), "password", "device1", Role.ADMINISTRATOR, "John", "Doe")
                 );
+
+                assertEquals("User already exists", exception.getMessage());
             }
         }
     }
@@ -175,9 +177,11 @@ public class AuthServiceTest {
             void testLogin_UserNotFound_ShouldThrowResourceNotFoundException() {
                 when(userService.findByEmail(user.getEmail())).thenReturn(Optional.empty());
 
-                assertThrows(ResourceNotFoundException.class, () ->
+                ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () ->
                         authService.login(user.getEmail(), "password", "device1")
                 );
+
+                assertEquals("User not found", exception.getMessage());
             }
         }
     }
@@ -218,9 +222,11 @@ public class AuthServiceTest {
             void testRefreshToken_RefreshTokenIsInvalid_ShouldThrowInvalidRefreshTokenException() {
                 when(jwtService.verifyToken("invalidToken")).thenReturn(false);
 
-                assertThrows(InvalidRefreshTokenException.class, () ->
+                InvalidRefreshTokenException exception = assertThrows(InvalidRefreshTokenException.class, () ->
                         authService.refreshToken("invalidToken", "device1")
                 );
+
+                assertEquals("Invalid Refresh Token", exception.getMessage());
             }
         }
 
@@ -240,9 +246,11 @@ public class AuthServiceTest {
                 when(userService.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
                 when(refreshTokenService.findByUserAndDeviceId(user, "device1")).thenReturn(storedToken);
 
-                assertThrows(InvalidRefreshTokenException.class, () ->
+                InvalidRefreshTokenException exception = assertThrows(InvalidRefreshTokenException.class, () ->
                         authService.refreshToken("validToken", "device1")
                 );
+
+                assertEquals("Token does not match records", exception.getMessage());
             }
 
             @Test
@@ -257,9 +265,11 @@ public class AuthServiceTest {
                 when(userService.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
                 when(refreshTokenService.findByUserAndDeviceId(user, "device1")).thenReturn(storedToken);
 
-                assertThrows(InvalidRefreshTokenException.class, () ->
+                InvalidRefreshTokenException exception = assertThrows(InvalidRefreshTokenException.class, () ->
                         authService.refreshToken("validToken", "device1")
                 );
+
+                assertEquals("Refresh token expired", exception.getMessage());
 
                 verify(refreshTokenService).delete(storedToken); // se elimina token expirado
             }
@@ -302,9 +312,11 @@ public class AuthServiceTest {
             void testLogout_RefreshTokenIsInvalid_ShouldThrowInvalidRefreshTokenException() {
                 when(jwtService.verifyToken("invalidToken")).thenReturn(false);
 
-                assertThrows(InvalidRefreshTokenException.class, () ->
+                InvalidRefreshTokenException exception = assertThrows(InvalidRefreshTokenException.class, () ->
                         authService.logout("invalidToken", "device1")
                 );
+
+                assertEquals("Invalid Refresh Token", exception.getMessage());
 
                 verify(userService, never()).findByEmail(anyString());
                 verify(refreshTokenService, never()).delete(any());
@@ -321,10 +333,11 @@ public class AuthServiceTest {
                 when(userService.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
                 when(refreshTokenService.findByUserAndDeviceId(user, "device1")).thenReturn(storedToken);
 
-                assertThrows(InvalidRefreshTokenException.class, () ->
+                InvalidRefreshTokenException exception = assertThrows(InvalidRefreshTokenException.class, () ->
                         authService.logout("validToken", "device1")
                 );
 
+                assertEquals("Token does not match records", exception.getMessage());
                 verify(refreshTokenService, never()).delete(storedToken);
             }
         }
