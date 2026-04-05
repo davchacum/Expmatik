@@ -1,7 +1,8 @@
 package com.expmatik.backend.sale;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
@@ -20,6 +21,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -120,620 +122,704 @@ public class SaleServiceTest {
 
     // == Test findById ==
 
-    @Test
-    @DisplayName("getSaleById - success")
-    void testGetSaleById_ValidId_ReturnsSale() {
+    @Nested
+    @DisplayName("getSaleById")
+    class GetSaleById {
 
-        when(saleRepository.findById(sale.getId())).thenReturn(Optional.of(sale));
+        @Nested
+        @DisplayName("Success Cases")
+        class SuccessCases {
 
-        Sale result = saleService.getSaleById(sale.getId(), user);
+            @Test
+            @DisplayName("getSaleById - success")
+            void testGetSaleById_ValidId_ReturnsSale() {
 
-        assertThat(result).isEqualTo(sale);
-        verify(saleRepository).findById(sale.getId());
-        
-    }
+                when(saleRepository.findById(sale.getId())).thenReturn(Optional.of(sale));
 
-    @Test
-    @DisplayName("getSaleById - not found")
-    void testGetSaleById_InvalidId_ThrowsResourceNotFoundException() {
-        UUID invalidId = UUID.randomUUID();
+                Sale result = saleService.getSaleById(sale.getId(), user);
 
-        when(saleRepository.findById(invalidId)).thenReturn(Optional.empty());
+                assertEquals(result, sale);
+                verify(saleRepository).findById(sale.getId());
+                
+            }
+        }
 
-        assertThrows(ResourceNotFoundException.class, () -> {
-            saleService.getSaleById(invalidId, user);
-        });
+        @Nested
+        @DisplayName("Failure Cases")
+        class FailureCases {
 
-        verify(saleRepository).findById(invalidId);
-    }
+            @Test
+            @DisplayName("getSaleById - not found")
+            void testGetSaleById_InvalidId_ThrowsResourceNotFoundException() {
+                UUID invalidId = UUID.randomUUID();
 
-    @Test
-    @DisplayName("getSaleById - access denied")
-    void testGetSaleById_AccessDenied_ThrowsAccessDeniedException() {
-        User otherUser = new User();
-        otherUser.setId(UUID.randomUUID());
+                when(saleRepository.findById(invalidId)).thenReturn(Optional.empty());
 
-        VendingMachine otherVendingMachine = new VendingMachine();
-        otherVendingMachine.setId(UUID.randomUUID());
-        otherVendingMachine.setUser(otherUser);
+                assertThrows(ResourceNotFoundException.class, () -> {
+                    saleService.getSaleById(invalidId, user);
+                });
 
-        VendingSlot otherVendingSlot = new VendingSlot();
-        otherVendingSlot.setId(UUID.randomUUID());
-        otherVendingSlot.setVendingMachine(otherVendingMachine);
+                verify(saleRepository).findById(invalidId);
+            }
 
-        Sale otherSale = new Sale();
-        otherSale.setId(UUID.randomUUID());
-        otherSale.setVendingSlot(otherVendingSlot);
+            @Test
+            @DisplayName("getSaleById - access denied")
+            void testGetSaleById_AccessDenied_ThrowsAccessDeniedException() {
+                User otherUser = new User();
+                otherUser.setId(UUID.randomUUID());
 
-        when(saleRepository.findById(otherSale.getId())).thenReturn(Optional.of(otherSale));
+                VendingMachine otherVendingMachine = new VendingMachine();
+                otherVendingMachine.setId(UUID.randomUUID());
+                otherVendingMachine.setUser(otherUser);
 
-        assertThrows(AccessDeniedException.class, () -> {
-            saleService.getSaleById(otherSale.getId(), user);
-        });
+                VendingSlot otherVendingSlot = new VendingSlot();
+                otherVendingSlot.setId(UUID.randomUUID());
+                otherVendingSlot.setVendingMachine(otherVendingMachine);
 
-        verify(saleRepository).findById(otherSale.getId());
+                Sale otherSale = new Sale();
+                otherSale.setId(UUID.randomUUID());
+                otherSale.setVendingSlot(otherVendingSlot);
+
+                when(saleRepository.findById(otherSale.getId())).thenReturn(Optional.of(otherSale));
+
+                assertThrows(AccessDeniedException.class, () -> {
+                    saleService.getSaleById(otherSale.getId(), user);
+                });
+
+                verify(saleRepository).findById(otherSale.getId());
+            }
+        }
     }
 
     // == Test createSale ==
 
-    @Test
-    @DisplayName("createSale - success")
-    void testCreateSale_ValidInput_ReturnsCreatedSale() {
-        String barcode = "1234567890123";
-        SaleCreate saleCreate = new SaleCreate(
-            LocalDateTime.now(),
-            new BigDecimal("10.00"),
-            PaymentMethod.CASH,
-            TransactionStatus.SUCCESS,
-            barcode,
-            "Máquina 1",
-            1,
-            1
-        );
+    @Nested
+    @DisplayName("createSale")
+    class CreateSale {
 
-        when(productService.findInternalProductByBarcode(barcode, user.getId())).thenReturn(product);
-        when(vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(saleCreate.machineName(), saleCreate.rowNumber(), saleCreate.columnNumber(), user)).thenReturn(vendingSlot);
-        when(saleRepository.save(any(Sale.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        @Nested
+        @DisplayName("Success Cases")
+        class SuccessCases {
 
-        Sale result = saleService.createSale(saleCreate, user);
+            @Test
+            @DisplayName("createSale - success")
+            void testCreateSale_ValidInput_ReturnsCreatedSale() {
+                String barcode = "1234567890123";
+                SaleCreate saleCreate = new SaleCreate(
+                    LocalDateTime.now(),
+                    new BigDecimal("10.00"),
+                    PaymentMethod.CASH,
+                    TransactionStatus.SUCCESS,
+                    barcode,
+                    "Máquina 1",
+                    1,
+                    1
+                );
 
-        assertThat(result.getSaleDate()).isEqualTo(saleCreate.saleDate());
-        assertThat(result.getTotalAmount()).isEqualTo(saleCreate.totalAmount());
-        assertThat(result.getPaymentMethod()).isEqualTo(saleCreate.paymentMethod());
-        assertThat(result.getStatus()).isEqualTo(saleCreate.status());
-        assertThat(result.getProduct()).isEqualTo(product);
-        assertThat(result.getVendingSlot()).isEqualTo(vendingSlot);
-        verify(productService).findInternalProductByBarcode(barcode, user.getId());
-        verify(vendingSlotService).getVendingSlotByMachineNameAndRowAndColumn(saleCreate.machineName(), saleCreate.rowNumber(), saleCreate.columnNumber(), user);
-        verify(saleRepository).save(any(Sale.class));
+                when(productService.findInternalProductByBarcode(barcode, user.getId())).thenReturn(product);
+                when(vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(saleCreate.machineName(), saleCreate.rowNumber(), saleCreate.columnNumber(), user)).thenReturn(vendingSlot);
+                when(saleRepository.save(any(Sale.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+                Sale result = saleService.createSale(saleCreate, user);
+
+                assertEquals(result.getSaleDate(), saleCreate.saleDate());
+                assertEquals(result.getTotalAmount(), saleCreate.totalAmount());
+                assertEquals(result.getPaymentMethod(), saleCreate.paymentMethod());
+                assertEquals(result.getStatus(), saleCreate.status());
+                assertEquals(result.getProduct(), product);
+                assertEquals(result.getVendingSlot(), vendingSlot);
+                verify(productService).findInternalProductByBarcode(barcode, user.getId());
+                verify(vendingSlotService).getVendingSlotByMachineNameAndRowAndColumn(saleCreate.machineName(), saleCreate.rowNumber(), saleCreate.columnNumber(), user);
+                verify(saleRepository).save(any(Sale.class));
+            }
+        }
     }
+    
 
     // == Test realTimeSale ==
 
-    @Test
-    @DisplayName("realTimeSale - success")
-    void testRealTimeSale_ValidInput_ReturnsSuccessfulSale() {
-        UUID vendingSlotId = vendingSlot.getId();
-        PaymentMethod paymentMethod = PaymentMethod.CASH;
+    @Nested
+    @DisplayName("realTimeSale")
+    class RealTimeSale {
+
+        @Nested
+        @DisplayName("Success SaleCases")
+        class SuccessCases {
+        
+            @Test
+            @DisplayName("realTimeSale - success")
+            void testRealTimeSale_ValidInput_ReturnsSuccessfulSale() {
+                UUID vendingSlotId = vendingSlot.getId();
+                PaymentMethod paymentMethod = PaymentMethod.CASH;
 
 
-        when(vendingSlotService.getVendingSlotById(vendingSlotId, user)).thenReturn(vendingSlot);
-        when(productInfoService.getOrCreateProductInfo(product.getId(), user,null)).thenReturn(productInfo);
-        when(saleRepository.save(any(Sale.class))).thenAnswer(invocation -> invocation.getArgument(0));
+                when(vendingSlotService.getVendingSlotById(vendingSlotId, user)).thenReturn(vendingSlot);
+                when(productInfoService.getOrCreateProductInfo(product.getId(), user,null)).thenReturn(productInfo);
+                when(saleRepository.save(any(Sale.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Sale result = saleService.realTimeSale(vendingSlotId, paymentMethod, user);
-        assertThat(result.getVendingSlot()).isEqualTo(vendingSlot);
-        assertThat(result.getProduct()).isEqualTo(product);
-        assertThat(result.getTotalAmount()).isEqualTo(productInfo.getSaleUnitPrice());
-        assertThat(result.getPaymentMethod()).isEqualTo(paymentMethod);
-        assertThat(result.getStatus()).isEqualTo(TransactionStatus.SUCCESS);
-        verify(vendingSlotService).getVendingSlotById(vendingSlotId, user);
-        verify(saleRepository).save(any(Sale.class));
-    }
+                Sale result = saleService.realTimeSale(vendingSlotId, paymentMethod, user);
+                assertEquals(result.getVendingSlot(), vendingSlot);
+                assertEquals(result.getProduct(), product);
+                assertEquals(result.getTotalAmount(), productInfo.getSaleUnitPrice());
+                assertEquals(result.getPaymentMethod(), paymentMethod);
+                assertEquals(result.getStatus(), TransactionStatus.SUCCESS);
+                verify(vendingSlotService).getVendingSlotById(vendingSlotId, user);
+                verify(saleRepository).save(any(Sale.class));
+            }
+        
+        }
 
-    @Test
-    @DisplayName("realTimeSale - vending slot not found")
-    void testRealTimeSale_VendingSlotNotFound_ThrowsResourceNotFoundException() {
-        UUID vendingSlotId = UUID.randomUUID();
-        PaymentMethod paymentMethod = PaymentMethod.CASH;
+        @Nested
+        @DisplayName("Failed Sale Cases")
+        class FailedSaleCases {
 
-        when(vendingSlotService.getVendingSlotById(vendingSlotId, user)).thenThrow(new ResourceNotFoundException("The vending slot does not exist."));
+            @Test
+            @DisplayName("realTimeSale - out of stock registers failed sale and creates notification")
+            void testRealTimeSale_PopStockThrowsOutOfStockException_RegistersFailedSale() {
+                UUID vendingSlotId = vendingSlot.getId();
+                PaymentMethod paymentMethod = PaymentMethod.CASH;
+                String errorMessage = "No hay stock disponible";
 
-        assertThrows(ResourceNotFoundException.class, () -> {
-            saleService.realTimeSale(vendingSlotId, paymentMethod, user);
-        });
+                when(vendingSlotService.getVendingSlotById(vendingSlotId, user)).thenReturn(vendingSlot);
+                when(productInfoService.getOrCreateProductInfo(product.getId(), user, null)).thenReturn(productInfo);
+                doThrow(new OutOfStockException(errorMessage)).when(vendingSlotService).popStockFromVendingSlot(vendingSlotId, user);
+                when(saleRepository.save(any(Sale.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        verify(vendingSlotService).getVendingSlotById(vendingSlotId, user);
-    }
+                Sale result = saleService.realTimeSale(vendingSlotId, paymentMethod, user);
 
-    @Test
-    @DisplayName("realTimeSale - access denied")
-    void testRealTimeSale_AccessDenied_ThrowsAccessDeniedException() {
-        UUID vendingSlotId = vendingSlot.getId();
-        PaymentMethod paymentMethod = PaymentMethod.CASH;
+                assertEquals(result.getStatus(), TransactionStatus.FAILED);
+                assertEquals(result.getFailureReason(), errorMessage);
+                assertEquals(result.getVendingSlot(), vendingSlot);
+                assertEquals(result.getProduct(), product);
+                assertEquals(result.getTotalAmount(), productInfo.getSaleUnitPrice());
 
-        when(vendingSlotService.getVendingSlotById(vendingSlotId, user)).thenThrow(new AccessDeniedException("You are not authorized to perform this action."));
+                verify(vendingSlotService).popStockFromVendingSlot(vendingSlotId, user);
+                verify(notificationService).createNotification(
+                    eq(NotificationType.FAILURE_SALE),
+                    contains(errorMessage),
+                    eq("Unknown"),
+                    eq(user)
+                );
+                verify(saleRepository).save(any(Sale.class));
+            }
 
-        assertThrows(AccessDeniedException.class, () -> {
-            saleService.realTimeSale(vendingSlotId, paymentMethod, user);
-        });
+            @Test
+            @DisplayName("realTimeSale - SlotBlockedException registers failed sale and creates notification")
+            void testRealTimeSale_PopStockThrowsSlotBlockedException_RegistersFailedSale() {
+                UUID vendingSlotId = vendingSlot.getId();
+                PaymentMethod paymentMethod = PaymentMethod.CASH;
+                String errorMessage = "La ranura está bloqueada por mantenimiento";
 
-        verify(vendingSlotService).getVendingSlotById(vendingSlotId, user);
-    }
+                when(vendingSlotService.getVendingSlotById(vendingSlotId, user)).thenReturn(vendingSlot);
+                when(productInfoService.getOrCreateProductInfo(product.getId(), user, null)).thenReturn(productInfo);
+                doThrow(new SlotBlockedException(errorMessage)).when(vendingSlotService).popStockFromVendingSlot(vendingSlotId, user);
+                when(saleRepository.save(any(Sale.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-    @Test
-    @DisplayName("realTimeSale - product info need update")
-    void testRealTimeSale_ProductInfoNeedUpdate_ThrowsConflictException() {
-        UUID vendingSlotId = vendingSlot.getId();
-        PaymentMethod paymentMethod = PaymentMethod.CASH;
-        productInfo.setNeedUpdate(true);
-
-        when(vendingSlotService.getVendingSlotById(vendingSlotId, user)).thenReturn(vendingSlot);
-        when(productInfoService.getOrCreateProductInfo(product.getId(), user,null)).thenReturn(productInfo);
-        assertThrows(ConflictException.class, () -> {
-            saleService.realTimeSale(vendingSlotId, paymentMethod, user);
-        });
-
-        verify(vendingSlotService).getVendingSlotById(vendingSlotId, user);
-        verify(productInfoService).getOrCreateProductInfo(product.getId(), user, null);
-    }
-
-    @Test
-    @DisplayName("realTimeSale - out of stock registers failed sale and creates notification")
-    void testRealTimeSale_PopStockThrowsOutOfStockException_RegistersFailedSale() {
-        UUID vendingSlotId = vendingSlot.getId();
-        PaymentMethod paymentMethod = PaymentMethod.CASH;
-        String errorMessage = "No hay stock disponible";
-
-        when(vendingSlotService.getVendingSlotById(vendingSlotId, user)).thenReturn(vendingSlot);
-        when(productInfoService.getOrCreateProductInfo(product.getId(), user, null)).thenReturn(productInfo);
-        doThrow(new OutOfStockException(errorMessage)).when(vendingSlotService).popStockFromVendingSlot(vendingSlotId, user);
-        when(saleRepository.save(any(Sale.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        Sale result = saleService.realTimeSale(vendingSlotId, paymentMethod, user);
-
-        assertThat(result.getStatus()).isEqualTo(TransactionStatus.FAILED);
-        assertThat(result.getFailureReason()).isEqualTo(errorMessage);
-        assertThat(result.getVendingSlot()).isEqualTo(vendingSlot);
-        assertThat(result.getProduct()).isEqualTo(product);
-        assertThat(result.getTotalAmount()).isEqualTo(productInfo.getSaleUnitPrice());
-
-        verify(vendingSlotService).popStockFromVendingSlot(vendingSlotId, user);
-        verify(notificationService).createNotification(
-            eq(NotificationType.FAILURE_SALE),
-            contains(errorMessage),
-            eq("Unknown"),
-            eq(user)
-        );
-        verify(saleRepository).save(any(Sale.class));
-    }
-
-    @Test
-    @DisplayName("realTimeSale - SlotBlockedException registers failed sale and creates notification")
-    void testRealTimeSale_PopStockThrowsSlotBlockedException_RegistersFailedSale() {
-        UUID vendingSlotId = vendingSlot.getId();
-        PaymentMethod paymentMethod = PaymentMethod.CASH;
-        String errorMessage = "La ranura está bloqueada por mantenimiento";
-
-        when(vendingSlotService.getVendingSlotById(vendingSlotId, user)).thenReturn(vendingSlot);
-        when(productInfoService.getOrCreateProductInfo(product.getId(), user, null)).thenReturn(productInfo);
-        doThrow(new SlotBlockedException(errorMessage)).when(vendingSlotService).popStockFromVendingSlot(vendingSlotId, user);
-        when(saleRepository.save(any(Sale.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        Sale result = saleService.realTimeSale(vendingSlotId, paymentMethod, user);
-        assertThat(result.getStatus()).isEqualTo(TransactionStatus.FAILED);
-        assertThat(result.getFailureReason()).isEqualTo(errorMessage);
-        assertThat(result.getVendingSlot()).isEqualTo(vendingSlot);
-        assertThat(result.getProduct()).isEqualTo(product);
-        assertThat(result.getTotalAmount()).isEqualTo(productInfo.getSaleUnitPrice());
-        verify(vendingSlotService).popStockFromVendingSlot(vendingSlotId, user);
-        verify(notificationService).createNotification(
-            eq(NotificationType.FAILURE_SALE),
-            contains(errorMessage),
-            eq("Unknown"),
-            eq(user)
-        );
-        verify(saleRepository).save(any(Sale.class));
-    }
+                Sale result = saleService.realTimeSale(vendingSlotId, paymentMethod, user);
+                assertEquals(result.getStatus(), TransactionStatus.FAILED);
+                assertEquals(result.getFailureReason(), errorMessage);
+                assertEquals(result.getVendingSlot(), vendingSlot);
+                assertEquals(result.getProduct(), product);
+                assertEquals(result.getTotalAmount(), productInfo.getSaleUnitPrice());
+                verify(vendingSlotService).popStockFromVendingSlot(vendingSlotId, user);
+                verify(notificationService).createNotification(
+                    eq(NotificationType.FAILURE_SALE),
+                    contains(errorMessage),
+                    eq("Unknown"),
+                    eq(user)
+                );
+                verify(saleRepository).save(any(Sale.class));
+            }
 
 
-    @Test
-    @DisplayName("realTimeSale - ExpiredProductException registers failed sale and creates notification")
-    void testRealTimeSale_PopStockThrowsExpiredProductException_RegistersFailedSale() {
-        UUID vendingSlotId = vendingSlot.getId();
-        PaymentMethod paymentMethod = PaymentMethod.CASH;
-        String errorMessage = "El producto está caducado";
+            @Test
+            @DisplayName("realTimeSale - ExpiredProductException registers failed sale and creates notification")
+            void testRealTimeSale_PopStockThrowsExpiredProductException_RegistersFailedSale() {
+                UUID vendingSlotId = vendingSlot.getId();
+                PaymentMethod paymentMethod = PaymentMethod.CASH;
+                String errorMessage = "El producto está caducado";
 
-        when(vendingSlotService.getVendingSlotById(vendingSlotId, user)).thenReturn(vendingSlot);
-        when(productInfoService.getOrCreateProductInfo(product.getId(), user, null)).thenReturn(productInfo);
-        doThrow(new OutOfStockException(errorMessage)).when(vendingSlotService).popStockFromVendingSlot(vendingSlotId, user);
-        when(saleRepository.save(any(Sale.class))).thenAnswer(invocation -> invocation.getArgument(0));
+                when(vendingSlotService.getVendingSlotById(vendingSlotId, user)).thenReturn(vendingSlot);
+                when(productInfoService.getOrCreateProductInfo(product.getId(), user, null)).thenReturn(productInfo);
+                doThrow(new OutOfStockException(errorMessage)).when(vendingSlotService).popStockFromVendingSlot(vendingSlotId, user);
+                when(saleRepository.save(any(Sale.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Sale result = saleService.realTimeSale(vendingSlotId, paymentMethod, user);
+                Sale result = saleService.realTimeSale(vendingSlotId, paymentMethod, user);
 
-        assertThat(result.getStatus()).isEqualTo(TransactionStatus.FAILED);
-        assertThat(result.getFailureReason()).isEqualTo(errorMessage);
-        assertThat(result.getVendingSlot()).isEqualTo(vendingSlot);
-        assertThat(result.getProduct()).isEqualTo(product);
-        assertThat(result.getTotalAmount()).isEqualTo(productInfo.getSaleUnitPrice());
+                assertEquals(result.getStatus(), TransactionStatus.FAILED);
+                assertEquals(result.getFailureReason(), errorMessage);
+                assertEquals(result.getVendingSlot(), vendingSlot);
+                assertEquals(result.getProduct(), product);
+                assertEquals(result.getTotalAmount(), productInfo.getSaleUnitPrice());
 
-        verify(vendingSlotService).popStockFromVendingSlot(vendingSlotId, user);
-        verify(notificationService).createNotification(
-            eq(NotificationType.FAILURE_SALE),
-            contains(errorMessage),
-            eq("Unknown"),
-            eq(user)
-        );
-        verify(saleRepository).save(any(Sale.class));
-    }
+                verify(vendingSlotService).popStockFromVendingSlot(vendingSlotId, user);
+                verify(notificationService).createNotification(
+                    eq(NotificationType.FAILURE_SALE),
+                    contains(errorMessage),
+                    eq("Unknown"),
+                    eq(user)
+                );
+                verify(saleRepository).save(any(Sale.class));
+            }
+        }
+
+        @Nested
+        @DisplayName("Failure Cases")
+        class FailureCases {
+
+            @Test
+            @DisplayName("realTimeSale - vending slot not found")
+            void testRealTimeSale_VendingSlotNotFound_ThrowsResourceNotFoundException() {
+                UUID vendingSlotId = UUID.randomUUID();
+                PaymentMethod paymentMethod = PaymentMethod.CASH;
+
+                when(vendingSlotService.getVendingSlotById(vendingSlotId, user)).thenThrow(new ResourceNotFoundException("The vending slot does not exist."));
+
+                assertThrows(ResourceNotFoundException.class, () -> {
+                    saleService.realTimeSale(vendingSlotId, paymentMethod, user);
+                });
+
+                verify(vendingSlotService).getVendingSlotById(vendingSlotId, user);
+            }
+
+            @Test
+            @DisplayName("realTimeSale - access denied")
+            void testRealTimeSale_AccessDenied_ThrowsAccessDeniedException() {
+                UUID vendingSlotId = vendingSlot.getId();
+                PaymentMethod paymentMethod = PaymentMethod.CASH;
+
+                when(vendingSlotService.getVendingSlotById(vendingSlotId, user)).thenThrow(new AccessDeniedException("You are not authorized to perform this action."));
+
+                assertThrows(AccessDeniedException.class, () -> {
+                    saleService.realTimeSale(vendingSlotId, paymentMethod, user);
+                });
+
+                verify(vendingSlotService).getVendingSlotById(vendingSlotId, user);
+            }
+
+            @Test
+            @DisplayName("realTimeSale - product info need update")
+            void testRealTimeSale_ProductInfoNeedUpdate_ThrowsConflictException() {
+                UUID vendingSlotId = vendingSlot.getId();
+                PaymentMethod paymentMethod = PaymentMethod.CASH;
+                productInfo.setNeedUpdate(true);
+
+                when(vendingSlotService.getVendingSlotById(vendingSlotId, user)).thenReturn(vendingSlot);
+                when(productInfoService.getOrCreateProductInfo(product.getId(), user,null)).thenReturn(productInfo);
+                assertThrows(ConflictException.class, () -> {
+                    saleService.realTimeSale(vendingSlotId, paymentMethod, user);
+                });
+
+                verify(vendingSlotService).getVendingSlotById(vendingSlotId, user);
+                verify(productInfoService).getOrCreateProductInfo(product.getId(), user, null);
+            }
+        }
+    }   
 
     // == Test searchSales ==
 
-    @Test
-    @DisplayName("searchSales - all parameters provided should call repository with same values")
-    void testSearchSales_AllParams_ReturnsExpectedPage() {
-        UUID userId = UUID.randomUUID();
-        String barcode = "123456";
-        String machineName = "Máquina 1";
-        Integer rowNumber = 1;
-        Integer columnNumber = 1;
-        LocalDateTime startDate = LocalDateTime.now().minusDays(1);
-        LocalDateTime endDate = LocalDateTime.now();
-        PaymentMethod paymentMethod = PaymentMethod.CASH;
-        TransactionStatus status = TransactionStatus.SUCCESS;
-        Pageable pageable = PageRequest.of(0, 10);
+    @Nested
+    @DisplayName("searchSales")
+    class SearchSales {
 
-        Page<Sale> expectedPage = Page.empty();
+        @Nested
+        @DisplayName("Success Cases")
+        class SuccessCases {
 
-        when(saleRepository.searchAdvanced(
-                userId, barcode, machineName, rowNumber, columnNumber,
-                startDate, endDate,
-                paymentMethod, status,
-                pageable
-        )).thenReturn(expectedPage);
+            @Test
+            @DisplayName("searchSales - all parameters provided should call repository with same values")
+            void testSearchSales_AllParams_ReturnsExpectedPage() {
+                UUID userId = UUID.randomUUID();
+                String barcode = "123456";
+                String machineName = "Máquina 1";
+                Integer rowNumber = 1;
+                Integer columnNumber = 1;
+                LocalDateTime startDate = LocalDateTime.now().minusDays(1);
+                LocalDateTime endDate = LocalDateTime.now();
+                PaymentMethod paymentMethod = PaymentMethod.CASH;
+                TransactionStatus status = TransactionStatus.SUCCESS;
+                Pageable pageable = PageRequest.of(0, 10);
 
-        Page<Sale> result = saleService.searchSales(
-                userId, barcode, machineName, rowNumber, columnNumber,
-                startDate, endDate,
-                paymentMethod, status,
-                pageable
-        );
+                Page<Sale> expectedPage = Page.empty();
 
-        assertThat(result).isEqualTo(expectedPage);
+                when(saleRepository.searchAdvanced(
+                        userId, barcode, machineName, rowNumber, columnNumber,
+                        startDate, endDate,
+                        paymentMethod, status,
+                        pageable
+                )).thenReturn(expectedPage);
 
-        verify(saleRepository).searchAdvanced(
-                userId, barcode, machineName, rowNumber, columnNumber,
-                startDate, endDate,
-                paymentMethod, status,
-                pageable
-        );
-    }
+                Page<Sale> result = saleService.searchSales(
+                        userId, barcode, machineName, rowNumber, columnNumber,
+                        startDate, endDate,
+                        paymentMethod, status,
+                        pageable
+                );
 
-    @Test
-    @DisplayName("searchSales - blank barcode should be converted to null")
-    void testSearchSales_BlankBarcode_ShouldPassNull() {
-        UUID userId = UUID.randomUUID();
-        String barcode = "   ";
-        Pageable pageable = PageRequest.of(0, 10);
+                assertEquals(result, expectedPage);
 
-        when(saleRepository.searchAdvanced(
-                eq(userId), isNull(), isNull(), isNull(), isNull(),
-                isNull(), isNull(),
-                isNull(), isNull(),
-                eq(pageable)
-        )).thenReturn(Page.empty());
+                verify(saleRepository).searchAdvanced(
+                        userId, barcode, machineName, rowNumber, columnNumber,
+                        startDate, endDate,
+                        paymentMethod, status,
+                        pageable
+                );
+            }
 
-        saleService.searchSales(
-                userId, barcode, null, null,null,
-                null, null,
-                null, null,
-                pageable
-        );
+            @Test
+            @DisplayName("searchSales - blank barcode should be converted to null")
+            void testSearchSales_BlankBarcode_ShouldPassNull() {
+                UUID userId = UUID.randomUUID();
+                String barcode = "   ";
+                Pageable pageable = PageRequest.of(0, 10);
 
-        verify(saleRepository).searchAdvanced(
-                eq(userId), isNull(), isNull(), isNull(), isNull(),
-                isNull(), isNull(),
-                isNull(), isNull(),
-                eq(pageable)
-        );
-    }
+                when(saleRepository.searchAdvanced(
+                        eq(userId), isNull(), isNull(), isNull(), isNull(),
+                        isNull(), isNull(),
+                        isNull(), isNull(),
+                        eq(pageable)
+                )).thenReturn(Page.empty());
 
-    @Test
-    @DisplayName("searchSales - null barcode should remain null")
-    void testSearchSales_NullBarcode_ReturnsExpectedPage() {
-        UUID userId = UUID.randomUUID();
-        Pageable pageable = PageRequest.of(0, 10);
+                saleService.searchSales(
+                        userId, barcode, null, null,null,
+                        null, null,
+                        null, null,
+                        pageable
+                );
 
-        when(saleRepository.searchAdvanced(
-                eq(userId), isNull(), any(), any(),any(),
-                any(), any(),
-                any(), any(),
-                eq(pageable)
-        )).thenReturn(Page.empty());
+                verify(saleRepository).searchAdvanced(
+                        eq(userId), isNull(), isNull(), isNull(), isNull(),
+                        isNull(), isNull(),
+                        isNull(), isNull(),
+                        eq(pageable)
+                );
+            }
 
-        saleService.searchSales(
-                userId, null, null, null,null,
-                null, null,
-                null, null,
-                pageable
-        );
+            @Test
+            @DisplayName("searchSales - null barcode should remain null")
+            void testSearchSales_NullBarcode_ReturnsExpectedPage() {
+                UUID userId = UUID.randomUUID();
+                Pageable pageable = PageRequest.of(0, 10);
 
-        verify(saleRepository).searchAdvanced(
-                eq(userId), isNull(), isNull(), isNull(),isNull(),
-                isNull(), isNull(),
-                isNull(), isNull(),
-                eq(pageable)
-        );
-    }
+                when(saleRepository.searchAdvanced(
+                        eq(userId), isNull(), any(), any(),any(),
+                        any(), any(),
+                        any(), any(),
+                        eq(pageable)
+                )).thenReturn(Page.empty());
 
-        @Test
-    @DisplayName("searchSales - blank machine name should be converted to null")
-    void testSearchSales_BlankMachineName_ShouldPassNull() {
-        UUID userId = UUID.randomUUID();
-        String machineName = "   ";
-        Pageable pageable = PageRequest.of(0, 10);
+                saleService.searchSales(
+                        userId, null, null, null,null,
+                        null, null,
+                        null, null,
+                        pageable
+                );
 
-        when(saleRepository.searchAdvanced(
-                eq(userId), isNull(), isNull(), isNull(), isNull(),
-                isNull(), isNull(),
-                isNull(), isNull(),
-                eq(pageable)
-        )).thenReturn(Page.empty());
+                verify(saleRepository).searchAdvanced(
+                        eq(userId), isNull(), isNull(), isNull(),isNull(),
+                        isNull(), isNull(),
+                        isNull(), isNull(),
+                        eq(pageable)
+                );
+            }
 
-        saleService.searchSales(
-                userId, null, machineName, null,null,
-                null, null,
-                null, null,
-                pageable
-        );
+            @Test
+            @DisplayName("searchSales - blank machine name should be converted to null")
+            void testSearchSales_BlankMachineName_ShouldPassNull() {
+                UUID userId = UUID.randomUUID();
+                String machineName = "   ";
+                Pageable pageable = PageRequest.of(0, 10);
 
-        verify(saleRepository).searchAdvanced(
-                eq(userId), isNull(), isNull(), isNull(), isNull(),
-                isNull(), isNull(),
-                isNull(), isNull(),
-                eq(pageable)
-        );
-    }
+                when(saleRepository.searchAdvanced(
+                        eq(userId), isNull(), isNull(), isNull(), isNull(),
+                        isNull(), isNull(),
+                        isNull(), isNull(),
+                        eq(pageable)
+                )).thenReturn(Page.empty());
 
-    @Test
-    @DisplayName("searchSales - null machine name should remain null")
-    void testSearchSales_NullMachineName_ReturnsExpectedPage() {
-        UUID userId = UUID.randomUUID();
-        Pageable pageable = PageRequest.of(0, 10);
+                saleService.searchSales(
+                        userId, null, machineName, null,null,
+                        null, null,
+                        null, null,
+                        pageable
+                );
 
-        when(saleRepository.searchAdvanced(
-                eq(userId), any(), isNull(), any(),any(),
-                any(), any(),
-                any(), any(),
-                eq(pageable)
-        )).thenReturn(Page.empty());
+                verify(saleRepository).searchAdvanced(
+                        eq(userId), isNull(), isNull(), isNull(), isNull(),
+                        isNull(), isNull(),
+                        isNull(), isNull(),
+                        eq(pageable)
+                );
+            }
 
-        saleService.searchSales(
-                userId, null, null, null,null,
-                null, null,
-                null, null,
-                pageable
-        );
+            @Test
+            @DisplayName("searchSales - null machine name should remain null")
+            void testSearchSales_NullMachineName_ReturnsExpectedPage() {
+                UUID userId = UUID.randomUUID();
+                Pageable pageable = PageRequest.of(0, 10);
 
-        verify(saleRepository).searchAdvanced(
-                eq(userId), isNull(), isNull(), isNull(),isNull(),
-                isNull(), isNull(),
-                isNull(), isNull(),
-                eq(pageable)
-        );
-    }
+                when(saleRepository.searchAdvanced(
+                        eq(userId), any(), isNull(), any(),any(),
+                        any(), any(),
+                        any(), any(),
+                        eq(pageable)
+                )).thenReturn(Page.empty());
 
-    @Test
-    @DisplayName("searchSales - partial filters should pass only provided values")
-    void testSearchSales_PartialFilters_ReturnsExpectedPage() {
-        UUID userId = UUID.randomUUID();
-        String barcode = "ABC123";
-        Pageable pageable = PageRequest.of(0, 10);
+                saleService.searchSales(
+                        userId, null, null, null,null,
+                        null, null,
+                        null, null,
+                        pageable
+                );
 
-        when(saleRepository.searchAdvanced(
-                eq(userId), eq(barcode), isNull(), isNull(),isNull(),
-                isNull(), isNull(),
-                isNull(), isNull(),
-                eq(pageable)
-        )).thenReturn(Page.empty());
+                verify(saleRepository).searchAdvanced(
+                        eq(userId), isNull(), isNull(), isNull(),isNull(),
+                        isNull(), isNull(),
+                        isNull(), isNull(),
+                        eq(pageable)
+                );
+            }
 
-        saleService.searchSales(
-                userId, barcode, null, null,null,
-                null, null,
-                null, null,
-                pageable
-        );
+            @Test
+            @DisplayName("searchSales - partial filters should pass only provided values")
+            void testSearchSales_PartialFilters_ReturnsExpectedPage() {
+                UUID userId = UUID.randomUUID();
+                String barcode = "ABC123";
+                Pageable pageable = PageRequest.of(0, 10);
 
-        verify(saleRepository).searchAdvanced(
-                eq(userId), eq(barcode), isNull(), isNull(),isNull(),
-                isNull(), isNull(),
-                isNull(), isNull(),
-                eq(pageable)
-        );
+                when(saleRepository.searchAdvanced(
+                        eq(userId), eq(barcode), isNull(), isNull(),isNull(),
+                        isNull(), isNull(),
+                        isNull(), isNull(),
+                        eq(pageable)
+                )).thenReturn(Page.empty());
+
+                saleService.searchSales(
+                        userId, barcode, null, null,null,
+                        null, null,
+                        null, null,
+                        pageable
+                );
+
+                verify(saleRepository).searchAdvanced(
+                        eq(userId), eq(barcode), isNull(), isNull(),isNull(),
+                        isNull(), isNull(),
+                        isNull(), isNull(),
+                        eq(pageable)
+                );
+            }
+        }
     }
 
     // == Test readSalesFromCSV ==
 
-    @Test
-    @DisplayName("readSalesFromCSV - valid CSV content should return list of SaleCreate")
-    void testReadSalesFromCSV_ValidContent_ReturnsSaleCreateList() {
+    @Nested
+    @DisplayName("readSalesFromCSV")
+    class ReadSalesFromCSV {
 
-        String csvContent = "saleDate,totalAmount,paymentMethod,status,barcode,vendingMachineName,rowNumber,columnNumber\n" +
-                "2024-03-01T10:00:00,2.50,CREDIT_CARD,SUCCESS,20000001,Máquina 1,1,1\n" +
-                "2024-03-02T11:30:00,5.00,CASH,SUCCESS,20000002,Máquina 1,1,2";
+        @Nested
+        @DisplayName("Success Cases")
+        class SuccessCases {
 
-        SaleCreate saleCreate1 = new SaleCreate(
-            LocalDateTime.parse("2024-03-01T10:00:00"),
-            new BigDecimal("2.50"),
-            PaymentMethod.CREDIT_CARD,
-            TransactionStatus.SUCCESS,
-            "20000001",
-            "Máquina 1",
-            1,
-            1
-        );
+            @Test
+            @DisplayName("readSalesFromCSV - valid CSV content should return list of SaleCreate")
+            void testReadSalesFromCSV_ValidContent_ReturnsSaleCreateList() {
 
-        SaleCreate saleCreate2 = new SaleCreate(
-            LocalDateTime.parse("2024-03-02T11:30:00"),
-            new BigDecimal("5.00"),
-            PaymentMethod.CASH,
-            TransactionStatus.SUCCESS,
-            "20000002",
-            "Máquina 1",
-            1,
-            2
-        );
+                String csvContent = "saleDate,totalAmount,paymentMethod,status,barcode,vendingMachineName,rowNumber,columnNumber\n" +
+                        "2024-03-01T10:00:00,2.50,CREDIT_CARD,SUCCESS,20000001,Máquina 1,1,1\n" +
+                        "2024-03-02T11:30:00,5.00,CASH,SUCCESS,20000002,Máquina 1,1,2";
 
-        MockMultipartFile csvFile = new MockMultipartFile(
-            "csv",
-            "sales.csv",
-            "text/csv",
-            csvContent.getBytes()
-        );
+                SaleCreate saleCreate1 = new SaleCreate(
+                    LocalDateTime.parse("2024-03-01T10:00:00"),
+                    new BigDecimal("2.50"),
+                    PaymentMethod.CREDIT_CARD,
+                    TransactionStatus.SUCCESS,
+                    "20000001",
+                    "Máquina 1",
+                    1,
+                    1
+                );
 
-        when(saleCSVLector.readCSV(any(File.class))).thenReturn(List.of(saleCreate1, saleCreate2));
+                SaleCreate saleCreate2 = new SaleCreate(
+                    LocalDateTime.parse("2024-03-02T11:30:00"),
+                    new BigDecimal("5.00"),
+                    PaymentMethod.CASH,
+                    TransactionStatus.SUCCESS,
+                    "20000002",
+                    "Máquina 1",
+                    1,
+                    2
+                );
 
-        List<SaleCreate> result = saleService.readSalesFromCSV(csvFile);
+                MockMultipartFile csvFile = new MockMultipartFile(
+                    "csv",
+                    "sales.csv",
+                    "text/csv",
+                    csvContent.getBytes()
+                );
 
-        assertThat(result).containsExactly(saleCreate1, saleCreate2);
-        verify(saleCSVLector).readCSV(any(File.class));
-    }
+                when(saleCSVLector.readCSV(any(File.class))).thenReturn(List.of(saleCreate1, saleCreate2));
 
-    @Test
-    @DisplayName("readSalesFromCSV - empty file should throw BadRequestException")
-    void testReadSalesFromCSV_EmptyFile_ThrowsBadRequestException() {
-        MockMultipartFile emptyFile = new MockMultipartFile(
-            "csv",
-            "empty.csv",
-            "text/csv",
-            new byte[0]
-        );
+                List<SaleCreate> result = saleService.readSalesFromCSV(csvFile);
 
-        assertThrows(BadRequestException.class, () -> {
-            saleService.readSalesFromCSV(emptyFile);
-        });
-    }
+                assertEquals(result, List.of(saleCreate1, saleCreate2));
+                verify(saleCSVLector).readCSV(any(File.class));
+            }
+        }
 
-    @Test
-    @DisplayName("readSalesFromCSV - null file should throw BadRequestException")
-    void testReadSalesFromCSV_NullFile_ThrowsBadRequestException() {
-        assertThrows(BadRequestException.class, () -> {
-            saleService.readSalesFromCSV(null);
-        });
-    }
+        @Nested
+        @DisplayName("Failure Cases")
+        class FailureCases {
 
-    @Test
-    @DisplayName("readSalesFromCSV - file with non-csv extension should throw BadRequestException")
-    void testReadSalesFromCSV_NonCSVFile_ThrowsBadRequestException() {
-        MockMultipartFile nonCSVFile = new MockMultipartFile(
-            "file",
-            "sales.txt",
-            "text/plain",
-            "Some content".getBytes()
-        );
+            @Test
+            @DisplayName("readSalesFromCSV - empty file should throw BadRequestException")
+            void testReadSalesFromCSV_EmptyFile_ThrowsBadRequestException() {
+                MockMultipartFile emptyFile = new MockMultipartFile(
+                    "csv",
+                    "empty.csv",
+                    "text/csv",
+                    new byte[0]
+                );
 
-        assertThrows(BadRequestException.class, () -> {
-            saleService.readSalesFromCSV(nonCSVFile);
-        });
+                assertThrows(BadRequestException.class, () -> {
+                    saleService.readSalesFromCSV(emptyFile);
+                });
+            }
+
+            @Test
+            @DisplayName("readSalesFromCSV - null file should throw BadRequestException")
+            void testReadSalesFromCSV_NullFile_ThrowsBadRequestException() {
+                assertThrows(BadRequestException.class, () -> {
+                    saleService.readSalesFromCSV(null);
+                });
+            }
+
+            @Test
+            @DisplayName("readSalesFromCSV - file with non-csv extension should throw BadRequestException")
+            void testReadSalesFromCSV_NonCSVFile_ThrowsBadRequestException() {
+                MockMultipartFile nonCSVFile = new MockMultipartFile(
+                    "file",
+                    "sales.txt",
+                    "text/plain",
+                    "Some content".getBytes()
+                );
+
+                assertThrows(BadRequestException.class, () -> {
+                    saleService.readSalesFromCSV(nonCSVFile);
+                });
+            }
+        }
     }
 
     // == Test exportSalesCSV ==
 
-    @Test
-    @DisplayName("exportSalesCSV - valid filters should call repository and CSV generator")
-    void testExportSalesCSV_ValidFilters_ReturnsCSVData() {
-        UUID userId = UUID.randomUUID();
-        String barcode = "123456";
-        String machineName = "Máquina 1";
-        Integer rowNumber = 1;
-        Integer columnNumber = 1;
-        LocalDateTime startDate = LocalDateTime.now().minusDays(1);
-        LocalDateTime endDate = LocalDateTime.now();
-        PaymentMethod paymentMethod = PaymentMethod.CASH;
-        TransactionStatus status = TransactionStatus.SUCCESS;
+    @Nested
+    @DisplayName("exportSalesCSV")
+    class ExportSalesCSV {
 
-        sale.setSaleDate(LocalDateTime.parse("2024-03-01T10:00:00"));
-        sale.setTotalAmount(new BigDecimal("2.50"));
-        sale.setPaymentMethod(PaymentMethod.CREDIT_CARD);
-        sale.setStatus(TransactionStatus.SUCCESS);
-        product.setBarcode("123456");
-        sale.setProduct(product);
+        @Nested
+        @DisplayName("Success Cases")
+        class SuccessCases {
 
-        List<Sale> sales = List.of(sale);
+            @Test
+            @DisplayName("exportSalesCSV - valid filters should call repository and CSV generator")
+            void testExportSalesCSV_ValidFilters_ReturnsCSVData() {
+                UUID userId = UUID.randomUUID();
+                String barcode = "123456";
+                String machineName = "Máquina 1";
+                Integer rowNumber = 1;
+                Integer columnNumber = 1;
+                LocalDateTime startDate = LocalDateTime.now().minusDays(1);
+                LocalDateTime endDate = LocalDateTime.now();
+                PaymentMethod paymentMethod = PaymentMethod.CASH;
+                TransactionStatus status = TransactionStatus.SUCCESS;
 
-        when(saleRepository.searchAdvanced(
-                userId, barcode, machineName, rowNumber, columnNumber,
-                startDate, endDate,
-                paymentMethod, status
-        )).thenReturn(sales);
-        when(saleCSVLector.generateCSV(sales)).thenCallRealMethod();
-        byte[] result = saleService.exportSalesCSV(userId, barcode, machineName, rowNumber, columnNumber, startDate, endDate, paymentMethod, status);
-        String csv = new String(result, StandardCharsets.UTF_8);
+                sale.setSaleDate(LocalDateTime.parse("2024-03-01T10:00:00"));
+                sale.setTotalAmount(new BigDecimal("2.50"));
+                sale.setPaymentMethod(PaymentMethod.CREDIT_CARD);
+                sale.setStatus(TransactionStatus.SUCCESS);
+                product.setBarcode("123456");
+                sale.setProduct(product);
 
-        assertThat(result).isNotEmpty();
-        assertThat(csv).contains("\"saleId\",\"saleDate\",\"totalAmount\",\"paymentMethod\",\"status\",\"barcode\",\"vendingMachineName\",\"rowNumber\",\"columnNumber\",\"failureReason\"");
-        assertThat(csv).contains("\"2024-03-01T10:00\",\"2.50\",\"CREDIT_CARD\",\"SUCCESS\",\"123456\",\"Máquina 1\",\"1\",\"1\",\"\"");
-        verify(saleRepository).searchAdvanced(
-                userId, barcode, machineName, rowNumber, columnNumber,
-                startDate, endDate,
-                paymentMethod, status
-        );
-        verify(saleCSVLector).generateCSV(sales);
-    }
+                List<Sale> sales = List.of(sale);
 
-    @Test
-    @DisplayName("exportSalesCSV - blank filters should be treated as null")
-    void testExportSalesCSV_BlankFilters_TreatedAsNull() {
-        UUID userId = UUID.randomUUID();
-        String barcode = "   ";
-        String machineName = "   ";
-        Integer rowNumber = null;
-        Integer columnNumber = null;
-        LocalDateTime startDate = null;
-        LocalDateTime endDate = null;
-        PaymentMethod paymentMethod = null;
-        TransactionStatus status = null;
+                when(saleRepository.searchAdvanced(
+                        userId, barcode, machineName, rowNumber, columnNumber,
+                        startDate, endDate,
+                        paymentMethod, status
+                )).thenReturn(sales);
+                when(saleCSVLector.generateCSV(sales)).thenCallRealMethod();
+                byte[] result = saleService.exportSalesCSV(userId, barcode, machineName, rowNumber, columnNumber, startDate, endDate, paymentMethod, status);
+                String csv = new String(result, StandardCharsets.UTF_8);
 
-        when(saleRepository.searchAdvanced(
-                eq(userId), isNull(), isNull(), isNull(), isNull(),
-                isNull(), isNull(),
-                isNull(), isNull()
-        )).thenReturn(List.of());
+                assertEquals(result.length, 255);
+                assertTrue(csv.contains("\"saleId\",\"saleDate\",\"totalAmount\",\"paymentMethod\",\"status\",\"barcode\",\"vendingMachineName\",\"rowNumber\",\"columnNumber\",\"failureReason\""),
+                "CSV header is missing or incorrect");
+                assertTrue(csv.contains("\"2024-03-01T10:00\",\"2.50\",\"CREDIT_CARD\",\"SUCCESS\",\"123456\",\"Máquina 1\",\"1\",\"1\",\"\""),
+                "CSV row is missing or incorrect");     
+                verify(saleRepository).searchAdvanced(
+                        userId, barcode, machineName, rowNumber, columnNumber,
+                        startDate, endDate,
+                        paymentMethod, status
+                );
+                verify(saleCSVLector).generateCSV(sales);
+            }
 
-        saleService.exportSalesCSV(userId, barcode, machineName, rowNumber, columnNumber, startDate, endDate, paymentMethod, status);
+            @Test
+            @DisplayName("exportSalesCSV - blank filters should be treated as null")
+            void testExportSalesCSV_BlankFilters_TreatedAsNull() {
+                UUID userId = UUID.randomUUID();
+                String barcode = "   ";
+                String machineName = "   ";
+                Integer rowNumber = null;
+                Integer columnNumber = null;
+                LocalDateTime startDate = null;
+                LocalDateTime endDate = null;
+                PaymentMethod paymentMethod = null;
+                TransactionStatus status = null;
 
-        verify(saleRepository).searchAdvanced(
-                eq(userId), isNull(), isNull(), isNull(), isNull(),
-                isNull(), isNull(),
-                isNull(), isNull()
-        );
-    }
+                when(saleRepository.searchAdvanced(
+                        eq(userId), isNull(), isNull(), isNull(), isNull(),
+                        isNull(), isNull(),
+                        isNull(), isNull()
+                )).thenReturn(List.of());
 
-    @Test
-    @DisplayName("exportSalesCSV - specific filters should be passed to repository")
-    void testExportSalesCSV_SpecificFilters_PassedToRepository() {
-        UUID userId = UUID.randomUUID();
-        String barcode = "ABC123";
-        String machineName = "Máquina 1";
-        Integer rowNumber = null;
-        Integer columnNumber = null;
-        LocalDateTime startDate = null;
-        LocalDateTime endDate = null;
-        PaymentMethod paymentMethod = null;
-        TransactionStatus status = null;
+                saleService.exportSalesCSV(userId, barcode, machineName, rowNumber, columnNumber, startDate, endDate, paymentMethod, status);
 
-        when(saleRepository.searchAdvanced(
-                eq(userId), eq(barcode), eq(machineName), isNull(), isNull(),
-                isNull(), isNull(),
-                isNull(), isNull()
-        )).thenReturn(List.of());
+                verify(saleRepository).searchAdvanced(
+                        eq(userId), isNull(), isNull(), isNull(), isNull(),
+                        isNull(), isNull(),
+                        isNull(), isNull()
+                );
+            }
 
-        saleService.exportSalesCSV(userId, barcode, machineName, rowNumber, columnNumber, startDate, endDate, paymentMethod, status);
+            @Test
+            @DisplayName("exportSalesCSV - specific filters should be passed to repository")
+            void testExportSalesCSV_SpecificFilters_PassedToRepository() {
+                UUID userId = UUID.randomUUID();
+                String barcode = "ABC123";
+                String machineName = "Máquina 1";
+                Integer rowNumber = null;
+                Integer columnNumber = null;
+                LocalDateTime startDate = null;
+                LocalDateTime endDate = null;
+                PaymentMethod paymentMethod = null;
+                TransactionStatus status = null;
 
-        verify(saleRepository).searchAdvanced(
-                eq(userId), eq(barcode), eq(machineName), isNull(), isNull(),
-                isNull(), isNull(),
-                isNull(), isNull()
-        );
+                when(saleRepository.searchAdvanced(
+                        eq(userId), eq(barcode), eq(machineName), isNull(), isNull(),
+                        isNull(), isNull(),
+                        isNull(), isNull()
+                )).thenReturn(List.of());
+
+                saleService.exportSalesCSV(userId, barcode, machineName, rowNumber, columnNumber, startDate, endDate, paymentMethod, status);
+
+                verify(saleRepository).searchAdvanced(
+                        eq(userId), eq(barcode), eq(machineName), isNull(), isNull(),
+                        isNull(), isNull(),
+                        isNull(), isNull()
+                );
+            }
+        }
     }
 }
