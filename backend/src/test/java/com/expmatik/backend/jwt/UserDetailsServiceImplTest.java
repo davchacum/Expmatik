@@ -11,6 +11,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -33,37 +34,52 @@ public class UserDetailsServiceImplTest {
         userDetailsService = new UserDetailsServiceImpl(userService);
     }
 
-    @Test
-    @DisplayName("Should return UserDetails when user exists")
-    void shouldReturnUserDetailsWhenUserExists() {
-        User user = new User();
-        user.setEmail("test@email.com");
-        user.setPassword("secret");
+    @Nested
+    @DisplayName("Tests for loadUserByUsername method")
+    class LoadUserByUsernameTests {
 
-        user.setRole(Role.ADMINISTRATOR);
+        @Nested
+        @DisplayName("Success cases")
+        class SuccessCases {
 
-        when(userService.findByEmail("test@email.com"))
-                .thenReturn(Optional.of(user));
+            @Test
+            @DisplayName("Should return UserDetails when user exists")
+            void testLoadUserByUsername_UserExists_shouldReturnUserDetails() {
+                User user = new User();
+                user.setEmail("test@email.com");
+                user.setPassword("secret");
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername("test@email.com");
+                user.setRole(Role.ADMINISTRATOR);
 
-        assertNotNull(userDetails);
-        assertEquals("test@email.com", userDetails.getUsername());
-        assertEquals("secret", userDetails.getPassword());
+                when(userService.findByEmail("test@email.com"))
+                        .thenReturn(Optional.of(user));
 
-        verify(userService).findByEmail("test@email.com");
-    }
+                UserDetails userDetails = userDetailsService.loadUserByUsername("test@email.com");
 
-    @Test
-    @DisplayName("Should throw UsernameNotFoundException when user does not exist")
-    void shouldThrowExceptionWhenUserNotFound() {
-        when(userService.findByEmail("notfound@email.com"))
-                .thenReturn(Optional.empty());
+                assertNotNull(userDetails);
+                assertEquals("test@email.com", userDetails.getUsername());
+                assertEquals("secret", userDetails.getPassword());
 
-        assertThrows(UsernameNotFoundException.class, () -> {
-            userDetailsService.loadUserByUsername("notfound@email.com");
-        });
+                verify(userService).findByEmail("test@email.com");
+            }
+        }
 
-        verify(userService).findByEmail("notfound@email.com");
+        @Nested
+        @DisplayName("Failure cases")
+        class FailureCases {
+
+            @Test
+            @DisplayName("Should throw UsernameNotFoundException when user does not exist")
+            void testLoadUserByUsername_UserNotFound_shouldThrowUsernameNotFoundException() {
+                when(userService.findByEmail("notfound@email.com"))
+                        .thenReturn(Optional.empty());
+
+                assertThrows(UsernameNotFoundException.class, () -> {
+                    userDetailsService.loadUserByUsername("notfound@email.com");
+                });
+
+                verify(userService).findByEmail("notfound@email.com");
+            }
+        }
     }
 }

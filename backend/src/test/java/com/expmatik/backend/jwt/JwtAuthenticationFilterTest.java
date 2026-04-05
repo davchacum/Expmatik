@@ -11,6 +11,7 @@ import java.util.Collections;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -55,85 +56,93 @@ class JwtAuthenticationFilterTest {
     
     // == TESTS de doFilterInternal ==
 
-    @Test
-    @DisplayName("Should authenticate user when token is valid")
-    void shouldAuthenticateUserWhenTokenValid() throws Exception {
+    @Nested
+    @DisplayName("Tests for doFilterInternal method")
+    class DoFilterInternalTests {
 
-        String token = "valid.jwt.token";
+        @Nested
+        @DisplayName("Success cases")
+        class SuccessCases {
 
-        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-        when(jwtService.verifyToken(token)).thenReturn(true);
-        when(jwtService.getEmailFromToken(token)).thenReturn("test@email.com");
-        when(userDetailsService.loadUserByUsername("test@email.com")).thenReturn(userDetails);
-        when(userDetails.getAuthorities()).thenReturn(Collections.emptyList());
+            @Test
+            @DisplayName("Should authenticate user when token is valid")
+            void testDoFilterInternal_WithValidToken_ShouldReturnAuthenticatedUser() throws Exception {
 
-        jwtFilter.doFilterInternal(request, response, filterChain);
+                String token = "valid.jwt.token";
 
-        assertNotNull(SecurityContextHolder.getContext().getAuthentication());
+                when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
+                when(jwtService.verifyToken(token)).thenReturn(true);
+                when(jwtService.getEmailFromToken(token)).thenReturn("test@email.com");
+                when(userDetailsService.loadUserByUsername("test@email.com")).thenReturn(userDetails);
+                when(userDetails.getAuthorities()).thenReturn(Collections.emptyList());
 
-        verify(filterChain).doFilter(request, response);
+                jwtFilter.doFilterInternal(request, response, filterChain);
+
+                assertNotNull(SecurityContextHolder.getContext().getAuthentication());
+
+                verify(filterChain).doFilter(request, response);
+            }
+
+            @Test
+            @DisplayName("Should continue filter when no Authorization header is present")
+            void testDoFilterInternal_WithNoAuthorizationHeader_ShouldContinueFilter() throws Exception {
+
+                when(request.getHeader("Authorization")).thenReturn(null);
+
+                jwtFilter.doFilterInternal(request, response, filterChain);
+
+                assertNull(SecurityContextHolder.getContext().getAuthentication());
+
+                verify(filterChain).doFilter(request, response);
+            }
+
+            @Test
+            @DisplayName("Should continue filter when Authorization header does not start with Bearer")
+            void testDoFilterInternal_WithInvalidAuthorizationHeader_ShouldContinueFilter() throws Exception {
+
+                when(request.getHeader("Authorization")).thenReturn("Invalid " + "token");
+
+                jwtFilter.doFilterInternal(request, response, filterChain);
+
+                assertNull(SecurityContextHolder.getContext().getAuthentication());
+
+                verify(filterChain).doFilter(request, response);
+            }
+
+            @Test
+            @DisplayName("Should not authenticate user when token is invalid")
+            void testDoFilterInternal_WithInvalidToken_ShouldNotAuthenticateUser() throws Exception {
+
+                String token = "invalid";
+
+                when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
+                when(jwtService.verifyToken(token)).thenReturn(false);
+
+                jwtFilter.doFilterInternal(request, response, filterChain);
+
+                verify(jwtService).verifyToken(token);
+                verify(userDetailsService, never()).loadUserByUsername(any());
+
+                assertNull(SecurityContextHolder.getContext().getAuthentication());
+
+                verify(filterChain).doFilter(request, response);
+            }
+
+            @Test
+            @DisplayName("Should clear security context when exception occurs during authentication")
+            void testDoFilterInternal_WithExceptionDuringAuthentication_ShouldClearSecurityContext() throws Exception {
+
+                String token = "token";
+
+                when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
+                when(jwtService.verifyToken(token)).thenThrow(new RuntimeException());
+
+                jwtFilter.doFilterInternal(request, response, filterChain);
+
+                assertNull(SecurityContextHolder.getContext().getAuthentication());
+
+                verify(filterChain).doFilter(request, response);
+            }
+        }
     }
-
-    @Test
-    @DisplayName("Should continue filter when no Authorization header is present")
-    void shouldContinueFilterWhenNoAuthorizationHeader() throws Exception {
-
-        when(request.getHeader("Authorization")).thenReturn(null);
-
-        jwtFilter.doFilterInternal(request, response, filterChain);
-
-        assertNull(SecurityContextHolder.getContext().getAuthentication());
-
-        verify(filterChain).doFilter(request, response);
-    }
-
-    @Test
-    @DisplayName("Should continue filter when Authorization header does not start with Bearer")
-    void shouldContinueFilterWhenAuthorizationHeaderDoesNotStartWithBearer() throws Exception {
-
-        when(request.getHeader("Authorization")).thenReturn("Invalid " + "token");
-
-        jwtFilter.doFilterInternal(request, response, filterChain);
-
-        assertNull(SecurityContextHolder.getContext().getAuthentication());
-
-        verify(filterChain).doFilter(request, response);
-    }
-
-    @Test
-    @DisplayName("Should not authenticate user when token is invalid")
-    void shouldNotAuthenticateWhenTokenInvalid() throws Exception {
-
-        String token = "invalid";
-
-        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-        when(jwtService.verifyToken(token)).thenReturn(false);
-
-        jwtFilter.doFilterInternal(request, response, filterChain);
-
-        verify(jwtService).verifyToken(token);
-        verify(userDetailsService, never()).loadUserByUsername(any());
-
-        assertNull(SecurityContextHolder.getContext().getAuthentication());
-
-        verify(filterChain).doFilter(request, response);
-    }
-
-    @Test
-    @DisplayName("Should clear security context when exception occurs during authentication")
-    void shouldClearSecurityContextWhenExceptionOccurs() throws Exception {
-
-        String token = "token";
-
-        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-        when(jwtService.verifyToken(token)).thenThrow(new RuntimeException());
-
-        jwtFilter.doFilterInternal(request, response, filterChain);
-
-        assertNull(SecurityContextHolder.getContext().getAuthentication());
-
-        verify(filterChain).doFilter(request, response);
-    }
-
-
 }
