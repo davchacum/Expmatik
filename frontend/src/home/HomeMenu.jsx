@@ -44,10 +44,10 @@ const HomeMenu = () => {
       roles: ["ADMINISTRATOR"],
     },
     {
-      title: "Máquinas",
+      title: "Máquinas Expendedoras",
       desc: "Administración de máquinas.",
-      path: "/machines",
-      roles: ["ADMINISTRATOR", "MAINTAINER"],
+      path: "/vending-machines",
+      roles: ["ADMINISTRATOR"],
     },
     {
       title: "Ventas",

@@ -1,17 +1,19 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import Login from "./auth/login";
-import Register from "./auth/register";
 import Profile from "./auth/profile";
-import PrivateRoute from "./PrivateRoute";
-import Products from "./product/productView";
-import Invoices from "./invoice/invoiceView";
-import CreateCustomProduct from "./product/createCustomProduct";
+import Register from "./auth/register";
 import HomeMenu from "./home/HomeMenu";
+import EditProductInventory from "./inventory/editProductInventory";
+import InventoryList from "./inventory/inventoryView";
 import CreateInvoice from "./invoice/createInvoice";
 import EditInvoice from "./invoice/editInvoice";
 import ImportInvoiceCSV from "./invoice/importInvoiceCSV";
-import InventoryList from "./inventory/inventoryView";
-import EditProductInventory from "./inventory/editProductInventory";
+import Invoices from "./invoice/invoiceView";
+import PrivateRoute from "./PrivateRoute";
+import CreateCustomProduct from "./product/createCustomProduct";
+import Products from "./product/productView";
+import VendingMachineDetails from "./vendingMachine/vendingMachineDetails";
+import VendingMachineList from "./vendingMachine/vendingMachineView";
 
 const AppRouter = () => {
   return (
@@ -100,10 +102,26 @@ const AppRouter = () => {
           </PrivateRoute>
         }
       />
+      <Route
+        path="/vending-machines"
+        element={
+          <PrivateRoute allowedRoles={["ADMINISTRATOR"]}>
+            <VendingMachineList />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/vending-machines/:id/details"
+        element={
+          <PrivateRoute allowedRoles={["ADMINISTRATOR"]}>
+            <VendingMachineDetails />
+          </PrivateRoute>
+        }
+      />
       <Route path="/" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 };
 
 export default AppRouter;
-

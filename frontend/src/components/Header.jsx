@@ -31,7 +31,8 @@ const Header = () => {
     if (path.startsWith("/invoices/") && path.endsWith("/edit"))
       return "Editar Factura";
     if( path === "/invoices/create/csv") return "Importar Factura desde CSV";
-    if (path === "/machines") return "Máquinas";
+    if (path === "/vending-machines") return "Gestión de Máquinas Expendedoras";
+    if (path.startsWith("/vending-machines/") && path.endsWith("/details")) return "Detalles de la Máquina Expendedora";
     if (path === "/sales") return "Ventas";
     if (path === "/maintenance") return "Tareas de Mantenimiento";
     return "Expmatik";
