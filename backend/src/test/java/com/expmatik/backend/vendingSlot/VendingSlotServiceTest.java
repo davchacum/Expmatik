@@ -317,7 +317,7 @@ public class VendingSlotServiceTest {
                     vendingSlotService.assignProductToVendingSlot(vendingSlotId, barcode, user);
                 });
 
-                assertEquals("Cannot assign a product to a vending slot that is blocked for maintenance.", exception.getMessage());
+                assertEquals("Cannot assign or unassign a product to a vending slot that is blocked for maintenance.", exception.getMessage());
             }
         }
     }
@@ -635,23 +635,6 @@ public class VendingSlotServiceTest {
                 });
             }
 
-            @Test
-            @DisplayName("popStockFromVendingSlot - valid vending slot ID, but vending slot is blocked for maintenance")
-            void testPopStockFromVendingSlot_validVendingSlotIdButVendingSlotBlockedForMaintenance_shouldThrowSlotBlockedException() {
-                UUID vendingSlotId = vendingSlot.getId();
-                vendingSlot.setCurrentStock(5);
-                vendingSlot.setIsBlocked(false);
-                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
-                doAnswer(invocation -> {
-                    vendingSlot.setCurrentStock(vendingSlot.getCurrentStock() - 1);
-                    vendingSlot.setIsBlocked(true);
-                    return null;
-                }).when(expirationBatchService).popUnitExpirationBatch(vendingSlot, user);
-
-                assertThrows(SlotBlockedException.class, () -> {
-                    vendingSlotService.popStockFromVendingSlot(vendingSlotId, user);
-                });
-            }
         }
 
         @Nested

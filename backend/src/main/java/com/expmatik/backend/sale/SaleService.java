@@ -110,7 +110,7 @@ public class SaleService {
 
             sale.setTotalAmount(productInfo.getSaleUnitPrice());
             
-            vendingSlotService.popStockFromVendingSlot(vendingSlotId, user);
+            vendingSlotService.popStockFromVendingSlotForSale(vendingSlotId, user);
             sale.setStatus(TransactionStatus.SUCCESS);
 
         } catch (OutOfStockException | SlotBlockedException | ExpiredProductException e) {

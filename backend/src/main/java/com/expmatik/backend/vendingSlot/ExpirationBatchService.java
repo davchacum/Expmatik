@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.expmatik.backend.exceptions.ExpiredProductException;
 import com.expmatik.backend.exceptions.OutOfStockException;
+import com.expmatik.backend.exceptions.SlotBlockedException;
 import com.expmatik.backend.user.User;
 
 
@@ -52,6 +53,14 @@ public class ExpirationBatchService {
 
     @Transactional
     public void popUnitExpirationBatch(VendingSlot vendingSlot, User user) {
+        popUnitExpirationBatchInternal(vendingSlot, user);
+    }
+
+    public void popUnitExpirationBatchForSale(VendingSlot vendingSlot, User user) {
+        popUnitExpirationBatchInternal(vendingSlot, user);
+    }
+
+    private void popUnitExpirationBatchInternal(VendingSlot vendingSlot, User user) {
         
         List<ExpirationBatch> expirationBatches = getExpirationBatchesByVendingSlotId(vendingSlot.getId(), user);
         ExpirationBatch existingBatch = expirationBatches.get(0);
@@ -62,6 +71,10 @@ public class ExpirationBatchService {
 
         if (existingBatch.getQuantity() <= 0) {
             throw new OutOfStockException("Cannot remove stock from the vending slot because there is no stock with the specified expiration date.");
+        }
+
+        if (vendingSlot.getIsBlocked()) {
+            throw new SlotBlockedException("The vending slot is blocked for maintenance.");
         }
 
         existingBatch.setQuantity(existingBatch.getQuantity() - 1);

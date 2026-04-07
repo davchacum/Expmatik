@@ -282,7 +282,7 @@ public class SaleServiceTest {
 
                 when(vendingSlotService.getVendingSlotById(vendingSlotId, user)).thenReturn(vendingSlot);
                 when(productInfoService.getOrCreateProductInfo(product.getId(), user, null)).thenReturn(productInfo);
-                doThrow(new OutOfStockException(errorMessage)).when(vendingSlotService).popStockFromVendingSlot(vendingSlotId, user);
+                doThrow(new OutOfStockException(errorMessage)).when(vendingSlotService).popStockFromVendingSlotForSale(vendingSlotId, user);
                 when(saleRepository.save(any(Sale.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
                 Sale result = saleService.realTimeSale(vendingSlotId, paymentMethod, user);
@@ -293,7 +293,7 @@ public class SaleServiceTest {
                 assertEquals(result.getProduct(), product);
                 assertEquals(result.getTotalAmount(), productInfo.getSaleUnitPrice());
 
-                verify(vendingSlotService).popStockFromVendingSlot(vendingSlotId, user);
+                verify(vendingSlotService).popStockFromVendingSlotForSale(vendingSlotId, user);
                 verify(notificationService).createNotification(
                     eq(NotificationType.FAILURE_SALE),
                     contains(errorMessage),
@@ -312,7 +312,7 @@ public class SaleServiceTest {
 
                 when(vendingSlotService.getVendingSlotById(vendingSlotId, user)).thenReturn(vendingSlot);
                 when(productInfoService.getOrCreateProductInfo(product.getId(), user, null)).thenReturn(productInfo);
-                doThrow(new SlotBlockedException(errorMessage)).when(vendingSlotService).popStockFromVendingSlot(vendingSlotId, user);
+                doThrow(new SlotBlockedException(errorMessage)).when(vendingSlotService).popStockFromVendingSlotForSale(vendingSlotId, user);
                 when(saleRepository.save(any(Sale.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
                 Sale result = saleService.realTimeSale(vendingSlotId, paymentMethod, user);
@@ -321,7 +321,7 @@ public class SaleServiceTest {
                 assertEquals(result.getVendingSlot(), vendingSlot);
                 assertEquals(result.getProduct(), product);
                 assertEquals(result.getTotalAmount(), productInfo.getSaleUnitPrice());
-                verify(vendingSlotService).popStockFromVendingSlot(vendingSlotId, user);
+                verify(vendingSlotService).popStockFromVendingSlotForSale(vendingSlotId, user);
                 verify(notificationService).createNotification(
                     eq(NotificationType.FAILURE_SALE),
                     contains(errorMessage),
@@ -341,7 +341,7 @@ public class SaleServiceTest {
 
                 when(vendingSlotService.getVendingSlotById(vendingSlotId, user)).thenReturn(vendingSlot);
                 when(productInfoService.getOrCreateProductInfo(product.getId(), user, null)).thenReturn(productInfo);
-                doThrow(new OutOfStockException(errorMessage)).when(vendingSlotService).popStockFromVendingSlot(vendingSlotId, user);
+                doThrow(new OutOfStockException(errorMessage)).when(vendingSlotService).popStockFromVendingSlotForSale(vendingSlotId, user);
                 when(saleRepository.save(any(Sale.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
                 Sale result = saleService.realTimeSale(vendingSlotId, paymentMethod, user);
@@ -352,7 +352,7 @@ public class SaleServiceTest {
                 assertEquals(result.getProduct(), product);
                 assertEquals(result.getTotalAmount(), productInfo.getSaleUnitPrice());
 
-                verify(vendingSlotService).popStockFromVendingSlot(vendingSlotId, user);
+                verify(vendingSlotService).popStockFromVendingSlotForSale(vendingSlotId, user);
                 verify(notificationService).createNotification(
                     eq(NotificationType.FAILURE_SALE),
                     contains(errorMessage),

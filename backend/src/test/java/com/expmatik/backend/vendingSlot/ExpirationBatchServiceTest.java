@@ -22,6 +22,7 @@ import org.springframework.security.access.AccessDeniedException;
 
 import com.expmatik.backend.exceptions.ExpiredProductException;
 import com.expmatik.backend.exceptions.OutOfStockException;
+import com.expmatik.backend.exceptions.SlotBlockedException;
 import com.expmatik.backend.user.User;
 import com.expmatik.backend.vendingMachine.VendingMachine;
 
@@ -240,6 +241,25 @@ public class ExpirationBatchServiceTest {
                 assertThrows(ExpiredProductException.class, () -> {
                     expirationBatchService.popUnitExpirationBatch(vendingSlot, user);
                 });
+            }
+
+            @Test
+            @DisplayName("popUnitExpirationBatch should throw SlotBlockedException when vending slot is blocked and should not decrement stock")
+            public void testPopUnitExpirationBatch_BlockedSlot_shouldThrowSlotBlockedExceptionWithoutStockChange() {
+                UUID vendingSlotId = vendingSlot.getId();
+                Integer initialBatchStock = batch1.getQuantity();
+                Integer initialSlotStock = vendingSlot.getCurrentStock();
+                vendingSlot.setIsBlocked(true);
+
+                when(expirationBatchRepository.findAllByVendingSlotIdOrderByExpirationDateAsc(vendingSlotId))
+                    .thenReturn(List.of(batch1, batch2));
+
+                assertThrows(SlotBlockedException.class, () -> {
+                    expirationBatchService.popUnitExpirationBatch(vendingSlot, user);
+                });
+
+                assertEquals(initialBatchStock, batch1.getQuantity());
+                assertEquals(initialSlotStock, vendingSlot.getCurrentStock());
             }
         }
     }

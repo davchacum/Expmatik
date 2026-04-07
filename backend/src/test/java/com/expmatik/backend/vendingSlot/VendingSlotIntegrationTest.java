@@ -173,7 +173,7 @@ public class VendingSlotIntegrationTest {
                         mockMvc.perform(patch("/api/vending-slots/{id}/assign-or-unassign-product", vendingSlotId)
                                         .param("barcode", "20000001"))
                                 .andExpect(status().isConflict())
-                                .andExpect(jsonPath("$.message").value("Cannot assign a product to a vending slot that is blocked for maintenance."));
+                                .andExpect(jsonPath("$.message").value("Cannot assign or unassign a product to a vending slot that is blocked for maintenance."));
                 }
 
                 @Test

@@ -91,7 +91,7 @@ public class VendingSlotService {
         checkVendingSlotNotEmpty(vendingSlot);
         //Revisar que no tenga tarea de mantenimiento pendiente actualmente no implementado
         if(vendingSlot.getIsBlocked()) {
-            throw new ConflictException("Cannot assign a product to a vending slot that is blocked for maintenance.");
+            throw new ConflictException("Cannot assign or unassign a product to a vending slot that is blocked for maintenance.");
         }
         if(barcode==null){
             vendingSlot.setProduct(null);
@@ -144,6 +144,14 @@ public class VendingSlotService {
 
     @Transactional
     public VendingSlot popStockFromVendingSlot(UUID vendingSlotId, User user) {
+        return popStockFromVendingSlotInternal(vendingSlotId, user, false);
+    }
+
+    public VendingSlot popStockFromVendingSlotForSale(UUID vendingSlotId, User user) {
+        return popStockFromVendingSlotInternal(vendingSlotId, user, true);
+    }
+
+    private VendingSlot popStockFromVendingSlotInternal(UUID vendingSlotId, User user, boolean saleFlow) {
         VendingSlot vendingSlot = getVendingSlotById(vendingSlotId,user);
         checkUserAuthorization(vendingSlot, user);
         if (vendingSlot.getProduct() == null) {
@@ -153,11 +161,11 @@ public class VendingSlotService {
         if(vendingSlot.getCurrentStock() <= 0) {
             throw new OutOfStockException("Cannot remove stock from the vending slot because it is empty.");
         }
-        
-        expirationBatchService.popUnitExpirationBatch(vendingSlot, user);
 
-        if (vendingSlot.getIsBlocked()) {
-            throw new SlotBlockedException("The vending slot is blocked for maintenance.");
+        if (saleFlow) {
+            expirationBatchService.popUnitExpirationBatchForSale(vendingSlot, user);
+        } else {
+            expirationBatchService.popUnitExpirationBatch(vendingSlot, user);
         }
         if(vendingSlot.getCurrentStock() == 3) {
             createProductLowStockNotification(vendingSlot, user);
