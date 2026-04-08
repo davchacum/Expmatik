@@ -100,13 +100,13 @@ public class ProductInfoService {
 
     private void generateLowStockNotification(ProductInfo productInfo) {
         String message = "El producto " + productInfo.getProduct().getName() + " tiene pocas unidades en stock. Quedan " + productInfo.getStockQuantity() + " unidades. Por favor, considere reponerlo pronto comprandolo con una factura.";
-        String link = "Unknown";
+        String link = "/inventory/" + productInfo.getId() + "/edit";
         notificationService.createNotification(NotificationType.INVENTORY_STOCK_LOW, message, link, productInfo.getUser());
     }
 
     private void generateOutOfStockNotification(ProductInfo productInfo) {
         String message = "El producto " + productInfo.getProduct().getName() + " se ha quedado sin stock. Por favor, considere reponerlo lo antes posible comprandolo con una factura.";
-        String link = "Unknown";
+        String link = "/inventory/" + productInfo.getId() + "/edit";
         notificationService.createNotification(NotificationType.INVENTORY_OUT_OF_STOCK, message, link, productInfo.getUser());
     }
 

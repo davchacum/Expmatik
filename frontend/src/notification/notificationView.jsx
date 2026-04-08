@@ -19,7 +19,7 @@ const NOTIFICATION_TYPE_OPTIONS = [
 const TYPE_LABELS = {
   PRODUCT_LOW_STOCK: "Stock bajo (máquina)",
   PRODUCT_OUT_OF_STOCK: "Sin stock (máquina)",
-  EXPIRATION_WARNING: "Próxima caducidad",
+  EXPIRATION_WARNING: "Caducidad próxima",
   PRODUCT_EXPIRED: "Producto caducado",
   ASSIGNED_RESTOCKING: "Reposición asignada",
   COMPLETED_RESTOCKING: "Reposición completada",
@@ -342,13 +342,31 @@ const NotificationsView = () => {
                       {notification.isRead ? "Leída" : "No leída"}
                     </span>
                   </td>
-                  <td style={{ textAlign: "center" }}>
+                  <td
+                    style={{
+                      textAlign: "center",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "6px",
+                      alignItems: "center",
+                    }}
+                  >
                     {!notification.isRead && (
                       <button
-                        className="action-btn-blue"
+                        className="action-btn-green"
                         onClick={() => handleMarkAsRead(notification.id)}
                       >
                         Marcar leída
+                      </button>
+                    )}
+                    {notification.link && notification.link !== "Unknown" && (
+                      <button
+                        className="action-btn-blue"
+                        style={{ marginTop: 4 }}
+                        onClick={() => navigate(notification.link)}
+                        aria-label="Ir al sitio relacionado"
+                      >
+                        Ir al sitio
                       </button>
                     )}
                   </td>

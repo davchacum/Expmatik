@@ -48,14 +48,14 @@ public class ExpirationTask {
     private void createExpirationWarningNotification(ExpirationBatch batch) {
             String slotLabel = SlotLabelFormatter.toFrontendLabel(batch.getVendingSlot().getRowNumber(), batch.getVendingSlot().getColumnNumber());
             String message = "AVISO: El producto " + batch.getVendingSlot().getProduct().getName() + " en la ranura " + slotLabel + " de la máquina expendedora " + batch.getVendingSlot().getVendingMachine().getName() + " expirará en 3 días. Por favor, revise el stock y recargue si es necesario.";
-            String link = "Unknown";
+            String link = "/vending-machines/" + batch.getVendingSlot().getVendingMachine().getId() + "/details";
             notificationService.createNotification(NotificationType.EXPIRATION_WARNING, message, link, batch.getVendingSlot().getVendingMachine().getUser());
     }
 
     private void createProductExpiredNotification(ExpirationBatch batch) {
             String slotLabel = SlotLabelFormatter.toFrontendLabel(batch.getVendingSlot().getRowNumber(), batch.getVendingSlot().getColumnNumber());
             String message = "CRÍTICO: El producto " + batch.getVendingSlot().getProduct().getName() + " en la ranura " + slotLabel + " de la máquina expendedora " + batch.getVendingSlot().getVendingMachine().getName() + " ha caducado. La ranura ha sido bloqueada automáticamente. Por favor, retire el producto caducado y recargue la ranura lo antes posible.";
-            String link = "Unknown";
+            String link = "/vending-machines/" + batch.getVendingSlot().getVendingMachine().getId() + "/details";
             notificationService.createNotification(NotificationType.PRODUCT_EXPIRED, message, link, batch.getVendingSlot().getVendingMachine().getUser());
     }
 }

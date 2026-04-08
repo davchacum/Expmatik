@@ -178,14 +178,14 @@ public class VendingSlotService {
     private void createProductLowStockNotification(VendingSlot vendingSlot, User user) {
             String slotLabel = SlotLabelFormatter.toFrontendLabel(vendingSlot.getRowNumber(), vendingSlot.getColumnNumber());
             String message = "El stock del producto " + vendingSlot.getProduct().getName() + " en la ranura " + slotLabel + " de la máquina expendedora " + vendingSlot.getVendingMachine().getName() + " le quedan 3 unidades. Por favor, recargue el producto lo antes posible para evitar quedarse sin stock.";
-            String link ="Unknown";
+            String link ="/vending-machines/" + vendingSlot.getVendingMachine().getId() + "/details";
             notificationService.createNotification(NotificationType.PRODUCT_LOW_STOCK,message, link, user);
     }
 
     private void createProductOutOfStockNotification(VendingSlot vendingSlot, User user) {
             String slotLabel = SlotLabelFormatter.toFrontendLabel(vendingSlot.getRowNumber(), vendingSlot.getColumnNumber());
             String message = "El stock del producto " + vendingSlot.getProduct().getName() + " en la ranura " + slotLabel + " de la máquina expendedora " + vendingSlot.getVendingMachine().getName() + " se ha agotado. Por favor, recargue el producto lo antes posible para evitar perder ventas.";
-            String link ="Unknown";
+            String link ="/vending-machines/" + vendingSlot.getVendingMachine().getId() + "/details";
             notificationService.createNotification(NotificationType.PRODUCT_OUT_OF_STOCK,message, link, user);
     }
  

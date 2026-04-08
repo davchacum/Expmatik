@@ -119,8 +119,8 @@ public class SaleService {
             sale.setStatus(TransactionStatus.FAILED);
             sale.setFailureReason(e.getMessage());
             String slotLabel = SlotLabelFormatter.toFrontendLabel(vendingSlot.getRowNumber(), vendingSlot.getColumnNumber());
-            String message = "La venta ha fallado porque en la ranura " + slotLabel + " de la máquina expendedora " + vendingSlot.getVendingMachine().getName() + ": " + e.getMessage() + " Por favor, revise el estado de la máquina y el producto para solucionar el problema.";
-            String link = "Unknown";
+            String message = "Una venta ha fallado en la ranura " + slotLabel + " de la máquina expendedora " + vendingSlot.getVendingMachine().getName() + " porque: " + e.getMessage() + " Por favor, revise el estado de la máquina y el producto para solucionar el problema.";
+            String link = "/vending-machines/" + vendingSlot.getVendingMachine().getId() + "/details";
             notificationService.createNotification(NotificationType.FAILURE_SALE, message, link, user);
             
             System.out.println("Sale failed: " + e.getMessage());
