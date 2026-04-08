@@ -28,6 +28,7 @@ import com.expmatik.backend.productInfo.ProductInfo;
 import com.expmatik.backend.productInfo.ProductInfoService;
 import com.expmatik.backend.sale.DTOs.SaleCreate;
 import com.expmatik.backend.user.User;
+import com.expmatik.backend.vendingSlot.SlotLabelFormatter;
 import com.expmatik.backend.vendingSlot.VendingSlot;
 import com.expmatik.backend.vendingSlot.VendingSlotService;
 
@@ -95,9 +96,9 @@ public class SaleService {
         Sale sale = new Sale();
         sale.setPaymentMethod(paymentMethod);
         sale.setSaleDate(LocalDateTime.now());
-
+        VendingSlot vendingSlot = vendingSlotService.getVendingSlotById(vendingSlotId, user);
         try {
-            VendingSlot vendingSlot = vendingSlotService.getVendingSlotById(vendingSlotId, user);
+            
             sale.setVendingSlot(vendingSlot);
 
             Product product = vendingSlot.getProduct();
@@ -117,7 +118,8 @@ public class SaleService {
 
             sale.setStatus(TransactionStatus.FAILED);
             sale.setFailureReason(e.getMessage());
-            String message = "La venta ha fallado porque " + e.getMessage() + " en la máquina expendedora " + vendingSlotId.toString() + ". Por favor, revise el estado de la máquina y el producto para solucionar el problema.";
+            String slotLabel = SlotLabelFormatter.toFrontendLabel(vendingSlot.getRowNumber(), vendingSlot.getColumnNumber());
+            String message = "La venta ha fallado porque en la ranura " + slotLabel + " de la máquina expendedora " + vendingSlot.getVendingMachine().getName() + ": " + e.getMessage() + " Por favor, revise el estado de la máquina y el producto para solucionar el problema.";
             String link = "Unknown";
             notificationService.createNotification(NotificationType.FAILURE_SALE, message, link, user);
             

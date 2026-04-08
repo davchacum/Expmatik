@@ -16,9 +16,11 @@ import com.expmatik.backend.user.User;
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final NotificationRealtimePublisher notificationRealtimePublisher;
 
-    public NotificationService(NotificationRepository notificationRepository) {
+    public NotificationService(NotificationRepository notificationRepository, NotificationRealtimePublisher notificationRealtimePublisher) {
         this.notificationRepository = notificationRepository;
+        this.notificationRealtimePublisher = notificationRealtimePublisher;
     }
 
     @Transactional
@@ -34,7 +36,7 @@ public class NotificationService {
     }
 
     private void checkUserAuthorization(Notification notification, User user) {
-        if(notification.getUser().getId() != user.getId()) {
+        if (!notification.getUser().getId().equals(user.getId())) {
             throw new AccessDeniedException("You are not authorized to perform this action.");
         }
     }
@@ -48,14 +50,18 @@ public class NotificationService {
         notification.setLink(link);
         notification.setIsRead(false);
         notification.setUser(user);
-        return save(notification);
+        Notification createdNotification = save(notification);
+        notificationRealtimePublisher.publishUnreadCount(user);
+        return createdNotification;
     }
 
     @Transactional
     public Notification markAsRead(UUID id, User user) {
         Notification notification = findById(id, user);
         notification.setIsRead(true);
-        return save(notification);
+        Notification updatedNotification = save(notification);
+        notificationRealtimePublisher.publishUnreadCount(user);
+        return updatedNotification;
     }
 
     @Transactional(readOnly = true)
@@ -75,6 +81,7 @@ public class NotificationService {
             notification.setIsRead(true);
             save(notification);
         });
+        notificationRealtimePublisher.publishUnreadCount(user);
     }
 
 

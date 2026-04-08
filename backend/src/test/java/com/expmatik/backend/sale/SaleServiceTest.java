@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doThrow;
@@ -36,6 +36,7 @@ import org.springframework.security.access.AccessDeniedException;
 
 import com.expmatik.backend.exceptions.BadRequestException;
 import com.expmatik.backend.exceptions.ConflictException;
+import com.expmatik.backend.exceptions.ExpiredProductException;
 import com.expmatik.backend.exceptions.OutOfStockException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
 import com.expmatik.backend.exceptions.SlotBlockedException;
@@ -296,7 +297,7 @@ public class SaleServiceTest {
                 verify(vendingSlotService).popStockFromVendingSlotForSale(vendingSlotId, user);
                 verify(notificationService).createNotification(
                     eq(NotificationType.FAILURE_SALE),
-                    contains(errorMessage),
+                    argThat(message -> message.contains("ranura A1") && message.contains(errorMessage)),
                     eq("Unknown"),
                     eq(user)
                 );
@@ -324,7 +325,7 @@ public class SaleServiceTest {
                 verify(vendingSlotService).popStockFromVendingSlotForSale(vendingSlotId, user);
                 verify(notificationService).createNotification(
                     eq(NotificationType.FAILURE_SALE),
-                    contains(errorMessage),
+                    argThat(message -> message.contains("ranura A1") && message.contains(errorMessage)),
                     eq("Unknown"),
                     eq(user)
                 );
@@ -341,7 +342,7 @@ public class SaleServiceTest {
 
                 when(vendingSlotService.getVendingSlotById(vendingSlotId, user)).thenReturn(vendingSlot);
                 when(productInfoService.getOrCreateProductInfo(product.getId(), user, null)).thenReturn(productInfo);
-                doThrow(new OutOfStockException(errorMessage)).when(vendingSlotService).popStockFromVendingSlotForSale(vendingSlotId, user);
+                doThrow(new ExpiredProductException(errorMessage)).when(vendingSlotService).popStockFromVendingSlotForSale(vendingSlotId, user);
                 when(saleRepository.save(any(Sale.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
                 Sale result = saleService.realTimeSale(vendingSlotId, paymentMethod, user);
@@ -355,7 +356,7 @@ public class SaleServiceTest {
                 verify(vendingSlotService).popStockFromVendingSlotForSale(vendingSlotId, user);
                 verify(notificationService).createNotification(
                     eq(NotificationType.FAILURE_SALE),
-                    contains(errorMessage),
+                    argThat(message -> message.contains("ranura A1") && message.contains(errorMessage)),
                     eq("Unknown"),
                     eq(user)
                 );

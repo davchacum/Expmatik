@@ -34,6 +34,9 @@ public class NotificationServiceTest {
     @Mock
     private NotificationRepository notificationRepository;
 
+    @Mock
+    private NotificationRealtimePublisher notificationRealtimePublisher;
+
     @Spy
     @InjectMocks
     private NotificationService notificationService;
@@ -91,7 +94,9 @@ public class NotificationServiceTest {
             void testFindById_userNotAuthorized_shouldThrowAccessDeniedException() {
                 User user = new User();
                 user.setId(UUID.randomUUID());
-                notification.setUser(new User());
+                User notificationOwner = new User();
+                notificationOwner.setId(UUID.randomUUID());
+                notification.setUser(notificationOwner);
 
                 when(notificationRepository.findById(any(UUID.class))).thenReturn(Optional.of(notification));
 
@@ -123,6 +128,7 @@ public class NotificationServiceTest {
                 assertEquals(result.getLink(), "/test-link");
                 assertEquals(result.getUser(), user);
                 verify(notificationRepository).save(any(Notification.class));
+                verify(notificationRealtimePublisher).publishUnreadCount(user);
             }
         }
     }
@@ -150,6 +156,7 @@ public class NotificationServiceTest {
                 assertEquals(result.getIsRead(), true);
                 verify(notificationRepository).findById(any(UUID.class));
                 verify(notificationRepository).save(any(Notification.class));
+                verify(notificationRealtimePublisher).publishUnreadCount(user);
             }
         }
 
@@ -166,7 +173,9 @@ public class NotificationServiceTest {
         void testMarkAsRead_userNotAuthorized_shouldThrowAccessDeniedException() {
             User user = new User();
             user.setId(UUID.randomUUID());
-            notification.setUser(new User());
+            User notificationOwner = new User();
+            notificationOwner.setId(UUID.randomUUID());
+            notification.setUser(notificationOwner);
 
             when(notificationRepository.findById(any(UUID.class))).thenReturn(Optional.of(notification));
 
@@ -198,6 +207,7 @@ public class NotificationServiceTest {
 
                 verify(notificationRepository).searchNotifications(any(UUID.class), eq(false), isNull(), isNull(), isNull(), any());
                 verify(notificationRepository).save(notification);
+                verify(notificationRealtimePublisher).publishUnreadCount(user);
                 assertEquals(notification.getIsRead(), true);
             }
         }
