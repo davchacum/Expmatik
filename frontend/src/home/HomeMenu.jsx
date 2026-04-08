@@ -1,22 +1,17 @@
-import { useState,useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useRequireTokenRedirect } from "../hooks/useRequireTokenRedirect";
 import "./home.css";
 
 const HomeMenu = () => {
   const navigate = useNavigate();
+  const token = localStorage.getItem("accessToken");
+  useRequireTokenRedirect(token, navigate);
 
   const [user] = useState(() => {
     const storedUser = localStorage.getItem("user");
     return storedUser ? JSON.parse(storedUser) : null;
   });
-
-  useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      navigate("/login", { replace: true });
-      return;
-    }
-  }, [navigate]);
 
   const allItems = [
     {
@@ -29,7 +24,7 @@ const HomeMenu = () => {
       title: "Inventario",
       desc: "Control de stock y productos.",
       path: "/inventory",
-      roles: ["ADMINISTRATOR", "MAINTAINER"],
+      roles: ["ADMINISTRATOR"],
     },
     {
       title: "Analíticas",
@@ -59,12 +54,6 @@ const HomeMenu = () => {
       title: "Tareas de mantenimiento",
       desc: "Ver registro de mantenimientos.",
       path: "/maintenance",
-      roles: ["ADMINISTRATOR", "MAINTAINER"],
-    },
-    {
-      title: "Notificaciones",
-      desc: "Alertas y mensajes del sistema.",
-      path: "/notifications",
       roles: ["ADMINISTRATOR", "MAINTAINER"],
     },
   ];

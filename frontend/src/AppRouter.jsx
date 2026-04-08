@@ -9,6 +9,7 @@ import CreateInvoice from "./invoice/createInvoice";
 import EditInvoice from "./invoice/editInvoice";
 import ImportInvoiceCSV from "./invoice/importInvoiceCSV";
 import Invoices from "./invoice/invoiceView";
+import NotificationsView from "./notification/notificationView";
 import PrivateRoute from "./PrivateRoute";
 import CreateCustomProduct from "./product/createCustomProduct";
 import Products from "./product/productView";
@@ -116,6 +117,15 @@ const AppRouter = () => {
         element={
           <PrivateRoute allowedRoles={["ADMINISTRATOR"]}>
             <VendingMachineDetails />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/notifications"
+        element={
+          <PrivateRoute allowedRoles={["ADMINISTRATOR", "MAINTAINER"]}>
+            <NotificationsView />
           </PrivateRoute>
         }
       />

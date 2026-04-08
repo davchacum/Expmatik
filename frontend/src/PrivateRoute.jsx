@@ -1,10 +1,14 @@
 import { Navigate } from "react-router-dom";
+import { useAuthenticatedUser } from "./hooks/useAuthenticatedUser";
 
 const PrivateRoute = ({ children, allowedRoles }) => {
-  const token = localStorage.getItem("accessToken");
-  const user = JSON.parse(localStorage.getItem("user"));
+  const { isCheckingAuth, isAuthenticated, user } = useAuthenticatedUser();
 
-  if (!token) {
+  if (isCheckingAuth) {
+    return null;
+  }
+
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
