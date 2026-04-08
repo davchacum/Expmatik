@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from "../components/Modal";
 import "../global-list.css";
+import { useRequireTokenRedirect } from "../hooks/useRequireTokenRedirect";
 
 const EyeIcon = ({ visible }) =>
   visible ? (
@@ -41,13 +42,7 @@ const EyeIcon = ({ visible }) =>
 const Products = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("accessToken");
-
-  useEffect(() => {
-    if (!token) {
-      navigate("/login", { replace: true });
-      return;
-    }
-  }, [token, navigate]);
+  useRequireTokenRedirect(token, navigate);
 
   const modalTitleRef = useRef(null);
 

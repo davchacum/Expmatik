@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../global-form.css";
+import { useRequireTokenRedirect } from "../hooks/useRequireTokenRedirect";
 
 const EditProductInfo = () => {
   const { id } = useParams(); // Usando 'id' como confirmamos antes
   const navigate = useNavigate();
   const token = localStorage.getItem("accessToken");
+  useRequireTokenRedirect(token, navigate);
 
   const [product, setProduct] = useState(null);
   const [formData, setFormData] = useState({
@@ -82,8 +84,8 @@ const EditProductInfo = () => {
   }, [token, id, calculateMetrics]);
 
   useEffect(() => {
-    if (!token) navigate("/login", { replace: true });
-    else fetchProductDetails();
+    if (!token) return;
+    fetchProductDetails();
   }, [token, navigate, fetchProductDetails]);
 
   const handleChange = (e) => {
@@ -172,7 +174,7 @@ const EditProductInfo = () => {
                 }
                 readOnly
                 aria-readonly="true"
-                style={{ opacity: 0.6 , cursor: "default"}}
+                style={{ opacity: 0.6, cursor: "default" }}
               />
             </div>
 
@@ -191,7 +193,7 @@ const EditProductInfo = () => {
                 }
                 readOnly
                 aria-readonly="true"
-                style={{ opacity: 0.6 , cursor: "default"}}
+                style={{ opacity: 0.6, cursor: "default" }}
               />
             </div>
 
@@ -270,7 +272,7 @@ const EditProductInfo = () => {
                 }
                 readOnly
                 aria-readonly="true"
-                style={{ opacity: 0.6 , cursor: "default"}}
+                style={{ opacity: 0.6, cursor: "default" }}
               />
             </div>
 

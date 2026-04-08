@@ -2,10 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from "../components/Modal";
 import "../global-list.css";
+import { useRequireTokenRedirect } from "../hooks/useRequireTokenRedirect";
 
 const InventoryList = () => {
   const token = localStorage.getItem("accessToken");
   const navigate = useNavigate();
+  useRequireTokenRedirect(token, navigate);
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -18,10 +20,6 @@ const InventoryList = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [catalogProducts, setCatalogProducts] = useState([]);
   const [catalogLoading, setCatalogLoading] = useState(false);
-
-  useEffect(() => {
-    if (!token) navigate("/login", { replace: true });
-  }, [token, navigate]);
 
   const fetchInventory = useCallback(async () => {
     setLoading(true);
@@ -201,7 +199,9 @@ const InventoryList = () => {
                     backgroundColor: item.needUpdate
                       ? "rgba(243, 34, 34, 0.05)"
                       : "transparent",
-                    borderLeft: item.needUpdate ? "8px solid var(--primary-red)" : "none",
+                    borderLeft: item.needUpdate
+                      ? "8px solid var(--primary-red)"
+                      : "none",
                   }}
                 >
                   <td>

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from "../components/Modal";
 import "../global-list.css";
+import { useRequireTokenRedirect } from "../hooks/useRequireTokenRedirect";
 
 const EyeIcon = ({ visible }) => (
   <svg
@@ -33,6 +34,7 @@ const EyeIcon = ({ visible }) => (
 const Invoices = () => {
   const token = localStorage.getItem("accessToken");
   const navigate = useNavigate();
+  useRequireTokenRedirect(token, navigate);
   const [invoices, setInvoices] = useState([]);
   const [filters, setFilters] = useState({
     status: "",
@@ -57,12 +59,6 @@ const Invoices = () => {
       modalTitleRef.current.focus();
     }
   }, [selectedInvoice]);
-
-  useEffect(() => {
-    if (!token) {
-      navigate("/login", { replace: true });
-    }
-  }, [token, navigate]);
 
   const fetchInvoices = useCallback(async () => {
     setLoading(true);

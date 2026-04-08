@@ -2,11 +2,13 @@ import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../global-form.css";
 import "../global-list.css";
+import { useRequireTokenRedirect } from "../hooks/useRequireTokenRedirect";
 
 const ImportInvoiceCSV = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const token = localStorage.getItem("accessToken");
+  useRequireTokenRedirect(token, navigate);
 
   const [importedInvoices, setImportedInvoices] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -279,9 +281,7 @@ const ImportInvoiceCSV = () => {
                 onClick={() => navigate("/invoices")}
                 disabled={loading}
               >
-                {loading
-                  ? "Procesando..."
-                  : `Cancelar`}
+                {loading ? "Procesando..." : `Cancelar`}
               </button>
               <button
                 className="action-btn-green"

@@ -1,17 +1,12 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../global-form.css";
+import { useRequireTokenRedirect } from "../hooks/useRequireTokenRedirect";
 
 const CreateCustomProduct = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("accessToken");
-
-  useEffect(() => {
-    if (!token) {
-      navigate("/login", { replace: true });
-      return;
-    }
-  }, [token, navigate]);
+  useRequireTokenRedirect(token, navigate);
 
   const [formData, setFormData] = useState({
     name: "",

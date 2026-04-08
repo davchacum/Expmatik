@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 import Modal from "../components/Modal";
 import "../global-form.css";
 import "../global-list.css";
+import { useRequireTokenRedirect } from "../hooks/useRequireTokenRedirect";
 
 const EyeIcon = ({ visible }) => (
   <svg
@@ -34,7 +35,9 @@ const EyeIcon = ({ visible }) => (
 
 const VendingMachineDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const token = localStorage.getItem("accessToken");
+  useRequireTokenRedirect(token, navigate);
 
   const [machine, setMachine] = useState(null);
   const [slots, setSlots] = useState([]);

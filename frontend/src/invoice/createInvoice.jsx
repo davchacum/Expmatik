@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../global-form.css";
 import "../global-list.css";
+import { useRequireTokenRedirect } from "../hooks/useRequireTokenRedirect";
 
 const CreateInvoice = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("accessToken");
+  useRequireTokenRedirect(token, navigate);
 
   const [invoice, setInvoice] = useState({
     invoiceNumber: "",
@@ -25,13 +27,6 @@ const CreateInvoice = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    if (!token) {
-      navigate("/login", { replace: true });
-      return;
-    }
-  }, [token, navigate]);
 
   const validateBarcode = async (barcode) => {
     try {

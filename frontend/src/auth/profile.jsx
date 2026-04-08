@@ -1,55 +1,11 @@
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../home/home.css";
+import { useAuthenticatedUser } from "../hooks/useAuthenticatedUser";
 import "./profile.css";
 
 const Profile = () => {
   const navigate = useNavigate();
-
-  const [user, setUser] = useState(() => {
-    const storedUser = localStorage.getItem("user");
-    return storedUser ? JSON.parse(storedUser) : null;
-  });
-
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      const token = localStorage.getItem("accessToken");
-
-      if (!token) {
-        navigate("/login", { replace: true });
-        return;
-      }
-
-      try {
-        const response = await fetch("/api/auth/profile", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (response.ok) {
-          const freshData = await response.json();
-          setUser(freshData);
-          localStorage.setItem("user", JSON.stringify(freshData));
-        } else {
-          localStorage.clear();
-          navigate("/login", { replace: true });
-        }
-      } catch (err) {
-        console.error("Error al obtener perfil:", err);
-        setError("No se pudo sincronizar con el servidor.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, [navigate]);
+  const { user, error, isCheckingAuth: loading } = useAuthenticatedUser();
 
   const handleLogout = async () => {
     try {

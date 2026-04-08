@@ -2,10 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from "../components/Modal";
 import "../global-list.css";
+import { useRequireTokenRedirect } from "../hooks/useRequireTokenRedirect";
 
 const VendingMachineList = () => {
   const token = localStorage.getItem("accessToken");
   const navigate = useNavigate();
+  useRequireTokenRedirect(token, navigate);
 
   const [machines, setMachines] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -23,10 +25,6 @@ const VendingMachineList = () => {
     rowCount: "",
     maxCapacityPerSlot: "",
   });
-
-  useEffect(() => {
-    if (!token) navigate("/login", { replace: true });
-  }, [token, navigate]);
 
   const fetchMachines = useCallback(async () => {
     setLoading(true);

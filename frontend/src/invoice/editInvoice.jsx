@@ -2,11 +2,13 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../global-form.css";
 import "../global-list.css";
+import { useRequireTokenRedirect } from "../hooks/useRequireTokenRedirect";
 
 const EditInvoice = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const token = localStorage.getItem("accessToken");
+  useRequireTokenRedirect(token, navigate);
 
   const [invoice, setInvoice] = useState({
     invoiceNumber: "",
@@ -54,10 +56,7 @@ const EditInvoice = () => {
   }, [id, token]);
 
   useEffect(() => {
-    if (!token) {
-      navigate("/login");
-      return;
-    }
+    if (!token) return;
     fetchInvoiceData();
   }, [fetchInvoiceData, token, navigate]);
 
