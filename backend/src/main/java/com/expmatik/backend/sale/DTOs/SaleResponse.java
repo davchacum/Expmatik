@@ -2,7 +2,10 @@ package com.expmatik.backend.sale.DTOs;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
+
+import org.springframework.data.domain.Page;
 
 import com.expmatik.backend.sale.PaymentMethod;
 import com.expmatik.backend.sale.Sale;
@@ -26,7 +29,8 @@ public record SaleResponse(
     Integer rowNumber,
     Integer columnNumber,
 
-    UUID vendingMachineId
+    UUID vendingMachineId,
+    String machineName
 
 ) {
 
@@ -45,10 +49,13 @@ public record SaleResponse(
             sale.getVendingSlot().getId(),
             sale.getVendingSlot().getRowNumber(),
             sale.getVendingSlot().getColumnNumber(),
-            sale.getVendingSlot().getVendingMachine().getId()
+            sale.getVendingSlot().getVendingMachine().getId(),
+            sale.getVendingSlot().getVendingMachine().getName()
         );
     }
 
-
+    public static Page<SaleResponse> fromSalePage(Page<Sale> salePage) {
+        return salePage.map(SaleResponse::fromSale);
+    }
 
 }

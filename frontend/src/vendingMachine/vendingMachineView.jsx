@@ -285,24 +285,6 @@ const VendingMachineList = () => {
                 }}
               >
                 <div className="input-group">
-                  <label htmlFor="machine-cols" className="input-label">
-                    Nº Columnas
-                  </label>
-                  <input
-                    id="machine-cols"
-                    type="number"
-                    className="dark-input"
-                    value={newMachine.columnCount}
-                    min={1}
-                    onChange={(e) =>
-                      setNewMachine({
-                        ...newMachine,
-                        columnCount: parseInt(e.target.value) || 0,
-                      })
-                    }
-                  />
-                </div>
-                <div className="input-group">
                   <label htmlFor="machine-rows" className="input-label">
                     Nº Filas
                   </label>
@@ -312,10 +294,30 @@ const VendingMachineList = () => {
                     className="dark-input"
                     value={newMachine.rowCount}
                     min={1}
+                    required
                     onChange={(e) =>
                       setNewMachine({
                         ...newMachine,
                         rowCount: parseInt(e.target.value) || 0,
+                      })
+                    }
+                  />
+                </div>
+                <div className="input-group">
+                  <label htmlFor="machine-cols" className="input-label">
+                    Nº Columnas
+                  </label>
+                  <input
+                    id="machine-cols"
+                    type="number"
+                    className="dark-input"
+                    value={newMachine.columnCount}
+                    min={1}
+                    required
+                    onChange={(e) =>
+                      setNewMachine({
+                        ...newMachine,
+                        columnCount: parseInt(e.target.value) || 0,
                       })
                     }
                   />
@@ -329,7 +331,7 @@ const VendingMachineList = () => {
                     type="number"
                     className="dark-input"
                     value={newMachine.maxCapacityPerSlot}
-                    min={0}
+                    min={1}
                     required
                     onChange={(e) =>
                       setNewMachine({

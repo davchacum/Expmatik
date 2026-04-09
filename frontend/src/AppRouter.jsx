@@ -13,6 +13,7 @@ import NotificationsView from "./notification/notificationView";
 import PrivateRoute from "./PrivateRoute";
 import CreateCustomProduct from "./product/createCustomProduct";
 import Products from "./product/productView";
+import Sales from "./sale/saleView";
 import VendingMachineDetails from "./vendingMachine/vendingMachineDetails";
 import VendingMachineList from "./vendingMachine/vendingMachineView";
 
@@ -117,6 +118,15 @@ const AppRouter = () => {
         element={
           <PrivateRoute allowedRoles={["ADMINISTRATOR"]}>
             <VendingMachineDetails />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/sales"
+        element={
+          <PrivateRoute allowedRoles={["ADMINISTRATOR"]}>
+            <Sales />
           </PrivateRoute>
         }
       />

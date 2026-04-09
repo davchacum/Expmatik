@@ -875,8 +875,15 @@ const VendingMachineDetail = () => {
                   Efectuar Venta Manual
                 </button>
               )}
+              <button
+                type="button"
+                className="btn-secondary"
+                style={{ width: "100%" }}
+                onClick={() => setShowAssignModal(false)}
+              >
+                Cancelar
+              </button>
             </div>
-
             <div
               style={{
                 textAlign: "center",

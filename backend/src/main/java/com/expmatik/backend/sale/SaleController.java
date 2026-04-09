@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
@@ -75,7 +76,8 @@ public class SaleController {
         @RequestParam(required = false) TransactionStatus status, 
         @ParameterObject Pageable pageable) throws AccessDeniedException {
         User currentUser = userService.getUserProfile();
-        return ResponseEntity.ok(saleService.searchSales(currentUser.getId(), barcode, machineName, rowNumber, columnNumber, startDate, endDate, paymentMethod, status, pageable));
+        Page<Sale> salesPage = saleService.searchSales(currentUser.getId(), barcode, machineName, rowNumber, columnNumber, startDate, endDate, paymentMethod, status, pageable);
+        return ResponseEntity.ok(SaleResponse.fromSalePage(salesPage));
     }
 
     @PostMapping(value="/csv" , consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
