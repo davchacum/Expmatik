@@ -76,4 +76,9 @@ public class VendingMachineService {
         return vendingMachineRepository.findAllByUserId(user.getId(), pageable);
     }
 
+    @Transactional
+    public VendingMachine findVendingMachineByNameAndUserId(String name, User user) {
+        return vendingMachineRepository.findByNameAndUserId(name, user.getId()).orElseThrow(() -> new ResourceNotFoundException("The vending machine does not exist."));
+    }
+    
 }

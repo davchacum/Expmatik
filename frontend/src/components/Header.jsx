@@ -36,7 +36,8 @@ const Header = () => {
     if (path === "/vending-machines") return "Gestión de Máquinas Expendedoras";
     if (path.startsWith("/vending-machines/") && path.endsWith("/details"))
       return "Detalles de la Máquina Expendedora";
-    if (path === "/sales") return "Ventas";
+    if (path === "/sales") return "Registro de Ventas";
+    if (path === "/sales/create/csv") return "Importar Ventas desde CSV";
     if (path === "/maintenance") return "Tareas de Mantenimiento";
     if (path === "/notifications") return "Notificaciones";
     return "Expmatik";

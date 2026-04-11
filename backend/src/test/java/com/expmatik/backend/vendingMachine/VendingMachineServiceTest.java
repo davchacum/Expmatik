@@ -282,5 +282,58 @@ public class VendingMachineServiceTest {
                                 verify(vendingMachineRepository).findById(vendingMachineId);
                         }
                 }
-        }           
+        }
+        
+        @Nested
+        @DisplayName("findVendingMachineByNameAndUserId")
+        class FindVendingMachineByNameAndUserId {
+
+                @Nested
+                @DisplayName("Success Cases")
+                class SuccessCases {
+
+                        @Test
+                        @DisplayName("findVendingMachineByNameAndUserId - success")
+                        void testFindVendingMachineByNameAndUserId_ValidName_Success() {
+                                User user = new User();
+                                user.setId(UUID.randomUUID());
+                                String machineName = "Machine 1";
+
+                                VendingMachine vendingMachine = new VendingMachine();
+                                vendingMachine.setId(UUID.randomUUID());
+                                vendingMachine.setUser(user);
+                                vendingMachine.setName(machineName);
+
+                                when(vendingMachineRepository.findByNameAndUserId(machineName, user.getId()))
+                                        .thenReturn(Optional.of(vendingMachine));
+
+                                VendingMachine result = vendingMachineService.findVendingMachineByNameAndUserId(machineName, user);
+
+                                assertEquals(result,vendingMachine);
+                                verify(vendingMachineRepository).findByNameAndUserId(machineName, user.getId());
+                        }
+                }
+
+                @Nested
+                @DisplayName("Failure Cases")
+                class FailureCases {
+
+                        @Test
+                        @DisplayName("findVendingMachineByNameAndUserId - not found")
+                        void testFindVendingMachineByNameAndUserId_NotFound_ShouldThrowResourceNotFoundException() {
+                                User user = new User();
+                                user.setId(UUID.randomUUID());
+                                String machineName = "Nonexistent Machine";
+
+                                when(vendingMachineRepository.findByNameAndUserId(machineName, user.getId()))
+                                        .thenReturn(Optional.empty());
+
+                                assertThrows(ResourceNotFoundException.class, () -> {
+                                        vendingMachineService.findVendingMachineByNameAndUserId(machineName, user);
+                                });
+
+                                verify(vendingMachineRepository).findByNameAndUserId(machineName, user.getId());
+                        }
+                }
+        }
 }

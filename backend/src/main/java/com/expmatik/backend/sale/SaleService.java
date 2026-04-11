@@ -28,6 +28,8 @@ import com.expmatik.backend.productInfo.ProductInfo;
 import com.expmatik.backend.productInfo.ProductInfoService;
 import com.expmatik.backend.sale.DTOs.SaleCreate;
 import com.expmatik.backend.user.User;
+import com.expmatik.backend.vendingMachine.VendingMachine;
+import com.expmatik.backend.vendingMachine.VendingMachineService;
 import com.expmatik.backend.vendingSlot.SlotLabelFormatter;
 import com.expmatik.backend.vendingSlot.VendingSlot;
 import com.expmatik.backend.vendingSlot.VendingSlotService;
@@ -39,14 +41,16 @@ public class SaleService {
     private final SaleRepository saleRepository;
     private final ProductService productService;
     private final VendingSlotService vendingSlotService;
+    private final VendingMachineService vendingMachineService;
     private final ProductInfoService productInfoService;
     private final SaleCSVLector saleCSVLector;
     private final NotificationService notificationService;
 
-    public SaleService(SaleRepository saleRepository, ProductService productService, VendingSlotService vendingSlotService, ProductInfoService productInfoService, SaleCSVLector saleCSVLector, NotificationService notificationService) {
+    public SaleService(SaleRepository saleRepository, ProductService productService, VendingSlotService vendingSlotService, VendingMachineService vendingMachineService, ProductInfoService productInfoService, SaleCSVLector saleCSVLector, NotificationService notificationService) {
         this.saleRepository = saleRepository;
         this.productService = productService;
         this.vendingSlotService = vendingSlotService;
+        this.vendingMachineService = vendingMachineService;
         this.productInfoService = productInfoService;
         this.saleCSVLector = saleCSVLector;
         this.notificationService = notificationService;
@@ -80,7 +84,8 @@ public class SaleService {
         sale.setPaymentMethod(saleCreate.paymentMethod());
         sale.setStatus(saleCreate.status());
         Product product = productService.findInternalProductByBarcode(saleCreate.barcode(), user.getId());
-        VendingSlot vendingSlot = vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(saleCreate.machineName(), saleCreate.rowNumber(), saleCreate.columnNumber(), user);
+        VendingMachine vendingMachine = vendingMachineService.findVendingMachineByNameAndUserId(saleCreate.machineName(), user);
+        VendingSlot vendingSlot = vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(vendingMachine.getName(), saleCreate.rowNumber(), saleCreate.columnNumber(), user);
         sale.setProduct(product);
         sale.setVendingSlot(vendingSlot);
         return save(sale);

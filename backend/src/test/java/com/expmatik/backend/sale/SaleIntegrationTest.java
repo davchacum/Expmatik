@@ -187,6 +187,27 @@ public class SaleIntegrationTest {
             }
 
             @Test
+            @DisplayName("POST /api/sales - vending machine not found")
+            @WithUserDetails("admin@expmatik.com")
+            public void testCreateSale_VendingMachineNotFound_ReturnsNotFound() throws Exception {
+                SaleCreate saleCreate = new SaleCreate(
+                    LocalDateTime.now(),
+                    new BigDecimal("2.50"),
+                    PaymentMethod.CREDIT_CARD,
+                    TransactionStatus.SUCCESS,
+                    "20000001",
+                                "Máquina 99",
+                    1,
+                    1
+                );
+
+                mockMvc.perform(MockMvcRequestBuilders.post("/api/sales")
+                    .contentType("application/json")
+                    .content(objectMapper.writeValueAsString(saleCreate)))
+                    .andExpect(status().isNotFound());
+            }
+
+            @Test
             @DisplayName("POST /api/sales - vending slot not found")
             @WithUserDetails("admin@expmatik.com")
             public void testCreateSale_VendingSlotNotFound_ReturnsNotFound() throws Exception {
@@ -196,8 +217,8 @@ public class SaleIntegrationTest {
                     PaymentMethod.CREDIT_CARD,
                     TransactionStatus.SUCCESS,
                     "20000001",
-                                "Máquina 99",
-                    1,
+                                "Máquina 1",
+                    5,
                     1
                 );
 

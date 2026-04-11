@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Modal from "../components/Modal";
 import "../global-list.css";
 import { useRequireTokenRedirect } from "../hooks/useRequireTokenRedirect";
@@ -32,7 +33,8 @@ const EyeIcon = ({ visible }) => (
 
 const Sales = () => {
   const token = localStorage.getItem("accessToken");
-  useRequireTokenRedirect(token);
+  const navigate = useNavigate();
+  useRequireTokenRedirect(token, navigate);
   const [sales, setSales] = useState([]);
   const [filters, setFilters] = useState({
     barcode: "",
@@ -79,6 +81,7 @@ const Sales = () => {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
   const [hasSearched, setHasSearched] = useState(false);
   const modalTitleRef = useRef(null);
@@ -95,10 +98,27 @@ const Sales = () => {
       const params = new URLSearchParams();
       params.append("page", page);
       params.append("size", 8);
-      Object.keys(search).forEach((key) => {
-        if (search[key] !== undefined && search[key] !== "")
-          params.append(key, search[key]);
-      });
+
+      if (search.barcode) params.append("barcode", search.barcode);
+
+      if (search.machineId) {
+        const selected = machines.find((m) => m.id === search.machineId);
+        if (selected?.name) params.append("machineName", selected.name);
+      }
+
+      if (search.rowNumber !== "") {
+        params.append("rowNumber", String(search.rowNumber));
+      }
+
+      if (search.columnNumber !== "") {
+        params.append("columnNumber", String(search.columnNumber));
+      }
+
+      if (search.startDate) params.append("startDate", search.startDate);
+      if (search.endDate) params.append("endDate", search.endDate);
+      if (search.paymentMethod)
+        params.append("paymentMethod", search.paymentMethod);
+      if (search.status) params.append("status", search.status);
 
       const response = await fetch(`/api/sales?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -128,7 +148,7 @@ const Sales = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, search, token, hasSearched]);
+  }, [page, search, token, hasSearched, machines]);
 
   useEffect(() => {
     fetchSales();
@@ -152,12 +172,87 @@ const Sales = () => {
     return label;
   };
 
+  const handleExportSalesCsv = async () => {
+    setExporting(true);
+    setMessage({ text: "", type: "" });
+
+    try {
+      const params = new URLSearchParams();
+
+      if (filters.barcode) params.append("barcode", filters.barcode);
+
+      if (filters.machineId) {
+        const selected = machines.find((m) => m.id === filters.machineId);
+        if (selected?.name) params.append("machineName", selected.name);
+      }
+
+      if (filters.rowNumber !== "") {
+        params.append("rowNumber", String(filters.rowNumber));
+      }
+
+      if (filters.columnNumber !== "") {
+        params.append("columnNumber", String(filters.columnNumber));
+      }
+
+      if (filters.startDate) params.append("startDate", filters.startDate);
+      if (filters.endDate) params.append("endDate", filters.endDate);
+      if (filters.paymentMethod)
+        params.append("paymentMethod", filters.paymentMethod);
+      if (filters.status) params.append("status", filters.status);
+
+      const response = await fetch(
+        `/api/sales/csv-export?${params.toString()}`,
+        {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      if (!response.ok) {
+        let msg = "No se pudo exportar el CSV.";
+        try {
+          const errData = await response.json();
+          msg = errData.message || msg;
+        } catch {
+          const text = await response.text();
+          if (text) msg = text;
+        }
+        setMessage({ text: msg, type: "error" });
+        return;
+      }
+
+      const blob = await response.blob();
+      const fileName = "sales.csv";
+
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = fileName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.URL.revokeObjectURL(url);
+
+      setMessage({ text: "CSV exportado correctamente.", type: "success" });
+    } catch (err) {
+      setMessage({ text: `Error de conexión: ${err.message}`, type: "error" });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <main className="home-container" role="main">
       <div className="list-container">
         <header className="list-header-actions">
           <div className="input-group">
-            <h1 className="section-label">Listado de ventas</h1>
+            <button
+              className="action-btn-green"
+              onClick={() => navigate("/sales/create/csv")}
+              style={{ width: "100%", height: "44px", marginTop: "8px" }}
+            >
+              Importar ventas CSV
+            </button>
           </div>
         </header>
 
@@ -231,7 +326,7 @@ const Sales = () => {
                 {selectedMachine &&
                   Array.from({ length: selectedMachine.rowCount }).map(
                     (_, idx) => (
-                      <option key={idx} value={idx}>
+                      <option key={idx} value={idx + 1}>
                         {getColumnLabel(idx)}
                       </option>
                     ),
@@ -257,7 +352,7 @@ const Sales = () => {
                 {selectedMachine &&
                   Array.from({ length: selectedMachine.columnCount }).map(
                     (_, idx) => (
-                      <option key={idx} value={idx}>
+                      <option key={idx} value={idx + 1}>
                         {idx + 1}
                       </option>
                     ),
@@ -362,6 +457,18 @@ const Sales = () => {
                 Limpiar
               </button>
             </div>
+
+            <div className="input-group">
+              <button
+                className="action-btn-green"
+                onClick={handleExportSalesCsv}
+                disabled={exporting}
+                style={{ height: "44px", width: "100%" }}
+                aria-label="Exportar ventas a CSV"
+              >
+                {exporting ? "Exportando..." : "Exportar Ventas"}
+              </button>
+            </div>
           </div>
         </section>
         {message.text && (
@@ -388,7 +495,9 @@ const Sales = () => {
                   Ranura
                 </th>
                 <th scope="col">Pago</th>
-                <th scope="col">Estado</th>
+                <th scope="col" style={{ textAlign: "center" }}>
+                  Estado
+                </th>
                 <th scope="col" style={{ textAlign: "right" }}>
                   Total
                 </th>
@@ -413,7 +522,7 @@ const Sales = () => {
                     {sale.columnNumber}
                   </td>
                   <td>{sale.paymentMethod}</td>
-                  <td>
+                  <td style={{ textAlign: "center" }}>
                     <span
                       className={`badge ${sale.status === "SUCCESS" ? "badge-green" : "badge-red"}`}
                       style={{
@@ -565,15 +674,26 @@ const Sales = () => {
 
                 {selectedSale.failureReason && (
                   <p style={{ display: "flex", gap: "12px" }}>
-                      <strong
-                        className="input-label"
-                        style={{ minWidth: "160px", lineHeight: "1.2", alignSelf: "center" }}
-                      >
-                        MOTIVO DEL FALLO:
-                      </strong>
-                      <span style={{ color: "var(--primary-red)", fontWeight: "bold", lineHeight: "1.2", alignSelf: "center" }}>
-                        {selectedSale.failureReason}
-                      </span>
+                    <strong
+                      className="input-label"
+                      style={{
+                        minWidth: "160px",
+                        lineHeight: "1.2",
+                        alignSelf: "center",
+                      }}
+                    >
+                      MOTIVO DEL FALLO:
+                    </strong>
+                    <span
+                      style={{
+                        color: "var(--primary-red)",
+                        fontWeight: "bold",
+                        lineHeight: "1.2",
+                        alignSelf: "center",
+                      }}
+                    >
+                      {selectedSale.failureReason}
+                    </span>
                   </p>
                 )}
               </div>
