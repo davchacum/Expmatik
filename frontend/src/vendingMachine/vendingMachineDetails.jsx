@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
+import EyeIcon from "../components/EyeIcon";
 import Modal from "../components/Modal";
 import "../global-form.css";
 import "../global-list.css";
 import { useRequireTokenRedirect } from "../hooks/useRequireTokenRedirect";
-import EyeIcon from "../components/EyeIcon";
 
 const VendingMachineDetail = () => {
   const { id } = useParams();
@@ -282,6 +282,53 @@ const VendingMachineDetail = () => {
       }
     } catch (error) {
       setErrorMsg("Error de red al procesar la venta");
+      console.error(error);
+    } finally {
+      setIsAssigning(false);
+    }
+  };
+
+  const handleToggleBlock = async () => {
+    if (!assignSlot) return;
+
+    setErrorMsg("");
+    setIsAssigning(true);
+    const shouldBlock = !assignSlot.isBlocked;
+
+    try {
+      const response = await fetch(
+        `/api/vending-slots/${assignSlot.id}/block-or-unblock?blocked=${shouldBlock}`,
+        {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      let responseData = null;
+      try {
+        responseData = await response.json();
+      } catch {
+        responseData = null;
+      }
+
+      if (response.ok) {
+        setAssignSlot(responseData);
+        setMessage({
+          text: shouldBlock
+            ? `Ranura ${getSlotLabel(assignSlot)} bloqueada correctamente.`
+            : `Ranura ${getSlotLabel(assignSlot)} desbloqueada correctamente.`,
+          type: "success",
+        });
+        fetchData();
+        setTimeout(() => setMessage({ text: "", type: "" }), 5000);
+      } else {
+        setErrorMsg(
+          responseData?.message ||
+            "No se pudo actualizar el estado de bloqueo de la ranura.",
+        );
+      }
+    } catch (error) {
+      setErrorMsg("Error de red al actualizar el bloqueo de la ranura.");
       console.error(error);
     } finally {
       setIsAssigning(false);
@@ -844,11 +891,28 @@ const VendingMachineDetail = () => {
                   className="action-btn-blue"
                   style={{ width: "100%" }}
                   onClick={() => handleRealTimeSale(assignSlot.id)}
-                  disabled={isAssigning}
+                  disabled={isAssigning || assignSlot?.isBlocked}
                 >
                   Efectuar Venta Manual
                 </button>
               )}
+              <button
+                type="button"
+                className={
+                  assignSlot?.isBlocked
+                    ? "action-btn-green"
+                    : "action-btn-red"
+                }
+                style={{ width: "100%" }}
+                onClick={handleToggleBlock}
+                disabled={isAssigning}
+              >
+                {isAssigning
+                  ? "Actualizando..."
+                  : assignSlot?.isBlocked
+                    ? "Desbloquear Ranura"
+                    : "Bloquear Ranura"}
+              </button>
               <button
                 type="button"
                 className="btn-secondary"
