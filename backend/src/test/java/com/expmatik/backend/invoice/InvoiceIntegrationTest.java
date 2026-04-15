@@ -64,6 +64,7 @@ public class InvoiceIntegrationTest {
         class SuccessCases {
 
             @Test
+            @DisplayName("GET /api/invoices/{id} - Valid ID and user is owner should return invoice details")
             @WithUserDetails("admin@expmatik.com")
             void testGetInvoiceById_ValidIdAndUser_success() throws Exception {
 
@@ -85,6 +86,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("GET /api/invoices/{id} - Invalid ID should return Not Found")
             void testGetInvoiceById_InvalidId_shouldReturnNotFound() throws Exception {
 
                 UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000999");
@@ -96,6 +98,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin2@expmatik.com")
+            @DisplayName("GET /api/invoices/{id} - Invoice exists but user is not the owner should return Forbidden")
             void testGetInvoiceById_InvoiceNotOwnedByUser_shouldReturnForbidden() throws Exception {
 
                 UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -107,6 +110,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("repo@expmatik.com")
+            @DisplayName("GET /api/invoices/{id} - Unauthorized user should return Forbidden")
             void testGetInvoiceById_UnauthorizedUser_shouldReturnForbidden() throws Exception {
 
                 UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -129,6 +133,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("GET /api/invoices/search - Search all invoices without filters should return all user's invoices")
             void testSearchInvoices_SearchAll_success() throws Exception {
 
                 mockMvc.perform(get("/api/invoices/search"))
@@ -140,6 +145,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin2@expmatik.com")
+            @DisplayName("GET /api/invoices/search - Search all invoices without filters but user has no invoices should return empty result")
             void testSearchInvoices_ZeroResults_success() throws Exception {
 
                 mockMvc.perform(get("/api/invoices/search"))
@@ -151,6 +157,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("GET /api/invoices/search - Search by status should return filtered results")
             void testSearchInvoices_ByStatus_success() throws Exception {
 
                 mockMvc.perform(get("/api/invoices/search")
@@ -164,6 +171,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("GET /api/invoices/search - Search by status should return empty result if no invoices match the status")
             void testSearchInvoices_ByStartDate_success() throws Exception {
 
                 mockMvc.perform(get("/api/invoices/search")
@@ -176,6 +184,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("GET /api/invoices/search - Search by start date should return filtered results")
             void testSearchInvoices_ByStartDate2_success() throws Exception {
 
                 mockMvc.perform(get("/api/invoices/search")
@@ -189,6 +198,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("GET /api/invoices/search - Search by end date should return filtered results")
             void testSearchInvoices_ByEndDate_success() throws Exception {
 
                 mockMvc.perform(get("/api/invoices/search")
@@ -202,6 +212,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("GET /api/invoices/search - Search by end date should return empty result if no invoices match the end date")
             void testSearchInvoices_ByEndDate2_success() throws Exception {
 
                 mockMvc.perform(get("/api/invoices/search")
@@ -214,6 +225,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("GET /api/invoices/search - Search by start date and end date should return filtered results")
             void testSearchInvoices_ByStartDateAndEndDate_success() throws Exception {
 
                 mockMvc.perform(get("/api/invoices/search")
@@ -227,6 +239,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("GET /api/invoices/search - Search by start date and end date should return filtered results")
             void testSearchInvoices_ByStartDateAndEndDate2_success() throws Exception {
 
                 mockMvc.perform(get("/api/invoices/search")
@@ -241,6 +254,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("GET /api/invoices/search - Search by supplier should return filtered results")
             void testSearchInvoices_BySupplier_success() throws Exception {
 
                 mockMvc.perform(get("/api/invoices/search")
@@ -253,6 +267,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("GET /api/invoices/search - Search by supplier should return empty result if no invoices match the supplier")
             void testSearchInvoices_MinPrice_success() throws Exception {
 
                 mockMvc.perform(get("/api/invoices/search")
@@ -266,6 +281,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("GET /api/invoices/search - Search by min price should return filtered results")
             void testSearchInvoices_MinPrice2_success() throws Exception {
 
                 mockMvc.perform(get("/api/invoices/search")
@@ -279,6 +295,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("GET /api/invoices/search - Search by max price should return filtered results")
             void testSearchInvoices_MaxPrice_success() throws Exception {
 
                 mockMvc.perform(get("/api/invoices/search")
@@ -292,6 +309,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("GET /api/invoices/search - Search by max price should return empty result if no invoices match the max price")
             void testSearchInvoices_MaxPrice2_success() throws Exception {
 
                 mockMvc.perform(get("/api/invoices/search")
@@ -305,6 +323,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("GET /api/invoices/search - Search by min price and max price should return filtered results")
             void testSearchInvoices_ByMinPriceAndMaxPrice_success() throws Exception {
 
                 mockMvc.perform(get("/api/invoices/search")
@@ -319,6 +338,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("GET /api/invoices/search - Search by min price and max price should return empty result if no invoices match the min price and max price")
             void testSearchInvoices_ByMinPriceAndMaxPrice2_success() throws Exception {
 
                 mockMvc.perform(get("/api/invoices/search")
@@ -331,6 +351,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("GET /api/invoices/search - Search by invoice number should return filtered results")
             void testSearchInvoices_ByInvoiceNumber_success() throws Exception {
 
                 mockMvc.perform(get("/api/invoices/search")
@@ -343,6 +364,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("GET /api/invoices/search - Search by invoice number with partial match should return filtered results")
             void testSearchInvoices_ByInvoiceNumber2_success() throws Exception {
 
                 mockMvc.perform(get("/api/invoices/search")
@@ -354,6 +376,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("GET /api/invoices/search - Search by invoice number should return empty result if no invoices match the invoice number")
             void testSearchInvoices_ByInvoiceNumber3_success() throws Exception {
 
                 mockMvc.perform(get("/api/invoices/search")
@@ -370,6 +393,7 @@ public class InvoiceIntegrationTest {
             
             @Test
             @WithUserDetails("repo@expmatik.com")
+            @DisplayName("GET /api/invoices/search - Unauthorized user should return Forbidden")
             void testSearchInvoices_UnauthorizedUser_shouldReturnForbidden() throws Exception {
 
                 mockMvc.perform(get("/api/invoices/search"))
@@ -390,6 +414,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("GET /api/invoices/number/{invoiceNumber} - Valid invoice number and user is owner should return invoice details")
             void testGetInvoiceByInvoiceNumber() throws Exception {
 
                 mockMvc.perform(get("/api/invoices/number/INV-001"))
@@ -407,6 +432,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("GET /api/invoices/number/{invoiceNumber} - Invalid invoice number should return Not Found")
             void testGetInvoiceByInvoiceNumber_InvalidInvoiceNumber_shouldReturnNotFound() throws Exception {
 
                 mockMvc.perform(get("/api/invoices/number/INV-999"))
@@ -415,6 +441,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin2@expmatik.com")
+            @DisplayName("GET /api/invoices/number/{invoiceNumber} - Invoice exists but user is not the owner should return Forbidden")
             void testGetInvoiceByInvoiceNumber_InvoiceNotOwnedByUser_shouldReturnForbidden() throws Exception {
 
                 mockMvc.perform(get("/api/invoices/number/INV-001"))
@@ -423,6 +450,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("repo@expmatik.com")
+            @DisplayName("GET /api/invoices/number/{invoiceNumber} - Unauthorized user should return Forbidden")
             void testGetInvoiceByInvoiceNumber_UnauthorizedUser_shouldReturnForbidden() throws Exception {
 
                 mockMvc.perform(get("/api/invoices/number/INV-001"))
@@ -443,6 +471,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("POST /api/invoices - Valid data should return created invoice")
             void testCreateInvoice_ValidData_shouldReturnCreatedInvoice() throws Exception {
 
                 BatchCreate batchCreate = new BatchCreate(
@@ -485,6 +514,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("POST /api/invoices - Create supplier should return created invoice")
             void testCreateInvoice_CreateSupplier_shouldReturnCreatedInvoice() throws Exception {
 
                 BatchCreate batchCreate = new BatchCreate(
@@ -526,6 +556,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("POST /api/invoices - Create non-custom product should return created invoice")
             void testCreateInvoice_CreateNonCustomProduct_shouldReturnCreatedInvoice() throws Exception {
                 Thread.sleep(2000);
                 BatchCreate batchCreate = new BatchCreate(
@@ -570,8 +601,9 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("POST /api/invoices - Create non-custom product and set invoice status to RECEIVED should return created invoice")
             void testCreateInvoice_CreateNonCustomProductAndInvoiceStatusReceived_shouldReturnCreatedInvoice() throws Exception {
-                Thread.sleep(2000);
+                Thread.sleep(5000);
                 BatchCreate batchCreate = new BatchCreate(
                     LocalDate.now().plusDays(10),
                     new BigDecimal("5"),
@@ -615,6 +647,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("POST /api/invoices - Create invoice with CANCELED status should return created invoice without updating stock or last purchase unit price")
             void testCreateInvoice_CanceledStatus_shouldReturnCreatedInvoice() throws Exception {
                 BatchCreate batchCreate = new BatchCreate(
                     LocalDate.now().plusDays(10),
@@ -644,6 +677,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("POST /api/invoices - Create invoice with RECEIVED status should return created invoice and update stock and last purchase unit price")
             void testCreateInvoice_ReceivedStatus_shouldReturnCreatedInvoice() throws Exception {
                 BatchCreate batchCreate = new BatchCreate(
                     LocalDate.now().plusDays(10),
@@ -688,6 +722,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("POST /api/invoices - Perishable true and expiration date null should return Conflict")
             void testCreateInvoice_PerishableTrueAndExpirationDateNull_shouldReturnConflict() throws Exception {
                 BatchCreate batchCreate = new BatchCreate(
                     null,
@@ -712,6 +747,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("POST /api/invoices - Perishable false and expiration date not null should return Conflict")
             void testCreateInvoice_PerishableFalseAndExpirationDateNotNull_shouldReturnConflict() throws Exception {
                 BatchCreate batchCreate = new BatchCreate(
                     LocalDate.now().plusDays(10),
@@ -737,6 +773,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("POST /api/invoices - Invoice number already exists should return Conflict")
             void testCreateInvoice_InvoiceNumberAlreadyExists_shouldReturnConflict() throws Exception {
                 BatchCreate batchCreate = new BatchCreate(
                     LocalDate.now().plusDays(10),
@@ -762,6 +799,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("POST /api/invoices - Product not found in Open Food Facts should return Not Found")
             void testCreateInvoice_ProductNotFoundInOpenFoodFacts_shouldReturnNotFound() throws Exception {
                 BatchCreate batchCreate = new BatchCreate(
                     LocalDate.now().plusDays(10),
@@ -786,6 +824,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin2@expmatik.com")
+            @DisplayName("POST /api/invoices - Product custom exists but does not belong to the current user should return Not Found")
             void testCreateInvoice_ProductCustomExistsButDoesNotBelongToTheCurrentUser_shouldReturnNotFound() throws Exception {
                 BatchCreate batchCreate = new BatchCreate(
                     LocalDate.now().plusDays(10),
@@ -810,6 +849,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("POST /api/invoices - Empty batch list should return Bad Request")
             void testCreateInvoice_EmptyBatchList_shouldReturnBadRequest() throws Exception {
                 InvoiceRequest invoiceRequest = new InvoiceRequest(
                     "INV-003",
@@ -827,6 +867,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("repo@expmatik.com")
+            @DisplayName("POST /api/invoices - Unauthorized user should return Forbidden")
             void testCreateInvoice_UnauthorizedUser_shouldReturnForbidden() throws Exception {
                 BatchCreate batchCreate = new BatchCreate(
                     LocalDate.now().plusDays(10),
@@ -863,6 +904,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("PUT /api/invoices/{id} - Valid data and existing invoice should update invoice")
             void testUpdateInvoice_ValidDataAndExistingInvoice_shouldUpdateInvoice() throws Exception {
 
                 UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -911,6 +953,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("PUT /api/invoices/{id} - Update invoice number to a new unique invoice number should update invoice")
             void testUpdateInvoice_NewInvoiceNumber_ShouldUpdateInvoice() throws Exception {
 
                 UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -958,6 +1001,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("PUT /api/invoices/{id} - Update supplier to a new supplier should update invoice")
             void testUpdateInvoice_CreateSupplier_shouldUpdateInvoice() throws Exception {
 
                 UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -1005,6 +1049,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("PUT /api/invoices/{id} - Update invoice status to CANCELED should update invoice without updating stock or last purchase unit price")
             void testUpdateInvoice_CanceledStatus_ShouldUpdateInvoice() throws Exception {
                 UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
@@ -1051,6 +1096,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("PUT /api/invoices/{id} - Update invoice status to RECEIVED should update invoice and update stock and last purchase unit price")
             void testUpdateInvoice_ReceivedStatus_ShouldUpdateInvoice() throws Exception {
                 UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
@@ -1092,6 +1138,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("PUT /api/invoices/{id} - Update invoice status to RECEIVED when old invoice status is not PENDING should update invoice and update stock and last purchase unit price")
             void testUpdateInvoice_AndOldInvoiceNotPendingStatus_ShouldReturnConflict() throws Exception {
 
                 UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000002");
@@ -1112,6 +1159,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("PUT /api/invoices/{id} - Update invoice number to an existing invoice number should return Conflict")
             void testUpdateInvoice_InvoiceNumberAlreadyExists_ShouldReturnConflict() throws Exception {
 
                 UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -1133,6 +1181,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("PUT /api/invoices/{id} - Update non existing invoice should return Not Found")
             void testUpdateInvoice_InvoiceNotFound_ShouldReturnNotFound() throws Exception {
 
                 UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000099");
@@ -1152,6 +1201,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin2@expmatik.com")
+            @DisplayName("PUT /api/invoices/{id} - Update invoice that does not belong to the current user should return Forbidden")
             void testUpdateInvoice_InvoiceDoesNotBelongsCurrentUser_ShouldReturnForbidden() throws Exception {
                 
                 UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -1171,6 +1221,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("repo@expmatik.com")
+            @DisplayName("PUT /api/invoices/{id} - Unauthorized user should return Forbidden")
             void testUpdateInvoice_UnauthorizedUser_ShouldReturnForbidden() throws Exception {
                 
                 UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -1202,6 +1253,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("DELETE /api/invoices/{id} - Valid invoice should return No Content and delete the invoice")
             void testDeleteInvoice_ValidInvoice_ShouldReturnNoContent() throws Exception {
 
                 UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -1218,6 +1270,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("DELETE /api/invoices/{id} - Invalid invoice should return Not Found")
             void testDeleteInvoice_InvalidInvoice_ShouldReturnNotFound() throws Exception {
                 UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000099");
 
@@ -1227,6 +1280,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin2@expmatik.com")
+            @DisplayName("DELETE /api/invoices/{id} - Invoice that does not belong to the current user should return Forbidden")
             void testDeleteInvoice_InvoiceDoesNotBelongCurrentUser_ShouldReturnForbidden() throws Exception {
                 UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
@@ -1236,6 +1290,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("repo@expmatik.com")
+            @DisplayName("DELETE /api/invoices/{id} - Unauthorized user should return Forbidden")
             void testDeleteInvoice_UnauthorizedUser_ShouldReturnForbidden() throws Exception {
                 UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
@@ -1245,6 +1300,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("DELETE /api/invoices/{id} - Invoice with status different than PENDING should return Conflict")
             void testDeleteInvoice_InvoiceNotPending_ShouldReturnConflict() throws Exception {
                 UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000002");
 
@@ -1266,6 +1322,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("PATCH /api/invoices/{id}/status - Update invoice status to CANCELED should update status without updating stock or last purchase unit price")
             void testUpdateInvoiceStatus_ValidInvoiceCanceled_ShouldUpdateStatus() throws Exception {
                 UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
                 InvoiceStatus newStatus = InvoiceStatus.CANCELED;
@@ -1299,6 +1356,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("PATCH /api/invoices/{id}/status - Update invoice status to RECEIVED should update status and update stock and last purchase unit price")
             void testUpdateInvoiceStatus_ValidInvoiceReceived_ShouldUpdateStatus() throws Exception {
                 UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
                 InvoiceStatus newStatus = InvoiceStatus.RECEIVED;
@@ -1332,6 +1390,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("PATCH /api/invoices/{id}/status - Update invoice status to PENDING should update status without updating stock or last purchase unit price")
             void testUpdateInvoiceStatus_ValidInvoicePending_ShouldUpdateStatus() throws Exception {
                 UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
                 InvoiceStatus newStatus = InvoiceStatus.PENDING;
@@ -1370,6 +1429,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("PATCH /api/invoices/{id}/status - Invalid invoice should return Not Found")
             void testUpdateInvoiceStatus_InvalidInvoiceId_shouldReturnNotFound() throws Exception {
                 UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000099");
                 InvoiceStatus newStatus = InvoiceStatus.CANCELED;
@@ -1381,6 +1441,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin2@expmatik.com")
+            @DisplayName("PATCH /api/invoices/{id}/status - Invoice that does not belong to the current user should return Forbidden")
             void testUpdateInvoiceStatus_InvoiceDoesNotBelongCurrentUser_shouldReturnForbidden() throws Exception {
                 UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
                 InvoiceStatus newStatus = InvoiceStatus.CANCELED;
@@ -1392,6 +1453,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("repo@expmatik.com")
+            @DisplayName("PATCH /api/invoices/{id}/status - Unauthorized user should return Forbidden")
             void testUpdateInvoiceStatus_UnauthorizedUser_shouldReturnForbidden() throws Exception {
                 UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
                 InvoiceStatus newStatus = InvoiceStatus.CANCELED;
@@ -1403,6 +1465,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("PATCH /api/invoices/{id}/status - Update invoice status to RECEIVED when old invoice status is not PENDING should return Conflict")
             void testUpdateInvoiceStatus_OldNotPending_shouldReturnConflict() throws Exception {
                 UUID invoiceId = UUID.fromString("00000000-0000-0000-0000-000000000002");
                 InvoiceStatus newStatus = InvoiceStatus.CANCELED;
@@ -1426,6 +1489,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("POST /api/invoices/csv - Valid CSV should return created invoices")
             void testReadInvoicesFromCSV_ValidCSV_ShouldReturnCreatedInvoices() throws Exception {
                 MockMultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                     ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
@@ -1488,6 +1552,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("POST /api/invoices/csv - Valid CSV with non custom product not in database should return created invoices")
             void testReadInvoicesFromCSV_NotPending_shouldReturnCreatedInvoices() throws Exception {
                 MockMultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                     ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
@@ -1531,6 +1596,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("POST /api/invoices/csv - Valid CSV with non custom product not in database should return created invoices")
             void testReadInvoicesFromCSV_WithNonCustomProductNotInDatabase_ShouldReturnCreatedInvoices() throws Exception {
                 MockMultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                     ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
@@ -1569,6 +1635,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("POST /api/invoices/csv - CSV with mismatching supplier names should return Bad Request")
             void testReadInvoicesFromCSV_SupplierMismatch_ShouldReturnBadRequest() throws Exception {
                 MockMultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                     ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
@@ -1582,6 +1649,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("POST /api/invoices/csv - CSV with mismatching status should return Bad Request")
             void testReadInvoicesFromCSV_StatusMismatch_ShouldReturnBadRequest() throws Exception {
                 MockMultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                     ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
@@ -1595,6 +1663,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("POST /api/invoices/csv - CSV with mismatching invoice dates should return Bad Request")
             void testReadInvoicesFromCSV_DateMismatch_ShouldReturnBadRequest() throws Exception {
                 MockMultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                     ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
@@ -1608,6 +1677,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("POST /api/invoices/csv - Empty CSV should return Bad Request")
             void testReadInvoicesFromCSV_EmptyFile_ShouldReturnBadRequest() throws Exception {
 
                 MockMultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
@@ -1620,6 +1690,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("admin@expmatik.com")
+            @DisplayName("POST /api/invoices/csv - CSV with invalid file extension should return Bad Request")
             void testReadInvoicesFromCSV_NoCsvFileExtension_ShouldReturnBadRequest() throws Exception {
                 MockMultipartFile csvContent = new MockMultipartFile("file", "invoices.txt", "text/csv",
                     ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +
@@ -1632,6 +1703,7 @@ public class InvoiceIntegrationTest {
 
             @Test
             @WithUserDetails("repo@expmatik.com")
+            @DisplayName("POST /api/invoices/csv - Unauthorized user should return Forbidden")
             void testReadInvoicesFromCSV_UnauthorizedUser_ShouldReturnForbidden() throws Exception {
                 MockMultipartFile csvContent = new MockMultipartFile("file", "invoices.csv", "text/csv",
                     ("invoiceNumber,supplierName,status,invoiceDate,productBarcode,quantity,unitPrice,expirationDate\n" +

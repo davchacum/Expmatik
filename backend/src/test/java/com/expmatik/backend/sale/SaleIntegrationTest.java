@@ -166,9 +166,9 @@ public class SaleIntegrationTest {
             }
 
             @Test
-            @DisplayName("POST /api/sales - Access Denied sale does not belong to user")
+            @DisplayName("POST /api/sales - Vending machine exists but the user does not have any vending machine with that name should return Not Found")
             @WithUserDetails("admin2@expmatik.com")
-            public void testCreateSale_SaleDoesNotBelongToUser_ReturnsForbidden() throws Exception {
+            public void testCreateSale_SaleDoesNotBelongToUser_ReturnsNotFound() throws Exception {
                 SaleCreate saleCreate = new SaleCreate(
                     LocalDateTime.now(),
                     new BigDecimal("2.50"),
@@ -183,7 +183,7 @@ public class SaleIntegrationTest {
                 mockMvc.perform(MockMvcRequestBuilders.post("/api/sales")
                     .contentType("application/json")
                     .content(objectMapper.writeValueAsString(saleCreate)))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isNotFound());
             }
 
             @Test

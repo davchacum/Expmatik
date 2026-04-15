@@ -687,7 +687,7 @@ public class ProductIntegrationTest {
             @DisplayName("Should return product details from Open Food Facts for valid barcode")
             void testGetProductFromOpenFoodFacts_ValidBarcode_ShouldReturnProduct() throws Exception {
                 String barcode = "4716982022201";
-                Thread.sleep(2000);
+                Thread.sleep(5000);
 
                 mockMvc.perform(get("/api/products/openfoodfacts/" + barcode))
                         .andExpect(status().isOk())

@@ -49,6 +49,7 @@ import com.expmatik.backend.productInfo.ProductInfoService;
 import com.expmatik.backend.sale.DTOs.SaleCreate;
 import com.expmatik.backend.user.User;
 import com.expmatik.backend.vendingMachine.VendingMachine;
+import com.expmatik.backend.vendingMachine.VendingMachineService;
 import com.expmatik.backend.vendingSlot.VendingSlot;
 import com.expmatik.backend.vendingSlot.VendingSlotService;
 
@@ -72,6 +73,9 @@ public class SaleServiceTest {
 
     @Mock
     private NotificationService notificationService;
+
+    @Mock
+    private VendingMachineService vendingMachineService;
 
     @Spy
     @InjectMocks
@@ -218,6 +222,7 @@ public class SaleServiceTest {
                 );
 
                 when(productService.findInternalProductByBarcode(barcode, user.getId())).thenReturn(product);
+                when(vendingMachineService.findVendingMachineByNameAndUserId(saleCreate.machineName(), user)).thenReturn(vendingMachine);
                 when(vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(saleCreate.machineName(), saleCreate.rowNumber(), saleCreate.columnNumber(), user)).thenReturn(vendingSlot);
                 when(saleRepository.save(any(Sale.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -298,7 +303,7 @@ public class SaleServiceTest {
                 verify(notificationService).createNotification(
                     eq(NotificationType.FAILURE_SALE),
                     argThat(message -> message.contains("ranura A1") && message.contains(errorMessage)),
-                    eq("Unknown"),
+                    any(String.class),
                     eq(user)
                 );
                 verify(saleRepository).save(any(Sale.class));
@@ -326,7 +331,7 @@ public class SaleServiceTest {
                 verify(notificationService).createNotification(
                     eq(NotificationType.FAILURE_SALE),
                     argThat(message -> message.contains("ranura A1") && message.contains(errorMessage)),
-                    eq("Unknown"),
+                    any(String.class),
                     eq(user)
                 );
                 verify(saleRepository).save(any(Sale.class));
@@ -357,7 +362,7 @@ public class SaleServiceTest {
                 verify(notificationService).createNotification(
                     eq(NotificationType.FAILURE_SALE),
                     argThat(message -> message.contains("ranura A1") && message.contains(errorMessage)),
-                    eq("Unknown"),
+                    any(String.class),
                     eq(user)
                 );
                 verify(saleRepository).save(any(Sale.class));

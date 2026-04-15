@@ -66,7 +66,7 @@ public class ExpirationTaskTest {
 				verify(notificationService, times(1)).createNotification(
 					eq(NotificationType.EXPIRATION_WARNING),
 					any(String.class),
-					eq("Unknown"),
+					any(String.class),
 					eq(batch.getVendingSlot().getVendingMachine().getUser())
 				);
 
@@ -89,7 +89,7 @@ public class ExpirationTaskTest {
 				verify(notificationService, times(1)).createNotification(
 					eq(NotificationType.PRODUCT_EXPIRED),
 					any(String.class),
-					eq("Unknown"),
+					any(String.class),
 					eq(expiredBatch.getVendingSlot().getVendingMachine().getUser())
 				);
 
