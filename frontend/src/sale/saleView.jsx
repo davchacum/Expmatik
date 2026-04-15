@@ -468,7 +468,7 @@ const Sales = () => {
                 <th scope="col" style={{ textAlign: "center" }}>
                   Ranura
                 </th>
-                <th scope="col">Pago</th>
+                <th scope="col">Método de Pago</th>
                 <th scope="col" style={{ textAlign: "center" }}>
                   Estado
                 </th>
@@ -495,7 +495,7 @@ const Sales = () => {
                     {getColumnLabel(sale.rowNumber - 1)}
                     {sale.columnNumber}
                   </td>
-                  <td>{sale.paymentMethod}</td>
+                  <td>{sale.paymentMethod === "CASH" ? "Efectivo" : "Tarjeta"}</td>
                   <td style={{ textAlign: "center" }}>
                     <span
                       className={`badge ${sale.status === "SUCCESS" ? "badge-green" : "badge-red"}`}
