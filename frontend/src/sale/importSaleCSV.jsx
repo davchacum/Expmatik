@@ -264,7 +264,7 @@ const ImportSaleCSV = () => {
                         <strong>{sale.saleDate}</strong>
                       </td>
                       <td>{sale.totalAmount}</td>
-                      <td>{sale.paymentMethod}</td>
+                      <td>{sale.paymentMethod === "CASH" ? "Efectivo" : "Tarjeta"}</td>
                       <td>
                         <span
                           className={`badge ${sale.status === "SUCCESS" ? "badge-green" : "badge-red"}`}
@@ -451,8 +451,8 @@ const EditSaleModal = ({ saleData, onClose, onSave }) => {
               }
             >
               <option value="">Seleccionar</option>
-              <option value="CASH">CASH</option>
-              <option value="CREDIT_CARD">CREDIT_CARD</option>
+              <option value="CASH">Efectivo</option>
+              <option value="CREDIT_CARD">Tarjeta</option>
             </select>
           </div>
           <div className="input-group">
