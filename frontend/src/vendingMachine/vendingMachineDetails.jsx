@@ -891,7 +891,7 @@ const VendingMachineDetail = () => {
                   className="action-btn-blue"
                   style={{ width: "100%" }}
                   onClick={() => handleRealTimeSale(assignSlot.id)}
-                  disabled={isAssigning || assignSlot?.isBlocked}
+                  disabled={isAssigning}
                 >
                   Efectuar Venta Manual
                 </button>
