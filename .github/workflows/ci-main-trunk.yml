@@ -58,9 +58,7 @@ jobs:
       - name: Upload JaCoCo coverage to Codacy
         if: always()
         run: |
-            export CODACY_PROJECT_TOKEN=${{ secrets.CODACY_PROJECT_TOKEN }}
-            bash <(curl -Ls https://coverage.codacy.com/get.sh) report \
-                -r backend/target/site/jacoco/jacoco.xml
+            ./codacy-coverage-reporter report -r backend/target/site/jacoco/jacoco.xml --project-token ${{ secrets.CODACY_PROJECT_TOKEN }}
 
       - name: Upload JaCoCo report
         if: always()
