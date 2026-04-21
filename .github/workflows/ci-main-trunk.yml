@@ -23,6 +23,8 @@ jobs:
           POSTGRES_DB: expmatik_ci
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
         options: >-
           --health-cmd "pg_isready -U postgres -d expmatik_ci"
           --health-interval 10s
@@ -46,14 +48,6 @@ jobs:
 
       - name: Grant execute permission to Maven wrapper
         run: chmod +x mvnw
-
-      - name: Wait for PostgreSQL
-        run: |
-          for i in {1..10}; do
-            pg_isready -h localhost -p 5432 -U postgres && break
-            echo "Waiting for PostgreSQL..."
-            sleep 2
-          done
 
       - name: Run all backend tests
         run: ./mvnw -B -ntp "-Dsurefire.rerunFailingTestsCount=2" test jacoco:report
