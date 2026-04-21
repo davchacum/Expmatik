@@ -55,10 +55,15 @@ jobs:
       - name: Validate JaCoCo report exists
         run: test -f target/site/jacoco/jacoco.xml
 
+      - name: Download Codacy Coverage Reporter
+        run: |
+          wget -O codacy-coverage-reporter https://github.com/codacy/codacy-coverage-reporter/releases/latest/download/codacy-coverage-reporter-linux
+          chmod +x codacy-coverage-reporter
+
       - name: Upload JaCoCo coverage to Codacy
         if: always()
         run: |
-            ./codacy-coverage-reporter report -r backend/target/site/jacoco/jacoco.xml --project-token ${{ secrets.CODACY_PROJECT_TOKEN }}
+          ./codacy-coverage-reporter report -r backend/target/site/jacoco/jacoco.xml --project-token ${{ secrets.CODACY_PROJECT_TOKEN }}
 
       - name: Upload JaCoCo report
         if: always()
