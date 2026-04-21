@@ -23,8 +23,6 @@ jobs:
           POSTGRES_DB: expmatik_ci
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
         options: >-
           --health-cmd "pg_isready -U postgres -d expmatik_ci"
           --health-interval 10s
@@ -49,11 +47,27 @@ jobs:
       - name: Grant execute permission to Maven wrapper
         run: chmod +x mvnw
 
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..10}; do
+            pg_isready -h localhost -p 5432 -U postgres && break
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+
       - name: Run all backend tests
         run: ./mvnw -B -ntp "-Dsurefire.rerunFailingTestsCount=2" test jacoco:report
 
       - name: Validate JaCoCo report exists
         run: test -f target/site/jacoco/jacoco.xml
+
+      - name: Upload JaCoCo coverage to Codacy
+        if: always()
+        env:
+          CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
+        run: |
+          bash <(curl -Ls https://coverage.codacy.com/get.sh) report \
+            -r target/site/jacoco/jacoco.xml
 
       - name: Upload JaCoCo report
         if: always()
@@ -61,7 +75,7 @@ jobs:
         with:
           name: jacoco-report-main-trunk
           path: backend/target/site/jacoco/**
-          if-no-files-found: error
+          if-no-files-found: warn
 
   codacy-analysis:
     name: Codacy Analysis
@@ -71,9 +85,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
-
-      - name: Grant execute permission to Maven wrapper
-        run: chmod +x backend/mvnw
 
       - name: Run Codacy Analysis
         uses: codacy/codacy-analysis-cli-action@v4

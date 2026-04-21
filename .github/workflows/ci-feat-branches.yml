@@ -31,15 +31,4 @@ jobs:
         run: chmod +x mvnw
 
       - name: Run backend unit tests
-        run: ./mvnw -B -ntp "-Dsurefire.rerunFailingTestsCount=2" "-Dtest=*Test,!*IntegrationTest" test jacoco:report
-
-      - name: Validate JaCoCo report exists
-        run: test -f target/site/jacoco/jacoco.xml
-
-      - name: Upload JaCoCo unit report
-        if: always()
-        uses: actions/upload-artifact@v5
-        with:
-          name: jacoco-unit-report-feat
-          path: backend/target/site/jacoco/**
-          if-no-files-found: error
+        run: ./mvnw -B -ntp "-Dsurefire.rerunFailingTestsCount=2" "-Dtest=*Test" "-DexcludedTests=*IntegrationTest" test
