@@ -12,6 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,6 +25,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class MaintenanceDetail extends BaseEntity {   
     @NotNull
+    @Positive
     @Column(name = "quantity_to_restock", nullable = false)
     private Integer quantityToRestock;
 

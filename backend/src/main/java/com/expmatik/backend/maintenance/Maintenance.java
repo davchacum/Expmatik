@@ -46,8 +46,13 @@ public class Maintenance extends BaseEntity{
 
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "maintainer_id", nullable = false)
+    private User maintainer;
+
+    @NotNull
+    @ManyToOne
+    @JoinColumn(name = "administrator_id", nullable = false)
+    private User administrator;
     
     @NotNull
     @OneToMany
