@@ -62,8 +62,10 @@ jobs:
 
       - name: Upload JaCoCo coverage to Codacy
         if: always()
+        env:
+          CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
         run: |
-          ./codacy-coverage-reporter report -r backend/target/site/jacoco/jacoco.xml --project-token ${{ secrets.CODACY_PROJECT_TOKEN }}
+            ../codacy-coverage-reporter report -r target/site/jacoco/jacoco.xml --project-token "$CODACY_PROJECT_TOKEN"
 
       - name: Upload JaCoCo report
         if: always()
