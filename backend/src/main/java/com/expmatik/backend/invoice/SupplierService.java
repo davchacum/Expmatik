@@ -10,7 +10,6 @@ public class SupplierService {
 
     private final SupplierRepository supplierRepository;
 
-    @Autowired
     public SupplierService(SupplierRepository supplierRepository) {
         this.supplierRepository = supplierRepository;
     }

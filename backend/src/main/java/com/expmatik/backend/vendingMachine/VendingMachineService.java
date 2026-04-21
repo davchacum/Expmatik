@@ -22,7 +22,6 @@ public class VendingMachineService {
     private final VendingMachineRepository vendingMachineRepository;
     public final VendingSlotService vendingSlotService;
 
-    @Autowired
     public VendingMachineService(VendingMachineRepository vendingMachineRepository, VendingSlotService vendingSlotService) {
         this.vendingMachineRepository = vendingMachineRepository;
         this.vendingSlotService = vendingSlotService;

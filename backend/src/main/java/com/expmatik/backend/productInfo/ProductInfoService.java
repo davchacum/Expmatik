@@ -28,7 +28,6 @@ public class ProductInfoService {
     private final NotificationService notificationService;
 
 
-    @Autowired
     public ProductInfoService(ProductInfoRepository productInfoRepository, ProductService productService, NotificationService notificationService) {
         this.productInfoRepository = productInfoRepository;
         this.productService = productService;

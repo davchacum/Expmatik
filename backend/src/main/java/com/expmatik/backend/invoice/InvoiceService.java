@@ -33,8 +33,7 @@ public class InvoiceService {
     private final SupplierService supplierService;
     private final BatchService batchService;
     private final InvoiceCSVLector invoiceCSVLector;
-
-    @Autowired
+    
     public InvoiceService(
             InvoiceRepository invoiceRepository,
             SupplierService supplierService,

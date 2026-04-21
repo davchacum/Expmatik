@@ -28,7 +28,6 @@ public class BatchService {
     private final InvoiceRepository invoiceRepository;
     private final ProductInfoService productInfoService;
 
-    @Autowired
     public BatchService(BatchRepository batchRepository, ProductService productService, InvoiceRepository invoiceRepository, ProductInfoService productInfoService) {
         this.batchRepository = batchRepository;
         this.productService = productService;

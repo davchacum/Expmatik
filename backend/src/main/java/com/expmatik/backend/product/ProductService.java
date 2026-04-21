@@ -36,7 +36,6 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final FileStorageService fileStorageService;
 
-    @Autowired
     public ProductService(ProductRepository productRepository, FileStorageService fileStorageService) {
         this.productRepository = productRepository;
         this.fileStorageService = fileStorageService;
