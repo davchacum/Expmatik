@@ -35,6 +35,7 @@ public class ExpirationBatchService {
 
     @Transactional
     public void pushExpirationBatch(VendingSlot vendingSlot, LocalDate expirationDate, Integer quantity, User user) {
+        popExpiredBatches(vendingSlot);
         Optional<ExpirationBatch> existingBatch = expirationBatchRepository.findFirstByVendingSlotIdAndExpirationDate(vendingSlot.getId(), expirationDate);
         if (existingBatch.isPresent()) {
             existingBatch.get().setQuantity(existingBatch.get().getQuantity() + quantity);
@@ -86,6 +87,16 @@ public class ExpirationBatchService {
         vendingSlot.setCurrentStock(vendingSlot.getCurrentStock() - 1);
     }
 
-    //Aqui añadiré la futura función de limpiar el stock caducado
-
+    private void popExpiredBatches(VendingSlot vendingSlot) {
+        List<ExpirationBatch> existingBatch = expirationBatchRepository.findAllByVendingSlotIdOrderByExpirationDateAsc(vendingSlot.getId());
+        List<ExpirationBatch> expiredBatches = existingBatch.stream()
+            .filter(batch -> batch.getExpirationDate().isBefore(LocalDate.now()))
+            .toList();
+        
+        if(!expiredBatches.isEmpty()) {
+            Integer expiredQuantity = expiredBatches.stream().map(ExpirationBatch::getQuantity).reduce(0, Integer::sum);
+            expiredBatches.forEach(batch -> expirationBatchRepository.delete(batch));
+            vendingSlot.setCurrentStock(vendingSlot.getCurrentStock() - expiredQuantity);
+        }
+    }
 }

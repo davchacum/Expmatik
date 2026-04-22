@@ -409,21 +409,6 @@ public class VendingSlotIntegrationTest {
                 }
 
                 @Test
-                @DisplayName("PATCH /api/vending-slots/{id}/increment-stock - blocked slot should return 409")
-                @WithUserDetails("admin@expmatik.com")
-                public void testIncrementVendingSlotStock_BlockedSlot_ShouldReturn409() throws Exception {
-                        UUID vendingSlotId = UUID.fromString("00000000-0000-0000-0000-000000000002");
-                        int quantity = 1;
-                        LocalDate expirationDate = LocalDate.now().plusDays(3);
-
-                        mockMvc.perform(patch("/api/vending-slots/{id}/increment-stock", vendingSlotId)
-                                        .param("quantity", String.valueOf(quantity))
-                                        .param("expirationDate", expirationDate.toString()))
-                                .andExpect(status().isConflict())
-                                .andExpect(jsonPath("$.message").value("The vending slot is blocked for maintenance."));
-                }
-
-                @Test
                 @DisplayName("PATCH /api/vending-slots/{id}/increment-stock - expiration date in the past should return 409")
                 @WithUserDetails("admin@expmatik.com")
                 public void testIncrementVendingSlotStock_PastExpirationDate_ShouldReturn409() throws Exception {

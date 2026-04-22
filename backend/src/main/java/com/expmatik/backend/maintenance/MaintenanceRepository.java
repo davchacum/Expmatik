@@ -1,6 +1,8 @@
 package com.expmatik.backend.maintenance;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -30,6 +32,16 @@ public interface MaintenanceRepository extends JpaRepository<Maintenance, UUID> 
         @Param("startDate") LocalDateTime startDate,
         @Param("endDate") LocalDateTime endDate,
         Pageable pageable
+    );
+
+    @Query("""
+        SELECT m FROM Maintenance m
+        WHERE m.status = :pendingStatus
+        AND m.maintenanceDate > :currentDate
+    """)
+    List<Maintenance> findPendingMaintenancesByMaintenanceDateAfter(
+        @Param("pendingStatus") MaintenanceStatus pendingStatus,
+        @Param("currentDate") LocalDate currentDate
     );
 
 }

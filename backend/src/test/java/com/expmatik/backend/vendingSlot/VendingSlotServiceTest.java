@@ -30,7 +30,6 @@ import com.expmatik.backend.exceptions.ConflictException;
 import com.expmatik.backend.exceptions.ExpiredProductException;
 import com.expmatik.backend.exceptions.OutOfStockException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
-import com.expmatik.backend.exceptions.SlotBlockedException;
 import com.expmatik.backend.maintenance.MaintenanceService;
 import com.expmatik.backend.notification.NotificationService;
 import com.expmatik.backend.notification.NotificationType;
@@ -500,21 +499,6 @@ public class VendingSlotServiceTest {
         @Nested
         @DisplayName("Failure Cases")
         class FailureCases {
-
-            @Test
-            @DisplayName("addStockToVendingSlot - valid vending slot ID, but slot is blocked for maintenance")
-            void testAddStockToVendingSlot_validVendingSlotIdButSlotBlockedForMaintenance_shouldThrowSlotBlockedException() {
-                UUID vendingSlotId = vendingSlot.getId();
-                Integer quantityToAdd = 3;
-                LocalDate expirationDate = LocalDate.now().plusDays(5);
-                vendingSlot.setIsBlocked(true);
-                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
-
-                assertThrows(SlotBlockedException.class, () -> {
-                    vendingSlotService.addStockToVendingSlot(vendingSlotId, quantityToAdd, expirationDate, user);
-                });
-
-            }
 
             @Test
             @DisplayName("addStockToVendingSlot - valid vending slot ID, but no assigned product")

@@ -65,9 +65,7 @@ public class MaintenanceService {
             validateAdministrator(maintenance, user);
             //Notificacion
         } else if (newStatus == MaintenanceStatus.DELAYED) {
-            if(maintenance.getStatus() != MaintenanceStatus.PENDING) {
-                throw new BadRequestException("Can only change status to DELAYED from PENDING.");
-            }
+            throw new BadRequestException("Cannot change status to DELAYED manually. The system will automatically change the status to DELAYED if the maintenance is not completed within 24 hours of the scheduled maintenance date.");
             //Lo ejecuta el sistema
             //Notificacion
         } else if (newStatus == MaintenanceStatus.COMPLETED) {
@@ -76,7 +74,7 @@ public class MaintenanceService {
             }
             validateMaintainer(maintenance, user);
             //Notificacion
-            //Funcion para actualizar el stock de las ranuras de vending
+            maintenanceDetailService.performSlotsMaintenance(maintenance, user);
         }
         maintenance.setStatus(newStatus);
 

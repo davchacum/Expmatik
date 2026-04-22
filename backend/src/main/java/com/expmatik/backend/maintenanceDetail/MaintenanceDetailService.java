@@ -85,4 +85,22 @@ public class MaintenanceDetailService {
         maintenanceDetailRepository.delete(maintenanceDetail);
     }
 
+    @Transactional(readOnly = true)
+    public List<VendingSlot> filterDistinctVendingSlotsByMaintenance(Maintenance maintenance) {
+
+        return maintenanceDetailRepository.findDistinctVendingSlotsByMaintenance(maintenance.getId());
+    }
+
+    @Transactional
+    public void performSlotsMaintenance(Maintenance maintenance,User user) {
+        List<VendingSlot> affectedSlots = maintenanceDetailRepository.findDistinctVendingSlotsByMaintenance(maintenance.getId());
+
+        for (VendingSlot slot : affectedSlots) {
+            List<MaintenanceDetail> detailsForSlot = maintenanceDetailRepository.findMaintenanceDetailsByMaintenanceIdAndSlotCoordinates(maintenance.getId(), slot.getVendingMachine().getName(), slot.getRowNumber(), slot.getColumnNumber());
+            for (MaintenanceDetail detail : detailsForSlot) {
+                vendingSlotService.addStockToVendingSlot(slot.getId(), detail.getQuantityToRestock(), detail.getExpirationDate(), user);
+            }
+        }
+    }
+
 }

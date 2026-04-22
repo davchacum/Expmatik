@@ -12,7 +12,6 @@ import com.expmatik.backend.exceptions.ConflictException;
 import com.expmatik.backend.exceptions.ExpiredProductException;
 import com.expmatik.backend.exceptions.OutOfStockException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
-import com.expmatik.backend.exceptions.SlotBlockedException;
 import com.expmatik.backend.maintenance.MaintenanceStatus;
 import com.expmatik.backend.notification.NotificationService;
 import com.expmatik.backend.notification.NotificationType;
@@ -141,9 +140,6 @@ public class VendingSlotService {
         checkUserAuthorization(vendingSlot, user);
         if(vendingSlot.getProduct() == null) {
             throw new ConflictException("Cannot add stock to a vending slot that does not have an assigned product.");
-        }
-        if (vendingSlot.getIsBlocked()) {
-            throw new SlotBlockedException("The vending slot is blocked for maintenance.");
         }
         if(vendingSlot.getCurrentStock() + quantity > vendingSlot.getMaxCapacity()) {
             throw new ConflictException("Cannot add stock to a vending slot that exceeds its maximum capacity.");
