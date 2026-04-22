@@ -1,14 +1,15 @@
 package com.expmatik.backend.maintenanceDetail.DTOs;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
+import java.time.LocalDate;
 
 import com.expmatik.backend.maintenanceDetail.MaintenanceDetail;
 import com.expmatik.backend.validation.ValidBarcode;
 
 import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 
 public record MaintenanceDetailCreate(
     @NotNull
@@ -16,10 +17,19 @@ public record MaintenanceDetailCreate(
     Integer quantityToRestock,
 
     @FutureOrPresent
-    LocalDateTime expirationDate,
+    LocalDate expirationDate,
 
     @NotNull
-    UUID vendingSlotId,
+    @Positive
+    Integer rowNumber,
+
+    @NotNull
+    @Positive
+    Integer columnNumber,
+    
+    @NotBlank
+    @Size(max = 100)
+    String vendingMachineName,
 
     @NotNull
     @ValidBarcode
@@ -30,7 +40,9 @@ public record MaintenanceDetailCreate(
         return new MaintenanceDetailCreate(
             maintenanceDetail.getQuantityToRestock(),
             maintenanceDetail.getExpirationDate(),
-            maintenanceDetail.getVendingSlot().getId(),
+            maintenanceDetail.getRowNumber(),
+            maintenanceDetail.getColumnNumber(),
+            maintenanceDetail.getVendingMachine().getName(),
             maintenanceDetail.getProduct().getBarcode()
         );
     }

@@ -1,8 +1,6 @@
 package com.expmatik.backend.maintenance;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -14,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.expmatik.backend.exceptions.BadRequestException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
 import com.expmatik.backend.maintenance.DTOs.MaintenanceCreate;
+import com.expmatik.backend.maintenance.DTOs.MaintenanceUpdate;
 import com.expmatik.backend.maintenanceDetail.MaintenanceDetail;
 import com.expmatik.backend.maintenanceDetail.MaintenanceDetailService;
 import com.expmatik.backend.maintenanceDetail.DTOs.MaintenanceDetailCreate;
@@ -47,6 +46,9 @@ public class MaintenanceService {
         if (!(maintenance.getAdministrator().getId().equals(user.getId()) || maintenance.getMaintainer().getId().equals(user.getId()))) {
             throw new AccessDeniedException("You are not the administrator or maintainer of this maintenance record.");
         }
+        if (maintenance.getStatus() == MaintenanceStatus.DRAFT && user.getRole() != Role.ADMINISTRATOR) {
+            throw new AccessDeniedException("Only administrators can access DRAFT maintenance records.");
+        }
         
         return maintenance;
     }
@@ -54,9 +56,45 @@ public class MaintenanceService {
     @Transactional
     public Maintenance updateStatus(UUID id, MaintenanceStatus newStatus, User user) {
         Maintenance maintenance = findById(id, user);
+        if (newStatus == MaintenanceStatus.DRAFT) {
+            throw new BadRequestException("Cannot change status back to DRAFT.");
+        } else if (newStatus == MaintenanceStatus.PENDING) {
+            if(maintenance.getStatus() != MaintenanceStatus.DRAFT) {
+                throw new BadRequestException("Can only change status to PENDING from DRAFT.");
+            }
+            validateAdministrator(maintenance, user);
+            //Notificacion
+        } else if (newStatus == MaintenanceStatus.DELAYED) {
+            if(maintenance.getStatus() != MaintenanceStatus.PENDING) {
+                throw new BadRequestException("Can only change status to DELAYED from PENDING.");
+            }
+            //Lo ejecuta el sistema
+            //Notificacion
+        } else if (newStatus == MaintenanceStatus.COMPLETED) {
+            if(maintenance.getStatus() != MaintenanceStatus.PENDING && maintenance.getStatus() != MaintenanceStatus.DELAYED) {
+                throw new BadRequestException("Can only change status to COMPLETED from PENDING or DELAYED.");
+            }
+            validateMaintainer(maintenance, user);
+            //Notificacion
+            //Funcion para actualizar el stock de las ranuras de vending
+        }
         maintenance.setStatus(newStatus);
+
         return save(maintenance);
     }
+
+    private void validateAdministrator(Maintenance maintenance, User user) {
+        if (!maintenance.getAdministrator().getId().equals(user.getId())) {
+            throw new AccessDeniedException("You are not the administrator of this maintenance record.");
+        }
+    }
+
+    private void validateMaintainer(Maintenance maintenance, User user) {
+        if (!maintenance.getMaintainer().getId().equals(user.getId())) {
+            throw new AccessDeniedException("You are not the maintainer of this maintenance record.");
+        }
+    }
+
 
     @Transactional
     public Maintenance createMaintenance(MaintenanceCreate maintenanceCreate,User administrator) {
@@ -65,26 +103,59 @@ public class MaintenanceService {
         maintenance.setDescription(maintenanceCreate.description());
         maintenance.setMaintenanceDate(maintenanceCreate.maintenanceDate());
         User maintainer = userService.findByEmail(maintenanceCreate.maintainerEmail()).orElseThrow(() -> new ResourceNotFoundException("Maintainer not found with email: " + maintenanceCreate.maintainerEmail()));
-        if (maintainer.getRole() != Role.MAINTAINER) {
-            throw new BadRequestException("The specified user is not a maintainer.");
-        }
+        validateAdministrator(maintenance, administrator);
         maintenance.setMaintainer(maintainer);
         
         maintenance.setStatus(MaintenanceStatus.PENDING);
-        List<MaintenanceDetail> details = new ArrayList<>();
-        for (MaintenanceDetailCreate detail : maintenanceCreate.maintenanceDetails()) {
-            details.add(maintenanceDetailService.createMaintenanceDetail(detail, administrator));
-        }
         return save(maintenance);
     }
 
     @Transactional(readOnly = true)
     public Page<Maintenance> searchMaintenances(User user, MaintenanceStatus status, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
         if (user.getRole() == Role.ADMINISTRATOR) {
-            return maintenanceRepository.searchMaintenances(user.getId(), null, status, startDate, endDate, pageable);
+            return maintenanceRepository.searchMaintenances(user.getId(), null, false, null, status, startDate, endDate, pageable);
         } else {
-            return maintenanceRepository.searchMaintenances(null, user.getId(), status, startDate, endDate, pageable);
+            return maintenanceRepository.searchMaintenances(null, user.getId(), true, MaintenanceStatus.DRAFT, status, startDate, endDate, pageable);
         }
+    }
+
+    @Transactional
+    public void deleteMaintenance(UUID id, User user) {
+        Maintenance maintenance = findById(id, user);
+        validateAdministrator(maintenance, user);
+        maintenanceRepository.delete(maintenance);
+    }
+
+    @Transactional
+    public Maintenance updateMaintenance(UUID id, MaintenanceUpdate maintenanceUpdate, User user) {
+        Maintenance maintenance = findById(id, user);
+        validateAdministrator(maintenance, user);
+        maintenance.setDescription(maintenanceUpdate.description());
+        maintenance.setMaintainer(userService.findByEmail(maintenanceUpdate.maintainerEmail()).orElseThrow(() -> new ResourceNotFoundException("Maintainer not found with email: " + maintenanceUpdate.maintainerEmail())));
+        return save(maintenance);
+    }
+
+    @Transactional
+    public Maintenance addMaintenanceDetail(UUID maintenanceId, MaintenanceDetailCreate maintenanceDetailCreate, User user) {
+        Maintenance maintenance = findById(maintenanceId, user);
+        validateAdministrator(maintenance, user);
+        MaintenanceDetail newDetail = maintenanceDetailService.createMaintenanceDetail(maintenance, maintenanceDetailCreate, user);
+        maintenance.getMaintenanceDetails().add(newDetail);
+        return save(maintenance);
+    }
+
+    @Transactional
+    public Maintenance deleteMaintenanceDetail(UUID maintenanceId, UUID detailId, User user) {
+        Maintenance maintenance = findById(maintenanceId, user);
+        validateAdministrator(maintenance, user);
+        MaintenanceDetail detailToDelete = maintenance.getMaintenanceDetails().stream()
+            .filter(detail -> detail.getId().equals(detailId))
+            .findFirst()
+            .orElseThrow(() -> new ResourceNotFoundException("Maintenance detail not found with id: " + detailId));
+
+        maintenance.getMaintenanceDetails().remove(detailToDelete);
+        maintenanceDetailService.deleteMaintenanceDetail(detailToDelete);
+        return save(maintenance);
     }
 
 }

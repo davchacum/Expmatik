@@ -31,6 +31,7 @@ import com.expmatik.backend.exceptions.ExpiredProductException;
 import com.expmatik.backend.exceptions.OutOfStockException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
 import com.expmatik.backend.exceptions.SlotBlockedException;
+import com.expmatik.backend.maintenance.MaintenanceService;
 import com.expmatik.backend.notification.NotificationService;
 import com.expmatik.backend.notification.NotificationType;
 import com.expmatik.backend.product.Product;
@@ -52,6 +53,9 @@ public class VendingSlotServiceTest {
 
     @Mock
     private NotificationService notificationService;
+
+    @Mock
+    private MaintenanceService maintenanceService;
 
     @InjectMocks
     @Spy

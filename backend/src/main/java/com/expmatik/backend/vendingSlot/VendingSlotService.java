@@ -13,6 +13,7 @@ import com.expmatik.backend.exceptions.ExpiredProductException;
 import com.expmatik.backend.exceptions.OutOfStockException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
 import com.expmatik.backend.exceptions.SlotBlockedException;
+import com.expmatik.backend.maintenance.MaintenanceStatus;
 import com.expmatik.backend.notification.NotificationService;
 import com.expmatik.backend.notification.NotificationType;
 import com.expmatik.backend.product.Product;
@@ -30,6 +31,7 @@ public class VendingSlotService {
     private final ExpirationBatchService expirationBatchService;
 
     private final NotificationService notificationService;
+    
 
     public VendingSlotService(VendingSlotRepository vendingSlotRepository, ProductService productService, ExpirationBatchService expirationBatchService, NotificationService notificationService) {
         this.vendingSlotRepository = vendingSlotRepository;
@@ -88,8 +90,8 @@ public class VendingSlotService {
     public VendingSlot assignProductToVendingSlot(UUID vendingSlotId, String barcode, User user) {
         VendingSlot vendingSlot = getVendingSlotById(vendingSlotId,user);
         checkUserAuthorization(vendingSlot, user);
-        checkVendingSlotNotEmpty(vendingSlot);
-        //Revisar que no tenga tarea de mantenimiento pendiente actualmente no implementado
+        checkVendingSlotIsEmpty(vendingSlot);
+        checkVendingHasPendingMaintenance(vendingSlot);
         if(vendingSlot.getIsBlocked()) {
             throw new ConflictException("Cannot assign or unassign a product to a vending slot that is blocked for maintenance.");
         }
@@ -100,6 +102,18 @@ public class VendingSlotService {
             vendingSlot.setProduct(product);
         }
         return saveVendingSlot(vendingSlot);
+    }
+
+    private void checkVendingHasPendingMaintenance(VendingSlot vendingSlot) {
+        Boolean hasPendingMaintenance = vendingSlotRepository.existsPendingOrDelayedBySlot(
+            MaintenanceStatus.PENDING,
+            MaintenanceStatus.DELAYED,
+            MaintenanceStatus.DRAFT,
+            vendingSlot.getId()
+        );
+        if (hasPendingMaintenance) {
+            throw new ConflictException("Cannot assign or unassign a product to a vending slot that has pending maintenance.");
+        }
     }
 
     @Transactional
@@ -116,7 +130,7 @@ public class VendingSlotService {
 
             }
         }
-        //Revisar que no tenga tarea de mantenimiento pendiente actualmente no implementado
+        checkVendingHasPendingMaintenance(vendingSlot);
         vendingSlot.setIsBlocked(isBlocked);
         return saveVendingSlot(vendingSlot);
     }
@@ -195,7 +209,7 @@ public class VendingSlotService {
         }
     }
 
-    public void checkVendingSlotNotEmpty(VendingSlot vendingSlot) {
+    public void checkVendingSlotIsEmpty(VendingSlot vendingSlot) {
         if (vendingSlot.getCurrentStock() > 0) {
             throw new ConflictException("The vending slot is not empty.");
         }

@@ -1,17 +1,21 @@
 package com.expmatik.backend.maintenanceDetail.DTOs;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import com.expmatik.backend.maintenanceDetail.MaintenanceDetail;
 import com.expmatik.backend.product.DTOs.ProductResponse;
-import com.expmatik.backend.vendingSlot.DTOs.VendingSlotResponse;
+import com.expmatik.backend.vendingMachine.DTOs.VendingMachineResponse;
 
 public record MaintenanceDetailResponse(
     Integer quantityToRestock,
 
-    LocalDateTime expirationDate,
+    LocalDate expirationDate,
 
-    VendingSlotResponse vendingSlot,
+    VendingMachineResponse vendingMachine,
+
+    Integer rowNumber,
+
+    Integer columnNumber,
 
     ProductResponse product
 ) {
@@ -20,7 +24,9 @@ public record MaintenanceDetailResponse(
         return new MaintenanceDetailResponse(
             maintenanceDetail.getQuantityToRestock(),
             maintenanceDetail.getExpirationDate(),
-            VendingSlotResponse.fromVendingSlot(maintenanceDetail.getVendingSlot()),
+            VendingMachineResponse.fromVendingMachine(maintenanceDetail.getVendingMachine()),
+            maintenanceDetail.getRowNumber(),
+            maintenanceDetail.getColumnNumber(),
             ProductResponse.fromProduct(maintenanceDetail.getProduct())
         );
     }

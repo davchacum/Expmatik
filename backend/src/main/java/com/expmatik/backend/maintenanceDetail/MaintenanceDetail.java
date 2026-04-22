@@ -1,10 +1,10 @@
 package com.expmatik.backend.maintenanceDetail;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import com.expmatik.backend.model.BaseEntity;
 import com.expmatik.backend.product.Product;
-import com.expmatik.backend.vendingSlot.VendingSlot;
+import com.expmatik.backend.vendingMachine.VendingMachine;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -31,12 +31,22 @@ public class MaintenanceDetail extends BaseEntity {
 
     @FutureOrPresent
     @Column(name = "expiration_date")
-    private LocalDateTime expirationDate;
+    private LocalDate expirationDate;
 
     @NotNull
+    @Positive
+    @Column(name = "row_number",nullable = false,updatable = false)
+    private Integer rowNumber;
+
+    @NotNull
+    @Positive
+    @Column(name = "column_number",nullable = false,updatable = false)
+    private Integer columnNumber;
+    
+    @NotNull
     @ManyToOne
-    @JoinColumn(name = "vending_slot_id", nullable = false)
-    private VendingSlot vendingSlot;
+    @JoinColumn(name = "vending_machine_id", nullable = false)
+    private VendingMachine vendingMachine;
 
     @NotNull
     @ManyToOne
