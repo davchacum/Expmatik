@@ -1,11 +1,13 @@
 package com.expmatik.backend.maintenanceDetail;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.expmatik.backend.exceptions.BadRequestException;
+import com.expmatik.backend.exceptions.ResourceNotFoundException;
 import com.expmatik.backend.maintenance.Maintenance;
 import com.expmatik.backend.maintenanceDetail.DTOs.MaintenanceDetailCreate;
 import com.expmatik.backend.user.User;
@@ -101,6 +103,11 @@ public class MaintenanceDetailService {
                 vendingSlotService.addStockToVendingSlot(slot.getId(), detail.getQuantityToRestock(), detail.getExpirationDate(), user);
             }
         }
+    }
+
+    @Transactional(readOnly = true)
+    public MaintenanceDetail findById(UUID id) {
+        return maintenanceDetailRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Maintenance detail not found with id: " + id));
     }
 
 }

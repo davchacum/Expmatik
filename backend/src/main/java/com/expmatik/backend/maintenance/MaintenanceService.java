@@ -66,11 +66,10 @@ public class MaintenanceService {
             if(maintenance.getStatus() != MaintenanceStatus.DRAFT) {
                 throw new BadRequestException("Can only change status to PENDING from DRAFT.");
             }
-            validateAdministrator(maintenance, user);
             createPendingNotification(maintenance);
         } else if (newStatus == MaintenanceStatus.DELAYED) {
             throw new BadRequestException("Cannot change status to DELAYED manually. The system will automatically change the status to DELAYED if the maintenance is not completed within 24 hours of the scheduled maintenance date.");
-        } else if (newStatus == MaintenanceStatus.COMPLETED) {
+        } else {
             if(maintenance.getStatus() != MaintenanceStatus.PENDING && maintenance.getStatus() != MaintenanceStatus.DELAYED) {
                 throw new BadRequestException("Can only change status to COMPLETED from PENDING or DELAYED.");
             }
@@ -95,12 +94,6 @@ public class MaintenanceService {
         notificationService.createNotification(NotificationType.COMPLETED_RESTOCKING, message, link, maintenance.getAdministrator());
     }
 
-    private void validateAdministrator(Maintenance maintenance, User user) {
-        if (!maintenance.getAdministrator().getId().equals(user.getId())) {
-            throw new AccessDeniedException("You are not the administrator of this maintenance record.");
-        }
-    }
-
     private void validateMaintainer(Maintenance maintenance, User user) {
         if (!maintenance.getMaintainer().getId().equals(user.getId())) {
             throw new AccessDeniedException("You are not the maintainer of this maintenance record.");
@@ -110,15 +103,20 @@ public class MaintenanceService {
 
     @Transactional
     public Maintenance createMaintenance(MaintenanceCreate maintenanceCreate,User administrator) {
+        if (!administrator.getRole().equals(Role.ADMINISTRATOR) ) {
+            throw new AccessDeniedException("Only administrators can create maintenance records.");
+        }
         Maintenance maintenance = new Maintenance();
         maintenance.setAdministrator(administrator);
         maintenance.setDescription(maintenanceCreate.description());
         maintenance.setMaintenanceDate(maintenanceCreate.maintenanceDate());
         User maintainer = userService.findByEmail(maintenanceCreate.maintainerEmail()).orElseThrow(() -> new ResourceNotFoundException("Maintainer not found with email: " + maintenanceCreate.maintainerEmail()));
-        validateAdministrator(maintenance, administrator);
+        if (!maintainer.getRole().equals(Role.MAINTAINER) ) {
+            throw new BadRequestException("Only users with the role of MAINTAINER can be assigned to maintenance tasks.");
+        }
         maintenance.setMaintainer(maintainer);
         
-        maintenance.setStatus(MaintenanceStatus.PENDING);
+        maintenance.setStatus(MaintenanceStatus.DRAFT);
         return save(maintenance);
     }
 
@@ -134,23 +132,33 @@ public class MaintenanceService {
     @Transactional
     public void deleteMaintenance(UUID id, User user) {
         Maintenance maintenance = findById(id, user);
-        validateAdministrator(maintenance, user);
+        if (maintenance.getStatus() != MaintenanceStatus.DRAFT) {
+            throw new BadRequestException("Only maintenance records in DRAFT status can be deleted.");
+        }
         maintenanceRepository.delete(maintenance);
     }
 
     @Transactional
     public Maintenance updateMaintenance(UUID id, MaintenanceUpdate maintenanceUpdate, User user) {
         Maintenance maintenance = findById(id, user);
-        validateAdministrator(maintenance, user);
+        if (maintenance.getStatus() != MaintenanceStatus.DRAFT) {
+            throw new BadRequestException("Only maintenance records in DRAFT status can be updated.");
+        }
         maintenance.setDescription(maintenanceUpdate.description());
-        maintenance.setMaintainer(userService.findByEmail(maintenanceUpdate.maintainerEmail()).orElseThrow(() -> new ResourceNotFoundException("Maintainer not found with email: " + maintenanceUpdate.maintainerEmail())));
+        User maintainer = userService.findByEmail(maintenanceUpdate.maintainerEmail()).orElseThrow(() -> new ResourceNotFoundException("Maintainer not found with email: " + maintenanceUpdate.maintainerEmail()));
+        if (!maintainer.getRole().equals(Role.MAINTAINER) ) {
+            throw new BadRequestException("Only users with the role of MAINTAINER can be assigned to maintenance tasks.");
+        }
+        maintenance.setMaintainer(maintainer);
         return save(maintenance);
     }
 
     @Transactional
     public Maintenance addMaintenanceDetail(UUID maintenanceId, MaintenanceDetailCreate maintenanceDetailCreate, User user) {
         Maintenance maintenance = findById(maintenanceId, user);
-        validateAdministrator(maintenance, user);
+        if (maintenance.getStatus() != MaintenanceStatus.DRAFT) {
+            throw new BadRequestException("Can only add maintenance details to DRAFT maintenance records.");
+        }
         MaintenanceDetail newDetail = maintenanceDetailService.createMaintenanceDetail(maintenance, maintenanceDetailCreate, user);
         maintenance.getMaintenanceDetails().add(newDetail);
         return save(maintenance);
@@ -159,11 +167,13 @@ public class MaintenanceService {
     @Transactional
     public Maintenance deleteMaintenanceDetail(UUID maintenanceId, UUID detailId, User user) {
         Maintenance maintenance = findById(maintenanceId, user);
-        validateAdministrator(maintenance, user);
-        MaintenanceDetail detailToDelete = maintenance.getMaintenanceDetails().stream()
-            .filter(detail -> detail.getId().equals(detailId))
-            .findFirst()
-            .orElseThrow(() -> new ResourceNotFoundException("Maintenance detail not found with id: " + detailId));
+        if (maintenance.getStatus() != MaintenanceStatus.DRAFT) {
+            throw new BadRequestException("Can only delete maintenance details from DRAFT maintenance records.");
+        }
+        MaintenanceDetail detailToDelete = maintenanceDetailService.findById(detailId);
+        if (!maintenance.getMaintenanceDetails().contains(detailToDelete)) {
+            throw new BadRequestException("The specified maintenance detail does not belong to this maintenance record.");
+        }
 
         maintenance.getMaintenanceDetails().remove(detailToDelete);
         maintenanceDetailService.deleteMaintenanceDetail(detailToDelete);
