@@ -16,6 +16,8 @@ import com.expmatik.backend.maintenance.DTOs.MaintenanceUpdate;
 import com.expmatik.backend.maintenanceDetail.MaintenanceDetail;
 import com.expmatik.backend.maintenanceDetail.MaintenanceDetailService;
 import com.expmatik.backend.maintenanceDetail.DTOs.MaintenanceDetailCreate;
+import com.expmatik.backend.notification.NotificationService;
+import com.expmatik.backend.notification.NotificationType;
 import com.expmatik.backend.user.Role;
 import com.expmatik.backend.user.User;
 import com.expmatik.backend.user.UserService;
@@ -26,11 +28,13 @@ public class MaintenanceService {
     private final MaintenanceRepository maintenanceRepository;
     private final UserService userService;
     private final MaintenanceDetailService maintenanceDetailService;
+    private final NotificationService notificationService;
 
-    public MaintenanceService(MaintenanceRepository maintenanceRepository, UserService userService, MaintenanceDetailService maintenanceDetailService) {
+    public MaintenanceService(MaintenanceRepository maintenanceRepository, UserService userService, MaintenanceDetailService maintenanceDetailService, NotificationService notificationService) {
         this.maintenanceRepository = maintenanceRepository;
         this.userService = userService;
         this.maintenanceDetailService = maintenanceDetailService;
+        this.notificationService = notificationService;
 
     }
 
@@ -63,22 +67,32 @@ public class MaintenanceService {
                 throw new BadRequestException("Can only change status to PENDING from DRAFT.");
             }
             validateAdministrator(maintenance, user);
-            //Notificacion
+            createPendingNotification(maintenance);
         } else if (newStatus == MaintenanceStatus.DELAYED) {
             throw new BadRequestException("Cannot change status to DELAYED manually. The system will automatically change the status to DELAYED if the maintenance is not completed within 24 hours of the scheduled maintenance date.");
-            //Lo ejecuta el sistema
-            //Notificacion
         } else if (newStatus == MaintenanceStatus.COMPLETED) {
             if(maintenance.getStatus() != MaintenanceStatus.PENDING && maintenance.getStatus() != MaintenanceStatus.DELAYED) {
                 throw new BadRequestException("Can only change status to COMPLETED from PENDING or DELAYED.");
             }
             validateMaintainer(maintenance, user);
-            //Notificacion
             maintenanceDetailService.performSlotsMaintenance(maintenance, user);
+            createCompletedNotification(maintenance);
         }
         maintenance.setStatus(newStatus);
 
         return save(maintenance);
+    }
+
+    private void createPendingNotification(Maintenance maintenance) {
+        String message = "Tienes una tarea de mantenimiento asignada para el día " + maintenance.getMaintenanceDate() + ". Por favor, revisa el mantenimiento y realízalo lo antes posible.";
+        String link = "Unknown";
+        notificationService.createNotification(NotificationType.ASSIGNED_RESTOCKING, message, link, maintenance.getMaintainer());
+    }
+
+    private void createCompletedNotification(Maintenance maintenance) {
+        String message = "La tarea de mantenimiento asignada a " + maintenance.getMaintainer().getEmail() + " para el día " + maintenance.getMaintenanceDate() + " ha sido completada.";
+        String link = "Unknown";
+        notificationService.createNotification(NotificationType.COMPLETED_RESTOCKING, message, link, maintenance.getAdministrator());
     }
 
     private void validateAdministrator(Maintenance maintenance, User user) {
