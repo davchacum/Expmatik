@@ -199,6 +199,12 @@ public class MaintenanceServiceTest {
 
                 Maintenance result = maintenanceService.updateStatus(UUID.randomUUID(), MaintenanceStatus.PENDING, administrator);
                 assertEquals(result.getStatus(), MaintenanceStatus.PENDING);
+                verify(notificationService).createNotification(
+                    eq(NotificationType.ASSIGNED_RESTOCKING),
+                    any(String.class),
+                    any(String.class),
+                    eq(maintenance.getMaintainer())
+                );
             }
 
             @Test
@@ -211,6 +217,12 @@ public class MaintenanceServiceTest {
 
                 Maintenance result = maintenanceService.updateStatus(UUID.randomUUID(), MaintenanceStatus.COMPLETED, maintainer);
                 assertEquals(result.getStatus(), MaintenanceStatus.COMPLETED);
+                verify(notificationService).createNotification(
+                    eq(NotificationType.COMPLETED_RESTOCKING),
+                    any(String.class),
+                    any(String.class),
+                    eq(maintenance.getAdministrator())
+                );
             }
 
             @Test
@@ -223,6 +235,12 @@ public class MaintenanceServiceTest {
                 
                 Maintenance result = maintenanceService.updateStatus(UUID.randomUUID(), MaintenanceStatus.COMPLETED, maintainer);
                 assertEquals(result.getStatus(), MaintenanceStatus.COMPLETED);
+                verify(notificationService).createNotification(
+                    eq(NotificationType.COMPLETED_RESTOCKING),
+                    any(String.class),
+                    any(String.class),
+                    eq(maintenance.getAdministrator())
+                );
             }
         }
 

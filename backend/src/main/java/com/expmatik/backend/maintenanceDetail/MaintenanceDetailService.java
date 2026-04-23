@@ -10,6 +10,7 @@ import com.expmatik.backend.exceptions.BadRequestException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
 import com.expmatik.backend.maintenance.Maintenance;
 import com.expmatik.backend.maintenanceDetail.DTOs.MaintenanceDetailCreate;
+import com.expmatik.backend.product.Product;
 import com.expmatik.backend.user.User;
 import com.expmatik.backend.vendingSlot.VendingSlot;
 import com.expmatik.backend.vendingSlot.VendingSlotService;
@@ -47,7 +48,7 @@ public class MaintenanceDetailService {
         newMaintenanceDetail.setColumnNumber(maintenanceDetailCreate.columnNumber());
         newMaintenanceDetail.setVendingMachine(vendingSlot.getVendingMachine());
         validateProduct(vendingSlot, maintenanceDetailCreate);
-        validateExpirationDate(maintenance, maintenanceDetailCreate);
+        validateExpirationDate(maintenance, maintenanceDetailCreate, vendingSlot.getProduct());
         validateSlotStock(maintenance.getMaintenanceDetails(), maintenanceDetailCreate, vendingSlot, user);
         newMaintenanceDetail.setProduct(vendingSlot.getProduct());
         return save(newMaintenanceDetail);
@@ -76,21 +77,24 @@ public class MaintenanceDetailService {
         }
     }
 
-    private void validateExpirationDate(Maintenance maintenance, MaintenanceDetailCreate newDetail) {
-        if (newDetail.expirationDate() != null && newDetail.expirationDate().isBefore(maintenance.getMaintenanceDate())) {
-            throw new BadRequestException("The expiration date cannot be before the maintenance date.");
+    private void validateExpirationDate(Maintenance maintenance, MaintenanceDetailCreate newDetail, Product product) {
+        if(product.getIsPerishable()){
+            if (newDetail.expirationDate() == null) {
+                throw new BadRequestException("Expiration date is required for perishable products.");
+            }
+            if (newDetail.expirationDate().isBefore(maintenance.getMaintenanceDate())) {
+                throw new BadRequestException("The expiration date cannot be before the maintenance date.");
+            }
+        }else{
+            if (newDetail.expirationDate() != null) {
+                throw new BadRequestException("Expiration date should not be provided for non-perishable products.");
+            }
         }
     }
 
     @Transactional
     public void deleteMaintenanceDetail(MaintenanceDetail maintenanceDetail) {
         maintenanceDetailRepository.delete(maintenanceDetail);
-    }
-
-    @Transactional(readOnly = true)
-    public List<VendingSlot> filterDistinctVendingSlotsByMaintenance(Maintenance maintenance) {
-
-        return maintenanceDetailRepository.findDistinctVendingSlotsByMaintenance(maintenance.getId());
     }
 
     @Transactional
