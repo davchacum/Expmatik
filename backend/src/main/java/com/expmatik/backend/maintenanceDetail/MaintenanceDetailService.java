@@ -40,13 +40,12 @@ public class MaintenanceDetailService {
         newMaintenanceDetail.setQuantityToRestock(maintenanceDetailCreate.quantityToRestock());
         VendingSlot vendingSlot = 
             vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(
-                    maintenanceDetailCreate.vendingMachineName(),
+                    maintenance.getVendingMachine().getName(),
                     maintenanceDetailCreate.rowNumber(),
                     maintenanceDetailCreate.columnNumber(),
                     user);
         newMaintenanceDetail.setRowNumber(maintenanceDetailCreate.rowNumber());
         newMaintenanceDetail.setColumnNumber(maintenanceDetailCreate.columnNumber());
-        newMaintenanceDetail.setVendingMachine(vendingSlot.getVendingMachine());
         validateProduct(vendingSlot, maintenanceDetailCreate);
         validateExpirationDate(maintenance, maintenanceDetailCreate, vendingSlot.getProduct());
         validateSlotStock(maintenance.getMaintenanceDetails(), maintenanceDetailCreate, vendingSlot, user);
@@ -60,14 +59,7 @@ public class MaintenanceDetailService {
         }
     }
 
-    private void validateSameMachine(List<MaintenanceDetail> currentMaintenanceDetails,MaintenanceDetailCreate newDetail) {
-        if(!currentMaintenanceDetails.stream().allMatch(detail -> detail.getVendingMachine().getName().equals(newDetail.vendingMachineName()))){
-            throw new BadRequestException("All maintenance details must be for the same vending machine.");
-        }
-    }
-
     private void validateSlotStock(List<MaintenanceDetail> currentMaintenanceDetails,MaintenanceDetailCreate newDetail,VendingSlot vendingSlot, User user) {
-        validateSameMachine(currentMaintenanceDetails, newDetail);
         List<MaintenanceDetail> sameSlot = currentMaintenanceDetails.stream()
             .filter(detail -> detail.getRowNumber().equals(newDetail.rowNumber()) && detail.getColumnNumber().equals(newDetail.columnNumber()))
             .toList();

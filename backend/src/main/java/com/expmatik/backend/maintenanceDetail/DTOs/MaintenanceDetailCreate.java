@@ -6,10 +6,8 @@ import com.expmatik.backend.maintenanceDetail.MaintenanceDetail;
 import com.expmatik.backend.validation.ValidBarcode;
 
 import jakarta.validation.constraints.FutureOrPresent;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
 
 public record MaintenanceDetailCreate(
     @NotNull
@@ -26,10 +24,6 @@ public record MaintenanceDetailCreate(
     @NotNull
     @Positive
     Integer columnNumber,
-    
-    @NotBlank
-    @Size(max = 100)
-    String vendingMachineName,
 
     @NotNull
     @ValidBarcode
@@ -42,7 +36,6 @@ public record MaintenanceDetailCreate(
             maintenanceDetail.getExpirationDate(),
             maintenanceDetail.getRowNumber(),
             maintenanceDetail.getColumnNumber(),
-            maintenanceDetail.getVendingMachine().getName(),
             maintenanceDetail.getProduct().getBarcode()
         );
     }

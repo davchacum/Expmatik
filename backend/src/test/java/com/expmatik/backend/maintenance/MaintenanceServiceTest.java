@@ -105,7 +105,7 @@ public class MaintenanceServiceTest {
         detail.setRowNumber(1);
         detail.setColumnNumber(1);
         detail.setProduct(product);
-        detail.setVendingMachine(vendingMachine);
+
 
         maintenanceDetails = new LinkedList<>();
         maintenanceDetails.add(detail);
@@ -117,6 +117,7 @@ public class MaintenanceServiceTest {
         maintenance.setDescription("Test maintenance");
         maintenance.setMaintainer(maintainer);
         maintenance.setAdministrator(administrator);
+        maintenance.setVendingMachine(vendingMachine);
         maintenance.setMaintenanceDetails(maintenanceDetails);
     }
 
@@ -328,7 +329,8 @@ public class MaintenanceServiceTest {
                 MaintenanceCreate maintenanceCreate = new MaintenanceCreate(
                     LocalDate.now(),
                     "Test maintenance",
-                    "maintainer@example.com"
+                    "maintainer@example.com",
+                    "Vending Machine 1"
                 );
                 when(userService.findByEmail(any(String.class))).thenReturn(Optional.of(maintainer));
                 when(maintenanceRepository.save(any(Maintenance.class))).thenReturn(maintenance);
@@ -349,7 +351,8 @@ public class MaintenanceServiceTest {
                 MaintenanceCreate maintenanceCreate = new MaintenanceCreate(
                     LocalDate.now(),
                     "Test maintenance",
-                    "maintainer@example.com"
+                    "maintainer@example.com",
+                    "Vending Machine 1"
                 );
 
                 assertThrows(AccessDeniedException.class, () -> maintenanceService.createMaintenance(maintenanceCreate, maintainer));
@@ -361,7 +364,8 @@ public class MaintenanceServiceTest {
                 MaintenanceCreate maintenanceCreate = new MaintenanceCreate(
                     LocalDate.now(),
                     "Test maintenance",
-                    "administrator@example.com"
+                    "administrator@example.com",
+                    "Vending Machine 1"
                 );
                 when(userService.findByEmail(any(String.class))).thenReturn(Optional.of(administrator));
 
@@ -374,7 +378,8 @@ public class MaintenanceServiceTest {
                 MaintenanceCreate maintenanceCreate = new MaintenanceCreate(
                     LocalDate.now(),
                     "Test maintenance",
-                    "nonexistent@example.com"
+                    "nonexistent@example.com",
+                    "Vending Machine 1"
                 );
                 when(userService.findByEmail(any(String.class))).thenReturn(Optional.empty());
 
@@ -615,7 +620,7 @@ public class MaintenanceServiceTest {
             void testAddMaintenanceDetails_validInput_shouldAddDetails() {
 
                 MaintenanceDetailCreate maintenanceDetailCreate = new MaintenanceDetailCreate(
-                    1, LocalDate.now(), 1,1, vendingMachine.getName(), product.getBarcode()
+                    1, LocalDate.now(), 1,1, product.getBarcode()
                 );
 
                 when(maintenanceRepository.findById(any(UUID.class))).thenReturn(Optional.of(maintenance));
@@ -637,7 +642,7 @@ public class MaintenanceServiceTest {
             void testAddMaintenanceDetails_maintenanceDoesNotExist_shouldThrowResourceNotFoundException() {
 
                 MaintenanceDetailCreate maintenanceDetailCreate = new MaintenanceDetailCreate(
-                    1, LocalDate.now(), 1,1, vendingMachine.getName(), product.getBarcode()
+                    1, LocalDate.now(), 1,1, product.getBarcode()
                 );
 
                 when(maintenanceRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
@@ -649,7 +654,7 @@ public class MaintenanceServiceTest {
             @DisplayName("should throw AccessDeniedException when user is not authorized to add details")
             void testAddMaintenanceDetails_userNotAuthorized_shouldThrowAccessDeniedException() {
                 MaintenanceDetailCreate maintenanceDetailCreate = new MaintenanceDetailCreate(
-                    1, LocalDate.now(), 1,1, vendingMachine.getName(), product.getBarcode()
+                    1, LocalDate.now(), 1,1, product.getBarcode()
                 );
 
                 when(maintenanceRepository.findById(any(UUID.class))).thenReturn(Optional.of(maintenance));
@@ -661,7 +666,7 @@ public class MaintenanceServiceTest {
             @DisplayName("should throw AccessDeniedException when maintainer tries to add details")
             void testAddMaintenanceDetails_maintainerTriesToAddDetails_shouldThrowAccessDeniedException() {
                 MaintenanceDetailCreate maintenanceDetailCreate = new MaintenanceDetailCreate(
-                    1, LocalDate.now(), 1,1, vendingMachine.getName(), product.getBarcode()
+                    1, LocalDate.now(), 1,1, product.getBarcode()
                 );
 
                 when(maintenanceRepository.findById(any(UUID.class))).thenReturn(Optional.of(maintenance));
@@ -673,7 +678,7 @@ public class MaintenanceServiceTest {
             @DisplayName("should throw BadRequestException when trying to add details to a non-DRAFT maintenance")
             void testAddMaintenanceDetails_nonDraftMaintenance_shouldThrowBadRequestException() {
                 MaintenanceDetailCreate maintenanceDetailCreate = new MaintenanceDetailCreate(
-                    1, LocalDate.now(), 1,1, vendingMachine.getName(), product.getBarcode()
+                    1, LocalDate.now(), 1,1, product.getBarcode()
                 );
 
                 maintenance.setStatus(MaintenanceStatus.PENDING);

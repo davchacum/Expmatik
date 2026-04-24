@@ -105,7 +105,6 @@ public class MaintenanceDetailServiceTest {
         detail.setRowNumber(1);
         detail.setColumnNumber(1);
         detail.setProduct(product);
-        detail.setVendingMachine(vendingMachine);
 
         maintenanceDetails = new LinkedList<>();
         maintenanceDetails.add(detail);
@@ -117,6 +116,7 @@ public class MaintenanceDetailServiceTest {
         maintenance.setDescription("Test maintenance");
         maintenance.setMaintainer(maintainer);
         maintenance.setAdministrator(administrator);
+        maintenance.setVendingMachine(vendingMachine);
         maintenance.setMaintenanceDetails(maintenanceDetails);
     }
 
@@ -136,12 +136,11 @@ public class MaintenanceDetailServiceTest {
                         LocalDate.now().plusDays(1),
                         1,
                         2,
-                        vendingMachine.getName(),
                         product.getBarcode()
                 );
 
                 when(vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(
-                        createRequest.vendingMachineName(),
+                        vendingMachine.getName(),
                         createRequest.rowNumber(),
                         createRequest.columnNumber(),
                         maintainer
@@ -157,7 +156,6 @@ public class MaintenanceDetailServiceTest {
                 assertEquals(createRequest.rowNumber(), result.getRowNumber());
                 assertEquals(createRequest.columnNumber(), result.getColumnNumber());
                 assertEquals(vendingSlot.getProduct(), result.getProduct());
-                assertEquals(vendingSlot.getVendingMachine(), result.getVendingMachine());
             }
 
             @Test
@@ -168,12 +166,11 @@ public class MaintenanceDetailServiceTest {
                         LocalDate.now().plusDays(1),
                         2,
                         2,
-                        vendingMachine.getName(),
                         product.getBarcode()
                 );
 
                 when(vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(
-                        createRequest.vendingMachineName(),
+                        vendingMachine.getName(),
                         createRequest.rowNumber(),
                         createRequest.columnNumber(),
                         maintainer
@@ -189,7 +186,6 @@ public class MaintenanceDetailServiceTest {
                 assertEquals(createRequest.rowNumber(), result.getRowNumber());
                 assertEquals(createRequest.columnNumber(), result.getColumnNumber());
                 assertEquals(vendingSlot2.getProduct(), result.getProduct());
-                assertEquals(vendingSlot2.getVendingMachine(), result.getVendingMachine());
             }
 
             @Test
@@ -200,13 +196,12 @@ public class MaintenanceDetailServiceTest {
                         null,
                         1,
                         1,
-                        vendingMachine.getName(),
                         product.getBarcode()
                 );
                 product.setIsPerishable(false);
 
                 when(vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(
-                        createRequest.vendingMachineName(),
+                        vendingMachine.getName(),
                         createRequest.rowNumber(),
                         createRequest.columnNumber(),
                         maintainer
@@ -222,7 +217,6 @@ public class MaintenanceDetailServiceTest {
                 assertEquals(createRequest.rowNumber(), result.getRowNumber());
                 assertEquals(createRequest.columnNumber(), result.getColumnNumber());
                 assertEquals(vendingSlot.getProduct(), result.getProduct());
-                assertEquals(vendingSlot.getVendingMachine(), result.getVendingMachine());
             }
         }
 
@@ -238,12 +232,11 @@ public class MaintenanceDetailServiceTest {
                         LocalDate.now().plusDays(1),
                         1,
                         1,
-                        vendingMachine.getName(),
                         "invalid_barcode"
                 );
 
                 when(vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(
-                        createRequest.vendingMachineName(),
+                        vendingMachine.getName(),
                         createRequest.rowNumber(),
                         createRequest.columnNumber(),
                         maintainer
@@ -262,12 +255,11 @@ public class MaintenanceDetailServiceTest {
                         null,
                         1,
                         1,
-                        vendingMachine.getName(),
                         product.getBarcode()
                 );
 
                 when(vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(
-                        createRequest.vendingMachineName(),
+                        vendingMachine.getName(),
                         createRequest.rowNumber(),
                         createRequest.columnNumber(),
                         maintainer
@@ -286,37 +278,12 @@ public class MaintenanceDetailServiceTest {
                         LocalDate.now().plusDays(1),
                         1,
                         1,
-                        vendingMachine.getName(),
                         product.getBarcode()
                 );
                 product.setIsPerishable(false);
 
                 when(vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(
-                        createRequest.vendingMachineName(),
-                        createRequest.rowNumber(),
-                        createRequest.columnNumber(),
-                        maintainer
-                )).thenReturn(vendingSlot);
-
-                assertThrows(BadRequestException.class, () -> {
-                    maintenanceDetailService.createMaintenanceDetail(maintenance, createRequest, maintainer);
-                });
-            }
-
-            @Test
-            @DisplayName("Should throw BadRequestException when maintenance details are for different vending machines")
-            void createMaintenanceDetail_DifferentVendingMachines_ThrowsBadRequestException() {
-                MaintenanceDetailCreate createRequest = new MaintenanceDetailCreate(
-                        1,
-                        LocalDate.now().plusDays(1),
-                        1,
-                        1,
-                        "Another Vending Machine",
-                        product.getBarcode()
-                );
-
-                when(vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(
-                        createRequest.vendingMachineName(),
+                        vendingMachine.getName(),
                         createRequest.rowNumber(),
                         createRequest.columnNumber(),
                         maintainer
@@ -335,12 +302,11 @@ public class MaintenanceDetailServiceTest {
                         LocalDate.now().plusDays(1),
                         1,
                         1,
-                        vendingMachine.getName(),
                         product.getBarcode()
                 );
 
                 when(vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(
-                        createRequest.vendingMachineName(),
+                        vendingMachine.getName(),
                         createRequest.rowNumber(),
                         createRequest.columnNumber(),
                         maintainer
@@ -360,12 +326,11 @@ public class MaintenanceDetailServiceTest {
                         LocalDate.now().minusDays(1),
                         1,
                         1,
-                        vendingMachine.getName(),
                         product.getBarcode()
                 );
 
                 when(vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(
-                        createRequest.vendingMachineName(),
+                        vendingMachine.getName(),
                         createRequest.rowNumber(),
                         createRequest.columnNumber(),
                         maintainer

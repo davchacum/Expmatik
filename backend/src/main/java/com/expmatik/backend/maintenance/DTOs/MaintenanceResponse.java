@@ -9,6 +9,7 @@ import com.expmatik.backend.maintenance.Maintenance;
 import com.expmatik.backend.maintenance.MaintenanceStatus;
 import com.expmatik.backend.maintenanceDetail.DTOs.MaintenanceDetailCreate;
 import com.expmatik.backend.user.DTOs.UserProfile;
+import com.expmatik.backend.vendingMachine.DTOs.VendingMachineResponse;
 
 public record MaintenanceResponse(
 
@@ -22,7 +23,9 @@ public record MaintenanceResponse(
 
     UserProfile administrator,
     
-    List<MaintenanceDetailCreate> maintenanceDetails
+    List<MaintenanceDetailCreate> maintenanceDetails,
+
+    VendingMachineResponse vendingMachine
 ) {
 
     public static MaintenanceResponse fromMaintenance(Maintenance maintenance) {
@@ -34,7 +37,8 @@ public record MaintenanceResponse(
             UserProfile.fromUser(maintenance.getAdministrator()),
             maintenance.getMaintenanceDetails().stream()
                 .map(MaintenanceDetailCreate::fromMaintenanceDetail)
-                .toList()
+                .toList(),
+            VendingMachineResponse.fromVendingMachine(maintenance.getVendingMachine())
         );
     }
 

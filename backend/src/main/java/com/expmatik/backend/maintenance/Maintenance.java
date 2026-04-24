@@ -6,6 +6,7 @@ import java.util.List;
 import com.expmatik.backend.maintenanceDetail.MaintenanceDetail;
 import com.expmatik.backend.model.BaseEntity;
 import com.expmatik.backend.user.User;
+import com.expmatik.backend.vendingMachine.VendingMachine;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -53,6 +54,11 @@ public class Maintenance extends BaseEntity{
     @ManyToOne
     @JoinColumn(name = "administrator_id", nullable = false)
     private User administrator;
+
+    @NotNull
+    @ManyToOne
+    @JoinColumn(name = "vending_machine_id", nullable = false)
+    private VendingMachine vendingMachine;
     
     @NotNull
     @OneToMany

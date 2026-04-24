@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import com.expmatik.backend.maintenance.Maintenance;
 
 import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -19,7 +20,11 @@ public record MaintenanceCreate(
     String description,
 
     @NotNull
-    String maintainerEmail
+    String maintainerEmail,
+
+    @NotBlank
+    @Size(max = 100)
+    String vendingMachineName
     
 ) {
 
@@ -27,7 +32,8 @@ public record MaintenanceCreate(
         return new MaintenanceCreate(
             maintenance.getMaintenanceDate(),
             maintenance.getDescription(),
-            maintenance.getMaintainer().getEmail()
+            maintenance.getMaintainer().getEmail(),
+            maintenance.getVendingMachine().getName()
         );
     }
 

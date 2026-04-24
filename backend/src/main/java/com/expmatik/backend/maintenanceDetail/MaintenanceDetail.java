@@ -4,7 +4,6 @@ import java.time.LocalDate;
 
 import com.expmatik.backend.model.BaseEntity;
 import com.expmatik.backend.product.Product;
-import com.expmatik.backend.vendingMachine.VendingMachine;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -42,11 +41,6 @@ public class MaintenanceDetail extends BaseEntity {
     @Positive
     @Column(name = "column_number",nullable = false,updatable = false)
     private Integer columnNumber;
-    
-    @NotNull
-    @ManyToOne
-    @JoinColumn(name = "vending_machine_id", nullable = false)
-    private VendingMachine vendingMachine;
 
     @NotNull
     @ManyToOne
