@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.expmatik.backend.chat.DTOs.ChatMessagePayload;
+import com.expmatik.backend.chat.DTOs.ChatMessageCreate;
 import com.expmatik.backend.chat.DTOs.ChatResponse;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
 import com.expmatik.backend.user.User;
@@ -36,10 +36,10 @@ public class ChatController {
     }
 
     @MessageMapping("/chat/{maintenanceId}")
-    public void sendMessage(@DestinationVariable UUID maintenanceId, ChatMessagePayload payload, Principal principal) {
+    public void sendMessage(@DestinationVariable UUID maintenanceId, ChatMessageCreate chatMessageCreate, Principal principal) {
         User sender = userService.findByEmail(principal.getName())
             .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + principal.getName()));
-        chatService.sendMessage(maintenanceId, payload.content(), sender);
+        chatService.sendMessage(maintenanceId, chatMessageCreate.content(), sender);
     }
 
     @GetMapping("/maintenance/{maintenanceId}")
