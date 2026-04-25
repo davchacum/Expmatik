@@ -20,6 +20,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -42,6 +44,7 @@ import com.expmatik.backend.user.Role;
 import com.expmatik.backend.user.User;
 import com.expmatik.backend.user.UserService;
 import com.expmatik.backend.vendingMachine.VendingMachine;
+import com.expmatik.backend.vendingMachine.VendingMachineService;
 import com.expmatik.backend.vendingSlot.VendingSlot;
 
 @ExtendWith(MockitoExtension.class)
@@ -58,6 +61,9 @@ public class MaintenanceServiceTest {
 
     @Mock
     private NotificationService notificationService;
+
+    @Mock
+    private VendingMachineService vendingMachineService;
 
     @Spy
     @InjectMocks
@@ -183,22 +189,22 @@ public class MaintenanceServiceTest {
     }
 
     @Nested
-    @DisplayName("updateStatus")
-    class UpdateStatus {
+    @DisplayName("pendingMaintenance")
+    class PendingMaintenance {
 
         @Nested
         @DisplayName("Success Cases")
         class SuccessCases {
 
             @Test
-            @DisplayName("should update status to PENDING when current status is DRAFT and user is administrator")
-            void testUpdateStatus_toPendingFromDraftByAdministrator_shouldUpdateStatus() {
+            @DisplayName("should update status to PENDING when current status is DRAFT and user is maintainer")
+            void testPendingMaintenance_toPendingFromDraftByMaintainer_shouldUpdateStatus() {
                 maintenance.setStatus(MaintenanceStatus.DRAFT);
                 when(maintenanceRepository.findById(any(UUID.class))).thenReturn(Optional.of(maintenance));
                 when(notificationService.createNotification(any(NotificationType.class), any(String.class),any(String.class), any(User.class))).thenReturn(null);
                 when(maintenanceRepository.save(any(Maintenance.class))).thenReturn(maintenance);
 
-                Maintenance result = maintenanceService.updateStatus(UUID.randomUUID(), MaintenanceStatus.PENDING, administrator);
+                Maintenance result = maintenanceService.pendingMaintenance(UUID.randomUUID(), administrator);
                 assertEquals(result.getStatus(), MaintenanceStatus.PENDING);
                 verify(notificationService).createNotification(
                     eq(NotificationType.ASSIGNED_RESTOCKING),
@@ -207,16 +213,60 @@ public class MaintenanceServiceTest {
                     eq(maintenance.getMaintainer())
                 );
             }
+        }
+
+        @Nested
+        @DisplayName("Failure Cases")
+        class FailureCases {
+
+            @Test
+            @DisplayName("should throw AccessDeniedException when user is not authorized to update status")
+            void testPendingMaintenance_userNotAuthorized_shouldThrowAccessDeniedException() {
+                maintenance.setStatus(MaintenanceStatus.PENDING);
+                when(maintenanceRepository.findById(any(UUID.class))).thenReturn(Optional.of(maintenance));
+
+                assertThrows(AccessDeniedException.class, () -> maintenanceService.pendingMaintenance(UUID.randomUUID(), otherUser));
+            }
+
+            @ParameterizedTest
+            @ValueSource(strings = {"REJECTED_EXPIRED", "PENDING", "DELAYED","COMPLETED"})
+            void testPendingMaintenance_toPendingFromInvalidStatus_shouldThrowBadRequestException(String invalidStatus) {
+                maintenance.setStatus(MaintenanceStatus.valueOf(invalidStatus));
+                when(maintenanceRepository.findById(any(UUID.class))).thenReturn(Optional.of(maintenance));
+
+                assertThrows(BadRequestException.class, () -> maintenanceService.pendingMaintenance(UUID.randomUUID(), administrator));
+            }
+
+
+            @Test
+            @DisplayName("should throw BadRequestException when trying to update to PENDING from DRAFT status without any maintenance details")
+            void testPendingMaintenance_toPendingFromDraftWithoutDetails_shouldThrowBadRequestException() {
+                maintenance.setStatus(MaintenanceStatus.DRAFT);
+                maintenance.setMaintenanceDetails(List.of());
+                when(maintenanceRepository.findById(any(UUID.class))).thenReturn(Optional.of(maintenance));
+
+                assertThrows(BadRequestException.class, () -> maintenanceService.pendingMaintenance(UUID.randomUUID(), administrator));
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("completedMaintenance")
+    class CompletedMaintenance {
+
+        @Nested
+        @DisplayName("Success Cases")
+        class SuccessCases {
 
             @Test
             @DisplayName("should update status to COMPLETED when current status is PENDING and user is maintainer")
-            void testUpdateStatus_toCompletedFromPendingByMaintainer_shouldUpdateStatus() {
+            void testCompletedMaintenance_fromPendingByMaintainer_shouldUpdateStatus() {
                 maintenance.setStatus(MaintenanceStatus.PENDING);
                 when(maintenanceRepository.findById(any(UUID.class))).thenReturn(Optional.of(maintenance));
                 when(notificationService.createNotification(any(NotificationType.class), any(String.class),any(String.class), any(User.class))).thenReturn(null);
                 when(maintenanceRepository.save(any(Maintenance.class))).thenReturn(maintenance);
 
-                Maintenance result = maintenanceService.updateStatus(UUID.randomUUID(), MaintenanceStatus.COMPLETED, maintainer);
+                Maintenance result = maintenanceService.completedMaintenance(UUID.randomUUID(), maintainer);
                 assertEquals(result.getStatus(), MaintenanceStatus.COMPLETED);
                 verify(notificationService).createNotification(
                     eq(NotificationType.COMPLETED_RESTOCKING),
@@ -228,13 +278,13 @@ public class MaintenanceServiceTest {
 
             @Test
             @DisplayName("should update status to COMPLETED when current status is DELAYED and user is maintainer")
-            void testUpdateStatus_toCompletedFromDelayedByMaintainer_shouldUpdateStatus() {
+            void testCompletedMaintenance_fromDelayedByMaintainer_shouldUpdateStatus() {
                 maintenance.setStatus(MaintenanceStatus.DELAYED);
                 when(maintenanceRepository.findById(any(UUID.class))).thenReturn(Optional.of(maintenance));
                 when(notificationService.createNotification(any(NotificationType.class), any(String.class),any(String.class), any(User.class))).thenReturn(null);
                 when(maintenanceRepository.save(any(Maintenance.class))).thenReturn(maintenance);
                 
-                Maintenance result = maintenanceService.updateStatus(UUID.randomUUID(), MaintenanceStatus.COMPLETED, maintainer);
+                Maintenance result = maintenanceService.completedMaintenance(UUID.randomUUID(), maintainer);
                 assertEquals(result.getStatus(), MaintenanceStatus.COMPLETED);
                 verify(notificationService).createNotification(
                     eq(NotificationType.COMPLETED_RESTOCKING),
@@ -250,66 +300,21 @@ public class MaintenanceServiceTest {
         class FailureCases {
 
             @Test
-            @DisplayName("should throw AccessDeniedException when user is not authorized to update status")
-            void testUpdateStatus_userNotAuthorized_shouldThrowAccessDeniedException() {
+            @DisplayName("should throw AccessDeniedException when user is not authorized to complete maintenance")
+            void testCompleteMaintenance_userNotAuthorized_shouldThrowAccessDeniedException() {
                 maintenance.setStatus(MaintenanceStatus.PENDING);
                 when(maintenanceRepository.findById(any(UUID.class))).thenReturn(Optional.of(maintenance));
 
-                assertThrows(AccessDeniedException.class, () -> maintenanceService.updateStatus(UUID.randomUUID(), MaintenanceStatus.COMPLETED, otherUser));
+                assertThrows(AccessDeniedException.class, () -> maintenanceService.completedMaintenance(UUID.randomUUID(), otherUser));
             }
 
-            @Test
-            @DisplayName("should throw BadRequestException when trying to update to DRAFT")
-            void testUpdateStatus_toDraft_shouldThrowBadRequestException() {
-                maintenance.setStatus(MaintenanceStatus.PENDING);
+            @ParameterizedTest
+            @ValueSource(strings = {"REJECTED_EXPIRED", "DRAFT","COMPLETED"})
+            void testCompletedMaintenance_toCompletedFromInvalidStatus_shouldThrowBadRequestException(String invalidStatus) {
+                maintenance.setStatus(MaintenanceStatus.valueOf(invalidStatus));
                 when(maintenanceRepository.findById(any(UUID.class))).thenReturn(Optional.of(maintenance));
 
-                assertThrows(BadRequestException.class, () -> maintenanceService.updateStatus(UUID.randomUUID(), MaintenanceStatus.DRAFT, administrator));
-            }
-
-            @Test
-            @DisplayName("should throw BadRequestException when trying to update to DELAYED")
-            void testUpdateStatus_toDelayed_shouldThrowBadRequestException() {
-                maintenance.setStatus(MaintenanceStatus.DELAYED);
-                when(maintenanceRepository.findById(any(UUID.class))).thenReturn(Optional.of(maintenance));
-
-                assertThrows(BadRequestException.class, () -> maintenanceService.updateStatus(UUID.randomUUID(), MaintenanceStatus.DELAYED, administrator));
-            }
-
-            @Test
-            @DisplayName("should throw BadRequestException when trying to update to COMPLETED from a non-PENDING/DELAYED status as an Administrator")
-            void testUpdateStatus_toCompletedFromNonPendingOrDelayed_shouldThrowBadRequestException() {
-                maintenance.setStatus(MaintenanceStatus.DRAFT);
-                when(maintenanceRepository.findById(any(UUID.class))).thenReturn(Optional.of(maintenance));
-
-                assertThrows(BadRequestException.class, () -> maintenanceService.updateStatus(UUID.randomUUID(), MaintenanceStatus.COMPLETED, administrator));
-            }
-
-            @Test
-            @DisplayName("should throw BadRequestException when trying to update to PENDING from a non-DRAFT status as an Administrator")
-            void testUpdateStatus_toPendingFromNonDraft_shouldThrowBadRequestException() {
-                maintenance.setStatus(MaintenanceStatus.COMPLETED);
-                when(maintenanceRepository.findById(any(UUID.class))).thenReturn(Optional.of(maintenance));
-
-                assertThrows(BadRequestException.class, () -> maintenanceService.updateStatus(UUID.randomUUID(), MaintenanceStatus.PENDING, administrator));
-            }
-
-            @Test
-            @DisplayName("should throw AccessDeniedException when trying to update to PENDING from DRAFT status as a non-Administrator")
-            void testUpdateStatus_toPendingFromDraftByNonAdministrator_shouldThrowAccessDeniedException() {
-                maintenance.setStatus(MaintenanceStatus.DRAFT);
-                when(maintenanceRepository.findById(any(UUID.class))).thenReturn(Optional.of(maintenance));
-
-                assertThrows(AccessDeniedException.class, () -> maintenanceService.updateStatus(UUID.randomUUID(), MaintenanceStatus.PENDING, maintainer));
-            }
-
-            @Test
-            @DisplayName("should throw AccessDeniedException when trying to update to COMPLETED from PENDING status as a non-Maintainer")
-            void testUpdateStatus_toCompletedFromPendingByNonMaintainer_shouldThrowAccessDeniedException(){
-                maintenance.setStatus(MaintenanceStatus.PENDING);
-                when(maintenanceRepository.findById(any(UUID.class))).thenReturn(Optional.of(maintenance));
-
-                assertThrows(AccessDeniedException.class, () -> maintenanceService.updateStatus(UUID.randomUUID(), MaintenanceStatus.COMPLETED, administrator));
+                assertThrows(BadRequestException.class, () -> maintenanceService.completedMaintenance(UUID.randomUUID(), administrator));
             }
         }
     }
@@ -334,6 +339,7 @@ public class MaintenanceServiceTest {
                 );
                 when(userService.findByEmail(any(String.class))).thenReturn(Optional.of(maintainer));
                 when(maintenanceRepository.save(any(Maintenance.class))).thenReturn(maintenance);
+                when(vendingMachineService.findVendingMachineByNameAndUserId(any(String.class), any(User.class))).thenReturn(vendingMachine);
 
                 Maintenance result = maintenanceService.createMaintenance(maintenanceCreate, administrator);
                 assertEquals(result.getId(), maintenance.getId());
@@ -344,19 +350,6 @@ public class MaintenanceServiceTest {
         @Nested
         @DisplayName("Failure Cases")
         class FailureCases {
-
-            @Test
-            @DisplayName("should throw AccessDeniedException when trying to create maintenance as a maintainer")
-            void testCreateMaintenance_byMaintainer_shouldThrowAccessDeniedException() {
-                MaintenanceCreate maintenanceCreate = new MaintenanceCreate(
-                    LocalDate.now(),
-                    "Test maintenance",
-                    "maintainer@example.com",
-                    "Vending Machine 1"
-                );
-
-                assertThrows(AccessDeniedException.class, () -> maintenanceService.createMaintenance(maintenanceCreate, maintainer));
-            }
 
             @Test
             @DisplayName("should throw BadRequestException when maintainer has ADMINISTRATOR role")
@@ -401,17 +394,18 @@ public class MaintenanceServiceTest {
             @DisplayName("should call repository with admin filters")
             void testSearchMaintenances_adminPath() {
                 when(maintenanceRepository.searchMaintenances(
-                        any(), any(), anyBoolean(), any(), any(), any(), any(), any()
+                        any(), any(), anyBoolean(), any(), any() ,any(), any(), any(), any()
                 )).thenReturn(Page.empty());
 
                 maintenanceService.searchMaintenances(
-                        administrator, null, null, null, Pageable.unpaged()
+                        administrator, null, null, null, null, Pageable.unpaged()
                 );
 
                 verify(maintenanceRepository).searchMaintenances(
                         eq(administrator.getId()), 
                         isNull(),
                         eq(false),               
+                        isNull(),
                         isNull(),
                         isNull(),
                         isNull(),
@@ -424,11 +418,11 @@ public class MaintenanceServiceTest {
             @DisplayName("should call repository with maintainer filters")
             void testSearchMaintenances_maintainerPath() {
                 when(maintenanceRepository.searchMaintenances(
-                        any(), any(), anyBoolean(), any(), any(), any(), any(), any()
+                        any(), any(), anyBoolean(), any(), any() ,any(), any(), any(), any()
                 )).thenReturn(Page.empty());
 
                 maintenanceService.searchMaintenances(
-                        maintainer, MaintenanceStatus.DRAFT, null, null, Pageable.unpaged()
+                        maintainer, MaintenanceStatus.DRAFT, null, null,null, Pageable.unpaged()
                 );
 
                 verify(maintenanceRepository).searchMaintenances(
@@ -437,6 +431,7 @@ public class MaintenanceServiceTest {
                         eq(true),
                         eq(MaintenanceStatus.DRAFT),
                         eq(MaintenanceStatus.DRAFT),
+                        isNull(),
                         isNull(),
                         isNull(),
                         any(Pageable.class)

@@ -15,8 +15,9 @@ public interface MaintenanceRepository extends JpaRepository<Maintenance, UUID> 
 
     @Query("""
         SELECT m FROM Maintenance m
-        WHERE (m.administrator is NULL OR m.administrator.id = :administratorId)
-        AND (m.maintainer is NULL OR m.maintainer.id = :maintainerId)
+        WHERE (:administratorId IS NULL OR m.administrator.id = :administratorId)
+        AND (:maintainerId IS NULL OR m.maintainer.id = :maintainerId)
+        AND (:machineName IS NULL OR LOWER(m.vendingMachine.name) LIKE LOWER(CONCAT('%', CAST(:machineName AS string), '%')))
         AND (:excludeDraft = false OR m.status <> :draftStatus)
         AND (:status IS NULL OR m.status = :status)
         AND (m.maintenanceDate >= COALESCE(:startDate, m.maintenanceDate))
@@ -29,6 +30,7 @@ public interface MaintenanceRepository extends JpaRepository<Maintenance, UUID> 
         @Param("excludeDraft") boolean excludeDraft,
         @Param("draftStatus") MaintenanceStatus draftStatus,
         @Param("status") MaintenanceStatus status,
+        @Param("machineName") String machineName,
         @Param("startDate") LocalDateTime startDate,
         @Param("endDate") LocalDateTime endDate,
         Pageable pageable
@@ -42,6 +44,17 @@ public interface MaintenanceRepository extends JpaRepository<Maintenance, UUID> 
     List<Maintenance> findPendingMaintenancesByMaintenanceDateAfter(
         @Param("pendingStatus") MaintenanceStatus pendingStatus,
         @Param("currentDate") LocalDate currentDate
+    );
+
+    @Query("""
+        SELECT DISTINCT m FROM Maintenance m
+        JOIN m.maintenanceDetails md
+        WHERE m.status = :delayedStatus
+        AND md.expirationDate = :expirationDate
+    """)
+    List<Maintenance> findDelayedMaintenanceByDetailsExpirationDate(
+        @Param("delayedStatus") MaintenanceStatus delayedStatus,
+        @Param("expirationDate") LocalDate expirationDate
     );
 
 }

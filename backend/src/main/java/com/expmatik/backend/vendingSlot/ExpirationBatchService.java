@@ -27,7 +27,7 @@ public class ExpirationBatchService {
     @Transactional(readOnly = true)
     public List<ExpirationBatch> getExpirationBatchesByVendingSlotId(UUID vendingSlotId,User user) {
         List<ExpirationBatch> expirationBatches = expirationBatchRepository.findAllByVendingSlotIdOrderByExpirationDateAsc(vendingSlotId);
-        if(!expirationBatches.isEmpty() && expirationBatches.get(0).getVendingSlot().getVendingMachine().getUser().getId() != user.getId()) {
+        if(!expirationBatches.isEmpty() && !expirationBatches.get(0).getVendingSlot().getVendingMachine().getUser().getId().equals(user.getId())) {
             throw new AccessDeniedException("You are not authorized to view the expiration batches of this vending slot.");
         }
         return expirationBatches;
@@ -66,7 +66,7 @@ public class ExpirationBatchService {
         List<ExpirationBatch> expirationBatches = getExpirationBatchesByVendingSlotId(vendingSlot.getId(), user);
         ExpirationBatch existingBatch = expirationBatches.get(0);
 
-        if (existingBatch.getExpirationDate().isBefore(LocalDate.now())) {
+        if (existingBatch.getExpirationDate() != null && existingBatch.getExpirationDate().isBefore(LocalDate.now())) {
             throw new ExpiredProductException("Cannot register sale because the product is expired.");
         }
 
@@ -90,7 +90,7 @@ public class ExpirationBatchService {
     private void popExpiredBatches(VendingSlot vendingSlot) {
         List<ExpirationBatch> existingBatch = expirationBatchRepository.findAllByVendingSlotIdOrderByExpirationDateAsc(vendingSlot.getId());
         List<ExpirationBatch> expiredBatches = existingBatch.stream()
-            .filter(batch -> batch.getExpirationDate().isBefore(LocalDate.now()))
+            .filter(batch -> batch.getExpirationDate() != null && batch.getExpirationDate().isBefore(LocalDate.now()))
             .toList();
         
         if(!expiredBatches.isEmpty()) {

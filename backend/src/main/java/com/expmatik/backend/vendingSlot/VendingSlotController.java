@@ -1,11 +1,9 @@
 package com.expmatik.backend.vendingSlot;
 
 import java.nio.file.AccessDeniedException;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -59,14 +57,6 @@ public class VendingSlotController {
     public ResponseEntity<?> blockOrUnblockVendingSlot(@PathVariable UUID vendingSlotId, @RequestParam(required = true) Boolean blocked) throws AccessDeniedException {
         User currentUser = userService.getUserProfile();
         VendingSlot vendingSlot = vendingSlotService.updateBlockStatus(vendingSlotId, blocked, currentUser);
-        return ResponseEntity.ok(VendingSlotResponse.fromVendingSlot(vendingSlot));
-    }
-
-    @PatchMapping("{vendingSlotId}/increment-stock")
-    @PreAuthorize("hasRole('ADMINISTRATOR')")
-    public ResponseEntity<?> addStockToVendingSlot(@PathVariable UUID vendingSlotId,  @RequestParam(required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)  LocalDate expirationDate, @RequestParam(required = true) Integer quantity) throws AccessDeniedException {
-        User currentUser = userService.getUserProfile();
-        VendingSlot vendingSlot = vendingSlotService.addStockToVendingSlot(vendingSlotId, quantity, expirationDate, currentUser);
         return ResponseEntity.ok(VendingSlotResponse.fromVendingSlot(vendingSlot));
     }
 

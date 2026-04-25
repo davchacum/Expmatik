@@ -454,8 +454,6 @@ public class VendingSlotServiceTest {
         }
     }
 
-    // == Test addStockToVendingSlot ==
-
     @Nested
     @DisplayName("addStockToVendingSlot")
     class AddStockToVendingSlot {
@@ -471,6 +469,7 @@ public class VendingSlotServiceTest {
                 Integer quantityToAdd = 3;
                 LocalDate expirationDate = LocalDate.now().plusDays(5);
                 vendingSlot.setIsBlocked(false);
+                product.setIsPerishable(true);
                 when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
                 when(vendingSlotRepository.save(vendingSlot)).thenReturn(vendingSlot);
 
@@ -481,18 +480,20 @@ public class VendingSlotServiceTest {
             }
 
             @Test
-            @DisplayName("createVendingSlotsForMachine - valid machine, row count, column count, and max capacity per slot")
-            void testCreateVendingSlotsForMachine_validMachineRowCountColumnCountAndMaxCapacityPerSlot_shouldCreateVendingSlotsForMachine() {
-                VendingMachine machine = new VendingMachine();
-                machine.setId(UUID.randomUUID());
-                machine.setUser(user);
-                Integer rowCount = 2;
-                Integer columnCount = 3;
-                Integer maxCapacityPerSlot = 10;
+            @DisplayName("addStockToVendingSlot - valid vending slot ID, valid quantity, null expiration date, and authorized user")
+            void testAddStockToVendingSlot_validVendingSlotIdValidQuantityNullExpirationDateAndAuthorizedUser_shouldAddStockToVendingSlot() {
+                UUID vendingSlotId = vendingSlot.getId();
+                Integer quantityToAdd = 3;
+                LocalDate expirationDate = null;
+                product.setIsPerishable(false);
+                vendingSlot.setIsBlocked(false);
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+                when(vendingSlotRepository.save(vendingSlot)).thenReturn(vendingSlot);
 
-                vendingSlotService.createVendingSlotsForMachine(machine, rowCount, columnCount, maxCapacityPerSlot);
-
-                verify(vendingSlotRepository, times(rowCount * columnCount)).save(any(VendingSlot.class));
+                VendingSlot result = vendingSlotService.addStockToVendingSlot(vendingSlotId, quantityToAdd, expirationDate, user);
+                assertEquals(vendingSlot, result);
+                verify(expirationBatchService).pushExpirationBatch(vendingSlot, expirationDate, quantityToAdd, user);
+                verify(vendingSlotRepository).save(vendingSlot);
             }
         }
 
@@ -541,11 +542,47 @@ public class VendingSlotServiceTest {
                 Integer quantityToAdd = 3;
                 LocalDate expirationDate = LocalDate.now().minusDays(1);
                 vendingSlot.setIsBlocked(false);
+                product.setIsPerishable(true);
                 when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
 
                 assertThrows(ExpiredProductException.class, () -> {
                     vendingSlotService.addStockToVendingSlot(vendingSlotId, quantityToAdd, expirationDate, user);
                 });
+            }
+
+            @Test
+            @DisplayName("addStockToVendingSlot - valid vending slot ID, but expiration date provided for non-perishable product")
+            void testAddStockToVendingSlot_validVendingSlotIdButExpirationDateProvidedForNonPerishableProduct_shouldThrowConflictException() {
+                UUID vendingSlotId = vendingSlot.getId();
+                Integer quantityToAdd = 3;
+                LocalDate expirationDate = LocalDate.now().plusDays(5);
+                product.setIsPerishable(false);
+                vendingSlot.setIsBlocked(false);
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+
+                ConflictException exception = assertThrows(ConflictException.class, () -> {
+                    vendingSlotService.addStockToVendingSlot(vendingSlotId, quantityToAdd, expirationDate, user);
+                });
+
+                assertEquals("Expiration date should not be provided for non-perishable products.", exception.getMessage());
+
+            }
+
+            @Test
+            @DisplayName("addStockToVendingSlot - valid vending slot ID, but null expiration date for perishable product")
+            void testAddStockToVendingSlot_validVendingSlotIdButNullExpirationDateForPerishableProduct_shouldThrowConflictException() {
+                UUID vendingSlotId = vendingSlot.getId();
+                Integer quantityToAdd = 3;
+                LocalDate expirationDate = null;
+                product.setIsPerishable(true);
+                vendingSlot.setIsBlocked(false);
+                when(vendingSlotRepository.findById(vendingSlotId)).thenReturn(Optional.of(vendingSlot));
+
+                ConflictException exception = assertThrows(ConflictException.class, () -> {
+                    vendingSlotService.addStockToVendingSlot(vendingSlotId, quantityToAdd, expirationDate, user);
+                });
+
+                assertEquals("Expiration date is required for perishable products.", exception.getMessage());
             }
         }
     }
@@ -694,6 +731,33 @@ public class VendingSlotServiceTest {
                     any(String.class),
                     any(User.class)
                 );
+            }
+        }
+    }
+
+    // == Test createVendingSlotsForMachine ==
+
+    @Nested
+    @DisplayName("createVendingSlotsForMachine")
+    class CreateVendingSlotsForMachine {
+
+        @Nested
+        @DisplayName("Success Cases")
+        class SuccessCases {
+
+            @Test
+            @DisplayName("createVendingSlotsForMachine - valid machine, row count, column count, and max capacity per slot")
+            void testCreateVendingSlotsForMachine_validMachineRowCountColumnCountAndMaxCapacityPerSlot_shouldCreateVendingSlotsForMachine() {
+                VendingMachine machine = new VendingMachine();
+                machine.setId(UUID.randomUUID());
+                machine.setUser(user);
+                Integer rowCount = 2;
+                Integer columnCount = 3;
+                Integer maxCapacityPerSlot = 10;
+
+                vendingSlotService.createVendingSlotsForMachine(machine, rowCount, columnCount, maxCapacityPerSlot);
+
+                verify(vendingSlotRepository, times(rowCount * columnCount)).save(any(VendingSlot.class));
             }
         }
     }

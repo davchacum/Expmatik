@@ -7,11 +7,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.expmatik.backend.exceptions.BadRequestException;
+import com.expmatik.backend.exceptions.ConflictException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
 import com.expmatik.backend.maintenance.Maintenance;
 import com.expmatik.backend.maintenanceDetail.DTOs.MaintenanceDetailCreate;
 import com.expmatik.backend.product.Product;
+import com.expmatik.backend.productInfo.ProductInfo;
+import com.expmatik.backend.productInfo.ProductInfoService;
 import com.expmatik.backend.user.User;
+import com.expmatik.backend.vendingSlot.SlotLabelFormatter;
 import com.expmatik.backend.vendingSlot.VendingSlot;
 import com.expmatik.backend.vendingSlot.VendingSlotService;
 
@@ -21,16 +25,13 @@ public class MaintenanceDetailService {
 
     private final MaintenanceDetailRepository maintenanceDetailRepository;
     private final VendingSlotService vendingSlotService;
+    private final ProductInfoService productInfoService;
 
-    public MaintenanceDetailService(MaintenanceDetailRepository maintenanceDetailRepository, VendingSlotService vendingSlotService) {
+    public MaintenanceDetailService(MaintenanceDetailRepository maintenanceDetailRepository, VendingSlotService vendingSlotService, ProductInfoService productInfoService) {
         this.maintenanceDetailRepository = maintenanceDetailRepository;
         this.vendingSlotService = vendingSlotService;
+        this.productInfoService = productInfoService;
 
-    }
-
-    @Transactional
-    public MaintenanceDetail save(MaintenanceDetail maintenanceDetail) {
-        return maintenanceDetailRepository.save(maintenanceDetail);
     }
 
     @Transactional
@@ -50,10 +51,29 @@ public class MaintenanceDetailService {
         validateExpirationDate(maintenance, maintenanceDetailCreate, vendingSlot.getProduct());
         validateSlotStock(maintenance.getMaintenanceDetails(), maintenanceDetailCreate, vendingSlot, user);
         newMaintenanceDetail.setProduct(vendingSlot.getProduct());
-        return save(newMaintenanceDetail);
+        reserveProductStock(newMaintenanceDetail.getProduct(), newMaintenanceDetail.getQuantityToRestock(), user);
+        return newMaintenanceDetail;
+    }
+
+    private void reserveProductStock(Product product, Integer quantityToReserve, User user) {
+        ProductInfo productInfo = productInfoService.getOrCreateProductInfo(product.getId(), user, null);
+        if (productInfo.getStockQuantity() < quantityToReserve) {
+            throw new ConflictException("Insufficient stock in inventory to create this maintenance detail.");
+        }
+        productInfoService.editStockQuantity(productInfo.getId(), user, -quantityToReserve, null);
+    }
+
+    @Transactional
+    public void releaseReservedStock(MaintenanceDetail maintenanceDetail, User user) {
+        ProductInfo productInfo = productInfoService.getOrCreateProductInfo(maintenanceDetail.getProduct().getId(), user, null);
+        productInfoService.editStockQuantity(productInfo.getId(), user, maintenanceDetail.getQuantityToRestock(), null);
     }
 
     private void validateProduct(VendingSlot vendingSlot, MaintenanceDetailCreate newDetail) {
+        if( vendingSlot.getProduct() == null) {
+            throw new BadRequestException("The vending slot does not have a product assigned.");
+        }
+
         if (!newDetail.barcode().equals(vendingSlot.getProduct().getBarcode())) {
             throw new BadRequestException("The barcode does not match the product in the vending slot.");
         }
@@ -65,7 +85,7 @@ public class MaintenanceDetailService {
             .toList();
         Integer totalQuantity = sameSlot.stream().map(MaintenanceDetail::getQuantityToRestock).reduce(0, Integer::sum);
         if(totalQuantity + newDetail.quantityToRestock() > vendingSlot.getMaxCapacity()){
-            throw new BadRequestException("The total quantity to restock for the same vending slot exceeds its maximum capacity.");
+            throw new BadRequestException("The total quantity to restock for this slot: " + SlotLabelFormatter.toFrontendLabel(vendingSlot.getRowNumber(), vendingSlot.getColumnNumber()) + " exceeds its maximum capacity.");
         }
     }
 
@@ -82,11 +102,6 @@ public class MaintenanceDetailService {
                 throw new BadRequestException("Expiration date should not be provided for non-perishable products.");
             }
         }
-    }
-
-    @Transactional
-    public void deleteMaintenanceDetail(MaintenanceDetail maintenanceDetail) {
-        maintenanceDetailRepository.delete(maintenanceDetail);
     }
 
     @Transactional

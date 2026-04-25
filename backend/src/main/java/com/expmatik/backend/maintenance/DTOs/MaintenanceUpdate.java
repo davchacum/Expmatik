@@ -1,7 +1,5 @@
 package com.expmatik.backend.maintenance.DTOs;
 
-import com.expmatik.backend.maintenance.Maintenance;
-
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -15,12 +13,5 @@ public record MaintenanceUpdate(
     String maintainerEmail
     
 ) {
-
-    public static MaintenanceUpdate fromMaintenance(Maintenance maintenance) {
-        return new MaintenanceUpdate(
-            maintenance.getDescription(),
-            maintenance.getMaintainer().getEmail()
-        );
-    }
 
 }

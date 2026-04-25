@@ -41,8 +41,14 @@ public class VendingSlotService {
 
     @Transactional(readOnly = true)
     public VendingSlot getVendingSlotById(UUID id,User user) {
-            VendingSlot vendingSlot = vendingSlotRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("The vending slot does not exist."));
+            VendingSlot vendingSlot = getVendingSlotById(id);
             checkUserAuthorization(vendingSlot, user);
+            return vendingSlot; 
+    }
+
+    @Transactional(readOnly = true)
+    public VendingSlot getVendingSlotById(UUID id) {
+            VendingSlot vendingSlot = vendingSlotRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("The vending slot does not exist."));
             return vendingSlot; 
     }
 
@@ -122,7 +128,7 @@ public class VendingSlotService {
         if(vendingSlot.getIsBlocked().equals(Boolean.TRUE) && isBlocked.equals(Boolean.FALSE)) {
             List<ExpirationBatch> expirationBatches = expirationBatchService.getExpirationBatchesByVendingSlotId(vendingSlot.getId(), user);
             if(!expirationBatches.isEmpty()) {
-                Boolean hasNonExpiredBatch = expirationBatches.stream().anyMatch(batch -> batch.getExpirationDate().isAfter(LocalDate.now()));
+                Boolean hasNonExpiredBatch = expirationBatches.stream().anyMatch(batch -> batch.getExpirationDate() != null && batch.getExpirationDate().isAfter(LocalDate.now()));
                 if(!hasNonExpiredBatch) {
                     throw new ConflictException("Cannot unblock a vending slot with expired products.");
                 }
@@ -136,16 +142,24 @@ public class VendingSlotService {
 
     @Transactional
     public VendingSlot addStockToVendingSlot(UUID vendingSlotId, Integer quantity, LocalDate expirationDate, User user) {
-        VendingSlot vendingSlot = getVendingSlotById(vendingSlotId,user);
-        checkUserAuthorization(vendingSlot, user);
+        VendingSlot vendingSlot = getVendingSlotById(vendingSlotId);
         if(vendingSlot.getProduct() == null) {
             throw new ConflictException("Cannot add stock to a vending slot that does not have an assigned product.");
         }
         if(vendingSlot.getCurrentStock() + quantity > vendingSlot.getMaxCapacity()) {
             throw new ConflictException("Cannot add stock to a vending slot that exceeds its maximum capacity.");
         }
-        if(expirationDate.isBefore(LocalDate.now())) {
-            throw new ExpiredProductException("Cannot add stock with an expiration date in the past.");
+        if(vendingSlot.getProduct().getIsPerishable()){
+            if (expirationDate == null) {
+                throw new ConflictException("Expiration date is required for perishable products.");
+            }
+            if( expirationDate != null && expirationDate.isBefore(LocalDate.now())) {
+                throw new ExpiredProductException("Cannot add stock with an expiration date in the past.");
+            }
+        }else{
+            if (expirationDate != null) {
+                throw new ConflictException("Expiration date should not be provided for non-perishable products.");
+            }
         }
         expirationBatchService.pushExpirationBatch(vendingSlot, expirationDate, quantity, user);
         

@@ -21,8 +21,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class ExpirationBatch extends BaseEntity {
 
-    @NotNull
-    @Column(name = "expiration_date", nullable = false)
+    @Column(name = "expiration_date")
     private LocalDate expirationDate;
 
     @NotNull

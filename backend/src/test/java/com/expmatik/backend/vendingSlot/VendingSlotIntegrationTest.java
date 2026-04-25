@@ -164,16 +164,17 @@ public class VendingSlotIntegrationTest {
                                 .andExpect(status().isNotFound());
                 }
 
+                //409 con tarea de mantenmiento pendiente
                 @Test
-                @DisplayName("PATCH assign-or-unassign-product - blocked slot should return 409")
+                @DisplayName("PATCH assign-or-unassign-product - pending maintenance task should return 409")
                 @WithUserDetails("admin@expmatik.com")
-                public void testAssignProduct_BlockedSlot_ShouldReturn409() throws Exception {
+                public void testAssignProduct_PendingMaintenance_ShouldReturn409() throws Exception {
                         UUID vendingSlotId = UUID.fromString("00000000-0000-0000-0000-000000000002");
 
                         mockMvc.perform(patch("/api/vending-slots/{id}/assign-or-unassign-product", vendingSlotId)
                                         .param("barcode", "20000001"))
                                 .andExpect(status().isConflict())
-                                .andExpect(jsonPath("$.message").value("Cannot assign or unassign a product to a vending slot that is blocked for maintenance."));
+                                .andExpect(jsonPath("$.message").value("Cannot assign or unassign a product to a vending slot that has pending maintenance."));
                 }
 
                 @Test
@@ -289,141 +290,6 @@ public class VendingSlotIntegrationTest {
         }
     }
 
-    // == Test Patch /api/vending-slots/{id}/increment-stock ==
-
-    @Nested
-    @DisplayName("PATCH /api/vending-slots/{id}/increment-stock")
-    class PatchIncrementStock {
-
-        @Nested
-        @DisplayName("Success Cases")
-        class SuccessCases {
-
-                @Test
-                @DisplayName("PATCH /api/vending-slots/{id}/increment-stock - valid ID, valid quantity, valid expiration date and authorized user should increment stock")
-                @WithUserDetails("admin@expmatik.com")
-                public void testIncrementVendingSlotStock_ShouldWork() throws Exception {
-                        UUID vendingSlotId = UUID.fromString("00000000-0000-0000-0000-000000000001");
-                        int quantity = 1;
-                        LocalDate expirationDate = LocalDate.now().plusDays(3);
-
-                        mockMvc.perform(patch("/api/vending-slots/{id}/increment-stock", vendingSlotId)
-                                        .param("quantity", String.valueOf(quantity))
-                                        .param("expirationDate", expirationDate.toString()))
-                                .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.id").value(vendingSlotId.toString()))
-                                .andExpect(jsonPath("$.currentStock").value(quantity));
-                }
-
-                @Test
-                @DisplayName("PATCH /api/vending-slots/{id}/increment-stock - valid ID, valid quantity, existing expiration date and authorized user should increment stock in existing batch")
-                @WithUserDetails("admin@expmatik.com")
-                public void testIncrementVendingSlotStock_ExistingExpirationDate_ShouldIncrementStock() throws Exception {
-                        UUID vendingSlotId = UUID.fromString("00000000-0000-0000-0000-000000000003");
-                        int quantity = 1;
-                        LocalDate expirationDate = LocalDate.of(2050, 11, 30);
-
-                        mockMvc.perform(patch("/api/vending-slots/{id}/increment-stock", vendingSlotId)
-                                        .param("quantity", String.valueOf(quantity))
-                                        .param("expirationDate", expirationDate.toString()))
-                                .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.id").value(vendingSlotId.toString()))
-                                .andExpect(jsonPath("$.currentStock").value(4+quantity));
-                }
-        }
-
-        @Nested
-        @DisplayName("Failure Cases")
-        class FailureCases {
-
-                @Test
-                @DisplayName("PATCH /api/vending-slots/{id}/increment-stock - valid ID but not ADMINISTRATOR role should return 403")
-                @WithUserDetails("repo@expmatik.com")
-                public void testIncrementVendingSlotStock_UnauthorizedUser_ShouldReturn403() throws Exception {
-                        UUID vendingSlotId = UUID.fromString("00000000-0000-0000-0000-000000000001");
-                        int quantity = 1;
-                        LocalDate expirationDate = LocalDate.now().plusDays(3);
-
-                        mockMvc.perform(patch("/api/vending-slots/{id}/increment-stock", vendingSlotId)
-                                        .param("quantity", String.valueOf(quantity))
-                                        .param("expirationDate", expirationDate.toString()))
-                                .andExpect(status().isForbidden());
-                }
-
-                @Test
-                @DisplayName("PATCH /api/vending-slots/{id}/increment-stock - valid ID but does not belong to the user should return 403")
-                @WithUserDetails("repo@expmatik.com")
-                public void testIncrementVendingSlotStock_InvalidUser_ShouldReturn403() throws Exception {
-                        UUID vendingSlotId = UUID.fromString("00000000-0000-0000-0000-000000000001");
-                        int quantity = 1;
-                        LocalDate expirationDate = LocalDate.now().plusDays(3);
-
-                        mockMvc.perform(patch("/api/vending-slots/{id}/increment-stock", vendingSlotId)
-                                        .param("quantity", String.valueOf(quantity))
-                                        .param("expirationDate", expirationDate.toString()))
-                                .andExpect(status().isForbidden());
-                }
-
-                @Test
-                @DisplayName("PATCH /api/vending-slots/{id}/increment-stock - non-existent vending slot should return 404")
-                @WithUserDetails("admin@expmatik.com")
-                public void testIncrementVendingSlotStock_NonExistentSlot_ShouldReturn404() throws Exception {
-                        UUID vendingSlotId = UUID.fromString("00000000-0000-0000-0000-000000000099");
-                        int quantity = 1;
-                        LocalDate expirationDate = LocalDate.now().plusDays(3);
-
-                        mockMvc.perform(patch("/api/vending-slots/{id}/increment-stock", vendingSlotId)
-                                        .param("quantity", String.valueOf(quantity))
-                                        .param("expirationDate", expirationDate.toString()))
-                                .andExpect(status().isNotFound());
-                }
-
-                @Test
-                @DisplayName("PATCH /api/vending-slots/{id}/increment-stock - incrementing stock beyond max capacity should return 409")
-                @WithUserDetails("admin@expmatik.com")
-                public void testIncrementVendingSlotStock_BeyondMaxCapacity_ShouldReturn409() throws Exception {
-                        UUID vendingSlotId = UUID.fromString("00000000-0000-0000-0000-000000000001");
-                        int quantity = 5;
-                        LocalDate expirationDate = LocalDate.now().plusDays(3);
-
-                        mockMvc.perform(patch("/api/vending-slots/{id}/increment-stock", vendingSlotId)
-                                        .param("quantity", String.valueOf(quantity))
-                                        .param("expirationDate", expirationDate.toString()))
-                                .andExpect(status().isConflict())
-                                .andExpect(jsonPath("$.message").value("Cannot add stock to a vending slot that exceeds its maximum capacity."));
-                }
-
-                @Test
-                @DisplayName("PATCH /api/vending-slots/{id}/increment-stock - product not assigned to slot should return 409")
-                @WithUserDetails("admin@expmatik.com")
-                public void testIncrementVendingSlotStock_ProductNotAssigned_ShouldReturn409() throws Exception {
-                        UUID vendingSlotId = UUID.fromString("00000000-0000-0000-0000-000000000005");
-                        int quantity = 1;
-                        LocalDate expirationDate = LocalDate.now().plusDays(3);
-
-                        mockMvc.perform(patch("/api/vending-slots/{id}/increment-stock", vendingSlotId)
-                                        .param("quantity", String.valueOf(quantity))
-                                        .param("expirationDate", expirationDate.toString()))
-                                .andExpect(status().isConflict())
-                                .andExpect(jsonPath("$.message").value("Cannot add stock to a vending slot that does not have an assigned product."));
-                }
-
-                @Test
-                @DisplayName("PATCH /api/vending-slots/{id}/increment-stock - expiration date in the past should return 409")
-                @WithUserDetails("admin@expmatik.com")
-                public void testIncrementVendingSlotStock_PastExpirationDate_ShouldReturn409() throws Exception {
-                        UUID vendingSlotId = UUID.fromString("00000000-0000-0000-0000-000000000001");
-                        int quantity = 1;
-                        LocalDate expirationDate = LocalDate.now().minusDays(1);
-
-                        mockMvc.perform(patch("/api/vending-slots/{id}/increment-stock", vendingSlotId)
-                                        .param("quantity", String.valueOf(quantity))
-                                        .param("expirationDate", expirationDate.toString()))
-                                .andExpect(status().isConflict())
-                                .andExpect(jsonPath("$.message").value("Cannot add stock with an expiration date in the past."));
-                }
-        }
-}
 
     // == Test Patch /api/vending-slots/{id}/decrement-stock ==
 

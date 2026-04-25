@@ -1,6 +1,7 @@
 package com.expmatik.backend.maintenance;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -21,18 +22,22 @@ import com.expmatik.backend.notification.NotificationType;
 import com.expmatik.backend.user.Role;
 import com.expmatik.backend.user.User;
 import com.expmatik.backend.user.UserService;
+import com.expmatik.backend.vendingMachine.VendingMachine;
+import com.expmatik.backend.vendingMachine.VendingMachineService;
 
 @Service
 public class MaintenanceService {
 
     private final MaintenanceRepository maintenanceRepository;
     private final UserService userService;
+    private final VendingMachineService vendingMachineService;
     private final MaintenanceDetailService maintenanceDetailService;
     private final NotificationService notificationService;
 
-    public MaintenanceService(MaintenanceRepository maintenanceRepository, UserService userService, MaintenanceDetailService maintenanceDetailService, NotificationService notificationService) {
+    public MaintenanceService(MaintenanceRepository maintenanceRepository, UserService userService, VendingMachineService vendingMachineService, MaintenanceDetailService maintenanceDetailService, NotificationService notificationService) {
         this.maintenanceRepository = maintenanceRepository;
         this.userService = userService;
+        this.vendingMachineService = vendingMachineService;
         this.maintenanceDetailService = maintenanceDetailService;
         this.notificationService = notificationService;
 
@@ -58,28 +63,32 @@ public class MaintenanceService {
     }
 
     @Transactional
-    public Maintenance updateStatus(UUID id, MaintenanceStatus newStatus, User user) {
+    public Maintenance pendingMaintenance(UUID id,User user){
         Maintenance maintenance = findById(id, user);
-        if (newStatus == MaintenanceStatus.DRAFT) {
-            throw new BadRequestException("Cannot change status back to DRAFT.");
-        } else if (newStatus == MaintenanceStatus.PENDING) {
-            if(maintenance.getStatus() != MaintenanceStatus.DRAFT) {
-                throw new BadRequestException("Can only change status to PENDING from DRAFT.");
-            }
-            createPendingNotification(maintenance);
-        } else if (newStatus == MaintenanceStatus.DELAYED) {
-            throw new BadRequestException("Cannot change status to DELAYED manually. The system will automatically change the status to DELAYED if the maintenance is not completed within 24 hours of the scheduled maintenance date.");
-        } else {
-            if(maintenance.getStatus() != MaintenanceStatus.PENDING && maintenance.getStatus() != MaintenanceStatus.DELAYED) {
-                throw new BadRequestException("Can only change status to COMPLETED from PENDING or DELAYED.");
-            }
-            validateMaintainer(maintenance, user);
-            maintenanceDetailService.performSlotsMaintenance(maintenance, user);
-            createCompletedNotification(maintenance);
+        if(maintenance.getStatus() != MaintenanceStatus.DRAFT){
+            throw new BadRequestException("Maintenance status must be DRAFT to be set as PENDING.");
         }
-        maintenance.setStatus(newStatus);
-
+        if (maintenance.getMaintenanceDetails().isEmpty()) {
+                throw new BadRequestException("Cannot change status to PENDING without any maintenance details. Please add at least one maintenance detail before changing the status to PENDING.");
+        }
+        createPendingNotification(maintenance);
+        maintenance.setStatus(MaintenanceStatus.PENDING);
         return save(maintenance);
+
+    }
+
+    @Transactional
+    public Maintenance completedMaintenance(UUID id,User user){
+
+        Maintenance maintenance = findById(id, user);
+        if(!(maintenance.getStatus() == MaintenanceStatus.PENDING || maintenance.getStatus() == MaintenanceStatus.DELAYED)){
+            throw new BadRequestException("Maintenance status must be PENDING or DELAYED to be set as COMPLETED.");
+        }
+        maintenanceDetailService.performSlotsMaintenance(maintenance, user);
+        createCompletedNotification(maintenance);
+        maintenance.setStatus(MaintenanceStatus.COMPLETED);
+        return save(maintenance);
+
     }
 
     private void createPendingNotification(Maintenance maintenance) {
@@ -94,18 +103,8 @@ public class MaintenanceService {
         notificationService.createNotification(NotificationType.COMPLETED_RESTOCKING, message, link, maintenance.getAdministrator());
     }
 
-    private void validateMaintainer(Maintenance maintenance, User user) {
-        if (!maintenance.getMaintainer().getId().equals(user.getId())) {
-            throw new AccessDeniedException("You are not the maintainer of this maintenance record.");
-        }
-    }
-
-
     @Transactional
     public Maintenance createMaintenance(MaintenanceCreate maintenanceCreate,User administrator) {
-        if (!administrator.getRole().equals(Role.ADMINISTRATOR) ) {
-            throw new AccessDeniedException("Only administrators can create maintenance records.");
-        }
         Maintenance maintenance = new Maintenance();
         maintenance.setAdministrator(administrator);
         maintenance.setDescription(maintenanceCreate.description());
@@ -114,18 +113,22 @@ public class MaintenanceService {
         if (!maintainer.getRole().equals(Role.MAINTAINER) ) {
             throw new BadRequestException("Only users with the role of MAINTAINER can be assigned to maintenance tasks.");
         }
+        VendingMachine vendingMachine = vendingMachineService.findVendingMachineByNameAndUserId(maintenanceCreate.vendingMachineName(), administrator);
         maintenance.setMaintainer(maintainer);
+        maintenance.setVendingMachine(vendingMachine);
+        maintenance.setMaintenanceDetails(new ArrayList<>());
         
         maintenance.setStatus(MaintenanceStatus.DRAFT);
         return save(maintenance);
     }
 
     @Transactional(readOnly = true)
-    public Page<Maintenance> searchMaintenances(User user, MaintenanceStatus status, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
+    public Page<Maintenance> searchMaintenances(User user, MaintenanceStatus status,String machineName, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
+        String machineNameParam = (machineName != null && !machineName.isBlank()) ? machineName : null;
         if (user.getRole() == Role.ADMINISTRATOR) {
-            return maintenanceRepository.searchMaintenances(user.getId(), null, false, null, status, startDate, endDate, pageable);
+            return maintenanceRepository.searchMaintenances(user.getId(), null, false, null, status, machineNameParam, startDate, endDate, pageable);
         } else {
-            return maintenanceRepository.searchMaintenances(null, user.getId(), true, MaintenanceStatus.DRAFT, status, startDate, endDate, pageable);
+            return maintenanceRepository.searchMaintenances(null, user.getId(), true, MaintenanceStatus.DRAFT, status, machineNameParam, startDate, endDate, pageable);
         }
     }
 
@@ -135,6 +138,11 @@ public class MaintenanceService {
         if (maintenance.getStatus() != MaintenanceStatus.DRAFT) {
             throw new BadRequestException("Only maintenance records in DRAFT status can be deleted.");
         }
+
+        for (MaintenanceDetail detail : maintenance.getMaintenanceDetails()) {
+            maintenanceDetailService.releaseReservedStock(detail, user);
+        }
+
         maintenanceRepository.delete(maintenance);
     }
 
@@ -175,8 +183,8 @@ public class MaintenanceService {
             throw new BadRequestException("The specified maintenance detail does not belong to this maintenance record.");
         }
 
+        maintenanceDetailService.releaseReservedStock(detailToDelete, user);
         maintenance.getMaintenanceDetails().remove(detailToDelete);
-        maintenanceDetailService.deleteMaintenanceDetail(detailToDelete);
         return save(maintenance);
     }
 

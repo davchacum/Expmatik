@@ -25,7 +25,7 @@ public interface VendingSlotRepository extends JpaRepository<VendingSlot, UUID> 
         FROM Maintenance m
         JOIN m.maintenanceDetails md
         WHERE (m.status = :pendingStatus OR m.status = :delayedStatus OR m.status = :draftStatus)
-        AND EXISTS (SELECT 1 FROM VendingSlot vs WHERE vs.id = :vendingSlotId AND vs.vendingMachine.id = md.vendingMachine.id AND vs.rowNumber = md.rowNumber AND vs.columnNumber = md.columnNumber)
+        AND EXISTS (SELECT 1 FROM VendingSlot vs WHERE vs.id = :vendingSlotId AND vs.vendingMachine.id = m.vendingMachine.id AND vs.rowNumber = md.rowNumber AND vs.columnNumber = md.columnNumber)
     """)
     boolean existsPendingOrDelayedBySlot(
         @Param("pendingStatus") MaintenanceStatus pendingStatus,

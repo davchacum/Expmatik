@@ -21,7 +21,7 @@ public interface MaintenanceDetailRepository extends JpaRepository<MaintenanceDe
             WHERE m.id = :maintenanceId
               AND md.rowNumber = vs.rowNumber
               AND md.columnNumber = vs.columnNumber
-              AND md.vendingMachine.name = vs.vendingMachine.name
+              AND m.vendingMachine.name = vs.vendingMachine.name
         )
     """)
     List<VendingSlot> findDistinctVendingSlotsByMaintenance(@Param("maintenanceId") UUID maintenanceId);
@@ -29,8 +29,7 @@ public interface MaintenanceDetailRepository extends JpaRepository<MaintenanceDe
     @Query("""
         SELECT md
         FROM MaintenanceDetail md
-        WHERE md.vendingMachine.name = :machineName
-          AND md.rowNumber = :row
+        WHERE md.rowNumber = :row
           AND md.columnNumber = :column
           AND EXISTS (
               SELECT 1
@@ -38,6 +37,7 @@ public interface MaintenanceDetailRepository extends JpaRepository<MaintenanceDe
               JOIN m.maintenanceDetails md2
               WHERE m.id = :maintenanceId
                 AND md2.id = md.id
+                AND m.vendingMachine.name = :machineName
           )
     """)
     List<MaintenanceDetail> findMaintenanceDetailsByMaintenanceIdAndSlotCoordinates(@Param("maintenanceId") UUID maintenanceId, @Param("machineName") String machineName, @Param("row") Integer row, @Param("column") Integer column);

@@ -14,7 +14,7 @@ public record ExpirationBatchResponse(
 
     Integer quantity,
 
-    UUID vendingSlotId
+    VendingSlotResponse vendingSlot
 ) {
 
     public static ExpirationBatchResponse fromExpirationBatch(ExpirationBatch batch) {
@@ -22,7 +22,7 @@ public record ExpirationBatchResponse(
             batch.getId(),
             batch.getExpirationDate(),
             batch.getQuantity(),
-            batch.getVendingSlot().getId()
+            VendingSlotResponse.fromVendingSlot(batch.getVendingSlot())
         );
     }
 

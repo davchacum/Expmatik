@@ -8,6 +8,7 @@ import com.expmatik.backend.model.BaseEntity;
 import com.expmatik.backend.user.User;
 import com.expmatik.backend.vendingMachine.VendingMachine;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -61,7 +62,7 @@ public class Maintenance extends BaseEntity{
     private VendingMachine vendingMachine;
     
     @NotNull
-    @OneToMany
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "maintenance_id", nullable = false)
     private List<MaintenanceDetail> maintenanceDetails;
 

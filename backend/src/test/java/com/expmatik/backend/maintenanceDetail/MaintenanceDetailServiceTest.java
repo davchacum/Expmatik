@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -23,10 +23,13 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.expmatik.backend.exceptions.BadRequestException;
+import com.expmatik.backend.exceptions.ConflictException;
 import com.expmatik.backend.maintenance.Maintenance;
 import com.expmatik.backend.maintenance.MaintenanceStatus;
 import com.expmatik.backend.maintenanceDetail.DTOs.MaintenanceDetailCreate;
 import com.expmatik.backend.product.Product;
+import com.expmatik.backend.productInfo.ProductInfo;
+import com.expmatik.backend.productInfo.ProductInfoService;
 import com.expmatik.backend.user.Role;
 import com.expmatik.backend.user.User;
 import com.expmatik.backend.vendingMachine.VendingMachine;
@@ -42,6 +45,9 @@ public class MaintenanceDetailServiceTest {
     @Mock
     private VendingSlotService vendingSlotService;
 
+    @Mock
+    private ProductInfoService productInfoService;
+
     @Spy
     @InjectMocks
     private MaintenanceDetailService maintenanceDetailService;
@@ -55,6 +61,7 @@ public class MaintenanceDetailServiceTest {
     private VendingMachine vendingMachine;
     private VendingSlot vendingSlot;
     private VendingSlot vendingSlot2;
+    private ProductInfo productInfo;
 
     @BeforeEach
     void setUp() {
@@ -98,6 +105,12 @@ public class MaintenanceDetailServiceTest {
         vendingSlot2.setVendingMachine(vendingMachine);
         vendingSlot2.setCurrentStock(1);
         vendingSlot2.setMaxCapacity(10);
+
+        productInfo = new ProductInfo();
+        productInfo.setId(UUID.fromString("00000000-0000-0000-0000-000000000010"));
+        productInfo.setProduct(product);
+        productInfo.setUser(maintainer);
+        productInfo.setStockQuantity(10);
 
         MaintenanceDetail detail = new MaintenanceDetail();
         detail.setId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
@@ -145,9 +158,8 @@ public class MaintenanceDetailServiceTest {
                         createRequest.columnNumber(),
                         maintainer
                 )).thenReturn(vendingSlot);
-
-                when(maintenanceDetailRepository.save(any(MaintenanceDetail.class)))
-                        .thenAnswer(invocation -> invocation.getArgument(0));
+                when(productInfoService.getOrCreateProductInfo(product.getId(), maintainer, null)).thenReturn(productInfo);
+                when(productInfoService.editStockQuantity(eq(productInfo.getId()), eq(maintainer), eq(-createRequest.quantityToRestock()), eq(null))).thenReturn(productInfo);
 
                 MaintenanceDetail result = maintenanceDetailService.createMaintenanceDetail(maintenance, createRequest, maintainer);
 
@@ -175,9 +187,8 @@ public class MaintenanceDetailServiceTest {
                         createRequest.columnNumber(),
                         maintainer
                 )).thenReturn(vendingSlot2);
-
-                when(maintenanceDetailRepository.save(any(MaintenanceDetail.class)))
-                        .thenAnswer(invocation -> invocation.getArgument(0));
+                when(productInfoService.getOrCreateProductInfo(product.getId(), maintainer, null)).thenReturn(productInfo);
+                when(productInfoService.editStockQuantity(eq(productInfo.getId()), eq(maintainer), eq(-createRequest.quantityToRestock()), eq(null))).thenReturn(productInfo);
 
                 MaintenanceDetail result = maintenanceDetailService.createMaintenanceDetail(maintenance, createRequest, maintainer);
 
@@ -186,8 +197,8 @@ public class MaintenanceDetailServiceTest {
                 assertEquals(createRequest.rowNumber(), result.getRowNumber());
                 assertEquals(createRequest.columnNumber(), result.getColumnNumber());
                 assertEquals(vendingSlot2.getProduct(), result.getProduct());
+                
             }
-
             @Test
             @DisplayName("Should create maintenance detail successfully with Product dont expires")
             void createMaintenanceDetail_ProductDoesntExpire_ReturnsCreatedDetail() {
@@ -206,9 +217,8 @@ public class MaintenanceDetailServiceTest {
                         createRequest.columnNumber(),
                         maintainer
                 )).thenReturn(vendingSlot);
-
-                when(maintenanceDetailRepository.save(any(MaintenanceDetail.class)))
-                        .thenAnswer(invocation -> invocation.getArgument(0));
+                when(productInfoService.getOrCreateProductInfo(product.getId(), maintainer, null)).thenReturn(productInfo);
+                when(productInfoService.editStockQuantity(eq(productInfo.getId()), eq(maintainer), eq(-createRequest.quantityToRestock()), eq(null))).thenReturn(productInfo);
 
                 MaintenanceDetail result = maintenanceDetailService.createMaintenanceDetail(maintenance, createRequest, maintainer);
 
@@ -318,7 +328,57 @@ public class MaintenanceDetailServiceTest {
             }
 
             @Test
-            @DisplayName("Should throw BadRequestException when expiration date is in the past")
+            @DisplayName("Should throw ConflictException when inventory stock is insufficient")
+            void createMaintenanceDetail_InsufficientInventoryStock_ThrowsConflictException() {
+                MaintenanceDetailCreate createRequest = new MaintenanceDetailCreate(
+                        3,
+                        LocalDate.now().plusDays(1),
+                        1,
+                        1,
+                        product.getBarcode()
+                );
+
+                productInfo.setStockQuantity(2);
+
+                when(vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(
+                        vendingMachine.getName(),
+                        createRequest.rowNumber(),
+                        createRequest.columnNumber(),
+                        maintainer
+                )).thenReturn(vendingSlot);
+                when(productInfoService.getOrCreateProductInfo(product.getId(), maintainer, null)).thenReturn(productInfo);
+
+                assertThrows(ConflictException.class, () -> {
+                    maintenanceDetailService.createMaintenanceDetail(maintenance, createRequest, maintainer);
+                });
+            }
+
+            @Test
+            @DisplayName("Should throw BadRequestException when vending slot does not have a product assigned")
+            void createMaintenanceDetail_VendingSlotNoProduct_ThrowsBadRequestException() {
+                MaintenanceDetailCreate createRequest = new MaintenanceDetailCreate(
+                        1,
+                        LocalDate.now().plusDays(1),
+                        1,
+                        1,
+                        product.getBarcode()
+                );
+                vendingSlot.setProduct(null);
+
+                when(vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(
+                        vendingMachine.getName(),
+                        createRequest.rowNumber(),
+                        createRequest.columnNumber(),
+                        maintainer
+                )).thenReturn(vendingSlot);
+
+                assertThrows(BadRequestException.class, () -> {
+                    maintenanceDetailService.createMaintenanceDetail(maintenance, createRequest, maintainer);
+                });
+            }
+
+            @Test
+            @DisplayName("Should throw BadRequestException when expiration date is before maintenance date")
             void createMaintenanceDetail_PastExpirationDate_ThrowsBadRequestException() {
 
                 MaintenanceDetailCreate createRequest = new MaintenanceDetailCreate(

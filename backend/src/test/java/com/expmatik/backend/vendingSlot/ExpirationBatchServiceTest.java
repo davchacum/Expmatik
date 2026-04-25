@@ -149,10 +149,45 @@ public class ExpirationBatchServiceTest {
             }
 
             @Test
+            @DisplayName("pushExpirationBatch should add new expiration batch with null expiration date for non-perishable products")
+            public void testPushExpirationBatch_NonPerishableProduct_shouldAddNewBatchWithNullExpirationDate() {
+                UUID vendingSlotId = vendingSlot.getId();
+                LocalDate expirationDate = null;
+                Integer quantity = 5;
+                Integer initialStock = vendingSlot.getCurrentStock();
+
+                when(expirationBatchRepository.findFirstByVendingSlotIdAndExpirationDate(vendingSlotId, expirationDate))
+                    .thenReturn(Optional.empty());
+
+                expirationBatchService.pushExpirationBatch(vendingSlot, expirationDate, quantity, user);
+
+                assertEquals(initialStock + quantity, vendingSlot.getCurrentStock());
+            }
+
+            @Test
             @DisplayName("pushExpirationBatch should update existing expiration batch when there is a batch with the same expiration date")
             public void testPushExpirationBatch_ExistingBatch_shouldUpdateBatch() {
                 UUID vendingSlotId = vendingSlot.getId();
                 LocalDate expirationDate = batch1.getExpirationDate();
+                Integer quantity = 2;
+                Integer initialStock = vendingSlot.getCurrentStock();
+                batch1.setQuantity(5);
+
+
+                when(expirationBatchRepository.findFirstByVendingSlotIdAndExpirationDate(vendingSlotId, expirationDate))
+                    .thenReturn(Optional.of(batch1));
+
+                expirationBatchService.pushExpirationBatch(vendingSlot, expirationDate, quantity, user);
+
+                assertEquals(initialStock + quantity, batch1.getQuantity());
+                assertEquals(initialStock + quantity, vendingSlot.getCurrentStock());
+            }
+
+            @Test
+            @DisplayName("pushExpirationBatch should update existing expiration batch with null expiration date for non-perishable products")
+            public void testPushExpirationBatch_NonPerishableProduct_shouldUpdateExistingBatchWithNullExpirationDate() {
+                UUID vendingSlotId = vendingSlot.getId();
+                LocalDate expirationDate = null;
                 Integer quantity = 2;
                 Integer initialStock = vendingSlot.getCurrentStock();
                 batch1.setQuantity(5);
