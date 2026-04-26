@@ -24,8 +24,8 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
     @Query("SELECT i FROM Invoice i " +
            "WHERE i.user.id = :userId " +
            "AND (:status IS NULL OR i.status = :status) " +
-           "AND (:startDate IS NULL OR i.invoiceDate >= :startDate) " +
-           "AND (:endDate IS NULL OR i.invoiceDate <= :endDate) " +
+           "AND (i.invoiceDate >= COALESCE(:startDate, i.invoiceDate)) " +
+           "AND (i.invoiceDate <= COALESCE(:endDate, i.invoiceDate)) " +
            "AND (:invoiceNumber IS NULL OR LOWER(i.invoiceNumber) LIKE LOWER(CONCAT('%', CAST(:invoiceNumber AS string), '%'))) " +
            "AND (:supplierName IS NULL OR LOWER(i.supplier.name) LIKE LOWER(CONCAT('%', CAST(:supplierName AS string), '%'))) " +
            "AND (:minPrice IS NULL OR (SELECT COALESCE(SUM(b.unitPrice * b.quantity), 0) FROM Batch b WHERE b.invoice = i) >= :minPrice) " +
