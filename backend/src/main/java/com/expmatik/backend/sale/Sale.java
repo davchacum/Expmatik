@@ -16,6 +16,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -34,6 +35,7 @@ public class Sale extends BaseEntity {
     private LocalDateTime saleDate;
 
     @NotNull
+    @Positive
     @Digits(integer = 10, fraction = 2)
     @Column(name="total_amount",nullable = false, precision = 12, scale = 2)
     private BigDecimal totalAmount;

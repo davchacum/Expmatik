@@ -129,9 +129,10 @@ public class InvoiceService {
     @Transactional(readOnly = true)
     public Page<Invoice> searchInvoices(UUID userId, InvoiceStatus status, LocalDate startDate, LocalDate endDate, 
                                         String invoiceNumber, String supplierName, BigDecimal minPrice, BigDecimal maxPrice,Pageable pageable) {
-        String statusStr = status != null ? status.name() : null;
-        validateInvoiceSearchInputs(startDate, endDate, minPrice, maxPrice);                                    
-        return invoiceRepository.searchInvoices(userId, statusStr, startDate, endDate, invoiceNumber, supplierName, minPrice, maxPrice, pageable);
+        String invoiceNumberParam = (invoiceNumber != null && !invoiceNumber.isBlank()) ? invoiceNumber : null;
+        String supplierNameParam = (supplierName != null && !supplierName.isBlank()) ? supplierName : null;
+        validateInvoiceSearchInputs(startDate, endDate, minPrice, maxPrice);
+        return invoiceRepository.searchInvoices(userId, status, startDate, endDate, invoiceNumberParam, supplierNameParam, minPrice, maxPrice, pageable);
     }
 
     @Transactional(readOnly = true)

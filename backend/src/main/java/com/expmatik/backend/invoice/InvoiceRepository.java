@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+
 public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
 
     Optional<Invoice> findById(UUID id);
@@ -20,22 +21,18 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
 
     List<Invoice> findByUserIdAndStatus(UUID userId, InvoiceStatus status);
 
-    @Query(value = "SELECT DISTINCT i.* FROM invoice i " +
-           "LEFT JOIN batch b ON i.id = b.invoice_id " +
-           "LEFT JOIN supplier s ON i.supplier_id = s.id " +
-           "WHERE i.user_id = CAST(:userId AS uuid) " +
+    @Query("SELECT i FROM Invoice i " +
+           "WHERE i.user.id = :userId " +
            "AND (:status IS NULL OR i.status = :status) " +
-           "AND (CAST(:startDate AS timestamp) IS NULL OR i.invoice_date >= CAST(:startDate AS timestamp)) " +
-           "AND (CAST(:endDate AS timestamp) IS NULL OR i.invoice_date <= CAST(:endDate AS timestamp)) " +
-           "AND (:invoiceNumber IS NULL OR LOWER(i.invoice_number) LIKE LOWER(CONCAT('%', :invoiceNumber, '%'))) " +
-           "AND (:supplierName IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :supplierName, '%'))) " +
-           "GROUP BY i.id, i.invoice_date, i.invoice_number, i.status, i.supplier_id, i.user_id " +
-           "HAVING (:minPrice IS NULL OR COALESCE(SUM(b.unit_price * b.quantity), 0) >= :minPrice) " +
-           "AND (:maxPrice IS NULL OR COALESCE(SUM(b.unit_price * b.quantity), 0) <= :maxPrice)", 
-           nativeQuery = true)
+           "AND (:startDate IS NULL OR i.invoiceDate >= :startDate) " +
+           "AND (:endDate IS NULL OR i.invoiceDate <= :endDate) " +
+           "AND (:invoiceNumber IS NULL OR LOWER(i.invoiceNumber) LIKE LOWER(CONCAT('%', CAST(:invoiceNumber AS string), '%'))) " +
+           "AND (:supplierName IS NULL OR LOWER(i.supplier.name) LIKE LOWER(CONCAT('%', CAST(:supplierName AS string), '%'))) " +
+           "AND (:minPrice IS NULL OR (SELECT COALESCE(SUM(b.unitPrice * b.quantity), 0) FROM Batch b WHERE b.invoice = i) >= :minPrice) " +
+           "AND (:maxPrice IS NULL OR (SELECT COALESCE(SUM(b.unitPrice * b.quantity), 0) FROM Batch b WHERE b.invoice = i) <= :maxPrice)")
     Page<Invoice> searchInvoices(
         @Param("userId") UUID userId,
-        @Param("status") String status,
+        @Param("status") InvoiceStatus status,
         @Param("startDate") LocalDate startDate,
         @Param("endDate") LocalDate endDate,
         @Param("invoiceNumber") String invoiceNumber,
