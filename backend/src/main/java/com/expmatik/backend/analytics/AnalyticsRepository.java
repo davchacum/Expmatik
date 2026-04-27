@@ -2,6 +2,7 @@ package com.expmatik.backend.analytics;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -69,8 +70,8 @@ public interface AnalyticsRepository extends JpaRepository<Sale, UUID> {
     """)
     BigDecimal getIncomeTotal(
         @Param("userId") UUID userId,
-        @Param("startDate") LocalDate startDate,
-        @Param("endDate") LocalDate endDate,
+        @Param("startDate") LocalDateTime startDate,
+        @Param("endDate") LocalDateTime endDate,
         @Param("status") TransactionStatus status,
         @Param("machineId") UUID machineId
     );
@@ -94,8 +95,8 @@ public interface AnalyticsRepository extends JpaRepository<Sale, UUID> {
         """)
     Page<Object[]> getIncomeBreakdownByMachine(
         @Param("userId") UUID userId,
-        @Param("startDate") LocalDate startDate,
-        @Param("endDate") LocalDate endDate,
+        @Param("startDate") LocalDateTime startDate,
+        @Param("endDate") LocalDateTime endDate,
         @Param("status") TransactionStatus status,
         @Param("machineId") UUID machineId,
         Pageable pageable
@@ -117,7 +118,6 @@ public interface AnalyticsRepository extends JpaRepository<Sale, UUID> {
         WHERE s.vendingSlot.vendingMachine.user.id = :userId
         AND (s.saleDate >= COALESCE(:startDate, s.saleDate))
         AND (s.saleDate <= COALESCE(:endDate, s.saleDate))
-        AND (:endDate IS NULL OR CAST(s.saleDate AS LocalDate) <= :endDate)
         AND s.status = :status
         AND (:machineId IS NULL OR s.vendingSlot.vendingMachine.id = :machineId)
         AND (:productName IS NULL OR LOWER(s.product.name) LIKE LOWER(CONCAT('%', CAST(:productName AS string), '%')))
@@ -125,8 +125,8 @@ public interface AnalyticsRepository extends JpaRepository<Sale, UUID> {
         """)
     Page<Object[]> getIncomeBreakdownByProduct(
         @Param("userId") UUID userId,
-        @Param("startDate") LocalDate startDate,
-        @Param("endDate") LocalDate endDate,
+        @Param("startDate") LocalDateTime startDate,
+        @Param("endDate") LocalDateTime endDate,
         @Param("status") TransactionStatus status,
         @Param("machineId") UUID machineId,
         @Param("productName") String productName,

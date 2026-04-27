@@ -2,6 +2,8 @@ package com.expmatik.backend.analytics;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -47,30 +49,36 @@ public class AnalyticsService {
 
     private AnalyticsResponse buildIncomeAnalytics(UUID userId, UUID machineId, LocalDate startDate, LocalDate endDate,
                                                     Pageable pageable) {
-        BigDecimal total = orZero(analyticsRepository.getIncomeTotal(userId, startDate, endDate, TransactionStatus.SUCCESS, machineId));
+        LocalDateTime start = toStartOfDay(startDate);
+        LocalDateTime end = toEndOfDay(endDate);
+        BigDecimal total = orZero(analyticsRepository.getIncomeTotal(userId, start, end, TransactionStatus.SUCCESS, machineId));
         Page<AnalyticsItem> breakdown = analyticsRepository
-            .getIncomeBreakdownByMachine(userId, startDate, endDate, TransactionStatus.SUCCESS, machineId, pageable)
+            .getIncomeBreakdownByMachine(userId, start, end, TransactionStatus.SUCCESS, machineId, pageable)
             .map(row -> new AnalyticsItem((String) row[0], toDecimal(row[1]), toLong(row[2])));
         return new AnalyticsResponse(total, breakdown);
     }
 
     private AnalyticsResponse buildIncomeProductAnalytics(UUID userId, UUID machineId, LocalDate startDate, LocalDate endDate,
                                                            String productName, String brand, Pageable pageable) {
-        BigDecimal total = orZero(analyticsRepository.getIncomeTotal(userId, startDate, endDate, TransactionStatus.SUCCESS, machineId));
+        LocalDateTime start = toStartOfDay(startDate);
+        LocalDateTime end = toEndOfDay(endDate);
+        BigDecimal total = orZero(analyticsRepository.getIncomeTotal(userId, start, end, TransactionStatus.SUCCESS, machineId));
         Page<AnalyticsItem> breakdown = analyticsRepository
-            .getIncomeBreakdownByProduct(userId, startDate, endDate, TransactionStatus.SUCCESS, machineId, productName, brand, pageable)
+            .getIncomeBreakdownByProduct(userId, start, end, TransactionStatus.SUCCESS, machineId, productName, brand, pageable)
             .map(row -> new AnalyticsItem((String) row[0], toDecimal(row[1]), toLong(row[2])));
         return new AnalyticsResponse(total, breakdown);
     }
 
     private AnalyticsResponse buildProfitAnalytics(UUID userId, UUID machineId, LocalDate startDate, LocalDate endDate,
                                                     String productName, String brand, Pageable pageable) {
-        BigDecimal totalIncome = orZero(analyticsRepository.getIncomeTotal(userId, startDate, endDate, TransactionStatus.SUCCESS, machineId));
+        LocalDateTime start = toStartOfDay(startDate);
+        LocalDateTime end = toEndOfDay(endDate);
+        BigDecimal totalIncome = orZero(analyticsRepository.getIncomeTotal(userId, start, end, TransactionStatus.SUCCESS, machineId));
         BigDecimal totalExpenses = orZero(analyticsRepository.getExpensesTotal(userId, startDate, endDate, InvoiceStatus.RECEIVED));
         BigDecimal total = totalIncome.subtract(totalExpenses);
 
         List<Object[]> incomeRows = analyticsRepository
-            .getIncomeBreakdownByProduct(userId, startDate, endDate, TransactionStatus.SUCCESS, machineId, productName, brand, Pageable.unpaged())
+            .getIncomeBreakdownByProduct(userId, start, end, TransactionStatus.SUCCESS, machineId, productName, brand, Pageable.unpaged())
             .getContent();
 
         Map<String, BigDecimal> incomeMap = incomeRows.stream()
@@ -99,5 +107,13 @@ public class AnalyticsService {
     private Long toLong(Object value) {
         if (value == null) return 0L;
         return ((Number) value).longValue();
+    }
+
+    private LocalDateTime toStartOfDay(LocalDate date) {
+        return date != null ? date.atStartOfDay() : null;
+    }
+
+    private LocalDateTime toEndOfDay(LocalDate date) {
+        return date != null ? date.atTime(LocalTime.MAX) : null;
     }
 }
