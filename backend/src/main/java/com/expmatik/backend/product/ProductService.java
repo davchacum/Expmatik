@@ -314,6 +314,22 @@ public class ProductService {
         return BatchValidationResponse.of(valid, notFound);
     }
 
+    @Transactional
+    public Product createProductForSeeder(String barcode, String name, String brand, String imageUrl, Boolean isPerishable) {
+        return productRepository.findByBarcodeAndIsCustomFalse(barcode)
+                .orElseGet(() -> {
+                    Product product = new Product();
+                    product.setBarcode(barcode);
+                    product.setName(name);
+                    product.setBrand(brand);
+                    product.setImageUrl(imageUrl);
+                    product.setIsPerishable(isPerishable);
+                    product.setIsCustom(false);
+                    product.setCreatedBy(null);
+                    return productRepository.save(product);
+                });
+    }
+
     @Transactional(readOnly = true)
     public Page<Product> searchProductsWithoutProductInfoForUser(UUID userId, String name, String brand, String barcode, Pageable pageable) {
         String nameParam = (name != null && !name.isBlank()) ? name : null;

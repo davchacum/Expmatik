@@ -19,6 +19,7 @@ INSERT INTO app_user (id, email, password, first_name, last_name, role) VALUES (
 INSERT INTO app_user (id, email, password, first_name, last_name, role) VALUES ('00000000-0000-0000-0000-000000000003', 'admin2@expmatik.com', '$2a$10$XUck0ZZl9lU8iRQpWexSy.izAOIXNW7XowjPL2Q4DUlNeljX/2tGu', 'Admin', 'Admin', 'ADMINISTRATOR');
 INSERT INTO app_user (id, email, password, first_name, last_name, role) VALUES ('00000000-0000-0000-0000-000000000002', 'repo@expmatik.com', '$2a$10$HtXpXb2XGvjL8MeO4Zcn.ee0SSKMi5hHcyM5hAg3BH6Da3j1hqEb6', 'Reponedor', 'Reponedor', 'MAINTAINER');
 INSERT INTO app_user (id, email, password, first_name, last_name, role) VALUES ('00000000-0000-0000-0000-000000000004', 'repo2@expmatik.com', '$2a$10$HtXpXb2XGvjL8MeO4Zcn.ee0SSKMi5hHcyM5hAg3BH6Da3j1hqEb6', 'Reponedor', 'Reponedor', 'MAINTAINER');
+INSERT INTO app_user (id, email, password, first_name, last_name, role) VALUES ('00000000-0000-0000-0000-000000000005', 'prediction@expmatik.com', '$2a$10$HtXpXb2XGvjL8MeO4Zcn.ee0SSKMi5hHcyM5hAg3BH6Da3j1hqEb6', 'Prediction', 'Prediction', 'ADMINISTRATOR');
 
 INSERT INTO product (id, name, brand, description, is_perishable, barcode, is_custom, created_by,image_url) VALUES 
 ('00000000-0000-0000-0000-000000000001', 'Leche Entera', 'Puleva', 'Leche entera de vaca', true, '20000001', false, null, 'https://example.com/images/leche_entera.jpg'),

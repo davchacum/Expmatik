@@ -78,5 +78,21 @@ public class VendingMachineService {
     public VendingMachine findVendingMachineByNameAndUserId(String name, User user) {
         return vendingMachineRepository.findByNameAndUserId(name, user.getId()).orElseThrow(() -> new ResourceNotFoundException("The vending machine does not exist."));
     }
-    
+
+    @Transactional
+    public VendingMachine createVendingMachineForSeeder(String name, String location, Integer rowCount, Integer columnCount, Integer maxCapacityPerSlot, User user) {
+        return vendingMachineRepository.findByNameAndUserId(name, user.getId())
+                .orElseGet(() -> {
+                    VendingMachine vm = new VendingMachine();
+                    vm.setName(name);
+                    vm.setLocation(location);
+                    vm.setRowCount(rowCount);
+                    vm.setColumnCount(columnCount);
+                    vm.setUser(user);
+                    VendingMachine saved = vendingMachineRepository.save(vm);
+                    vendingSlotService.createVendingSlotsForMachine(saved, rowCount, columnCount, maxCapacityPerSlot);
+                    return saved;
+                });
+    }
+
 }

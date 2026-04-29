@@ -37,8 +37,7 @@ public class Product extends BaseEntity{
     @Size(max = 1000,min = 0)
     private String description;
 
-    @NotNull
-    @Column(name = "image_url",length = 1000, nullable = false)
+    @Column(name = "image_url",length = 1000)
     @Size(max = 1000)
     private String imageUrl;
 
