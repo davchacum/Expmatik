@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
@@ -30,6 +31,7 @@ import com.expmatik.backend.user.UserRepository;
 import com.expmatik.backend.vendingMachine.VendingMachineService;
 
 @Component
+@ConditionalOnProperty(name = "app.prediction-seeder.enabled", havingValue = "true", matchIfMissing = true)
 public class PredictionDataSeeder implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(PredictionDataSeeder.class);
@@ -73,9 +75,10 @@ public class PredictionDataSeeder implements ApplicationRunner {
                     machineName, machineName, dims[0], dims[1], DEFAULT_MAX_CAPACITY_PER_SLOT, predictionUser);
         }
 
+
         for (String barcode : uniqueBarcodes) {
             productService.createProductForSeeder(
-                    barcode, "Product " + barcode, "Prediction Data", null, false);
+                    barcode, "Product " + barcode, "Prediction Data", null, false, predictionUser);
         }
 
         boolean salesAlreadyExist = saleService

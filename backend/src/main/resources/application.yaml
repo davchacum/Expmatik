@@ -1,6 +1,8 @@
 spring:
   application:
     name: vending-backend
+  profiles:
+    active: test
   config:
     import: optional:file:./backend/.env[.properties],optional:file:.env[.properties]
   datasource:

@@ -21,6 +21,7 @@ import com.expmatik.backend.exceptions.BadRequestException;
 import com.expmatik.backend.exceptions.ConflictException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
 import com.expmatik.backend.file.FileStorageService;
+import com.expmatik.backend.user.User;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -315,7 +316,7 @@ public class ProductService {
     }
 
     @Transactional
-    public Product createProductForSeeder(String barcode, String name, String brand, String imageUrl, Boolean isPerishable) {
+    public Product createProductForSeeder(String barcode, String name, String brand, String imageUrl, Boolean isPerishable, User predictionUser) {
         return productRepository.findByBarcodeAndIsCustomFalse(barcode)
                 .orElseGet(() -> {
                     Product product = new Product();
@@ -324,8 +325,8 @@ public class ProductService {
                     product.setBrand(brand);
                     product.setImageUrl(imageUrl);
                     product.setIsPerishable(isPerishable);
-                    product.setIsCustom(false);
-                    product.setCreatedBy(null);
+                    product.setIsCustom(true);
+                    product.setCreatedBy(predictionUser);
                     return productRepository.save(product);
                 });
     }
