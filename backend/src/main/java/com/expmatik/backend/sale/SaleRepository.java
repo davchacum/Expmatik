@@ -14,6 +14,11 @@ import org.springframework.data.repository.query.Param;
 public interface SaleRepository extends JpaRepository<Sale, UUID> {
 
     Optional<Sale> findById(UUID id);
+    
+    @Query("SELECT s.product.barcode, YEAR(s.saleDate), MONTH(s.saleDate), COUNT(s) " +
+           "FROM Sale s WHERE s.status = :status AND s.product.barcode = :barcode AND s.vendingSlot.vendingMachine.user.id = :userId " +
+           "GROUP BY s.product.barcode, YEAR(s.saleDate), MONTH(s.saleDate)")
+    List<Object[]> findMonthlySalesByBarcode(@Param("status") TransactionStatus status, @Param("barcode") String barcode, @Param("userId") UUID userId);
 
     @Query("SELECT s FROM Sale s WHERE " +
         "(s.vendingSlot.vendingMachine.user.id = :userId) " +

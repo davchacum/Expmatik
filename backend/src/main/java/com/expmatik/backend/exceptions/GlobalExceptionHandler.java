@@ -91,6 +91,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
     }
 
+    @ExceptionHandler(PredictionNotAvailableException.class)
+    @ResponseStatus(value = HttpStatus.UNPROCESSABLE_ENTITY)
+    public ResponseEntity<ErrorResponse> predictionNotAvailableException(PredictionNotAvailableException ex) {
+        ErrorResponse message = new ErrorResponse(ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY.value(), new Date());
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(message);
+    }
+
     @ExceptionHandler(FileSizeExceededException.class)
     @ResponseStatus(value = HttpStatus.PAYLOAD_TOO_LARGE)
     public ResponseEntity<ErrorResponse> fileSizeExceededException(FileSizeExceededException ex) {
