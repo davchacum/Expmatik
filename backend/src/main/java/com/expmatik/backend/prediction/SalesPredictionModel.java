@@ -23,9 +23,6 @@ public class SalesPredictionModel {
      * @param targets ventas correspondientes a cada muestra
      */
     public void train(List<double[]> samples, List<Double> targets) {
-        if (samples.size() < 4) {
-            throw new IllegalArgumentException("Se necesitan al menos 4 muestras mensuales para ajustar 4 coeficientes");
-        }
         int n = samples.size();
         double[][] X = new double[n][];
         double[] y = new double[n];
@@ -48,7 +45,6 @@ public class SalesPredictionModel {
      * @return unidades vendidas estimadas
      */
     public double predict(int month) {
-        if (beta == null) throw new IllegalStateException("El modelo aún no ha sido entrenado");
         return Math.max(0.0, OrdinaryLeastSquares.predict(buildFeatureVector(month), beta));
     }
 
@@ -61,17 +57,8 @@ public class SalesPredictionModel {
         return new double[]{1.0, Math.sin(angle), Math.cos(angle)};
     }
 
-    public boolean isTrained() {
-        return beta != null;
-    }
-
     /** Coeficiente de determinación (R²) medido sobre el conjunto de entrenamiento. */
     public double getR2() {
         return r2;
-    }
-
-    /** Coeficientes OLS brutos [intercepto, β_sin, β_cos, β_precio]. */
-    public double[] getBeta() {
-        return beta;
     }
 }

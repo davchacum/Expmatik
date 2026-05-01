@@ -1,8 +1,10 @@
 package com.expmatik.backend.prediction.DTOs;
 
-import jakarta.validation.constraints.NotBlank;
+import com.expmatik.backend.validation.ValidBarcode;
+import jakarta.validation.constraints.NotNull;
 
 public record PredictionRequest(
-        @NotBlank(message = "El barcode del producto es obligatorio")
+        @NotNull
+        @ValidBarcode
         String barcode
 ) {}
