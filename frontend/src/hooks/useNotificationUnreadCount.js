@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 const WS_PATH = "/ws";
 const UNREAD_COUNT_ENDPOINT = "/api/notifications/unread/count";
+const WS_BASE_URL = import.meta.env.VITE_WS_URL ?? "";
 const UNREAD_COUNT_TOPIC = "/user/queue/notifications/unread-count";
 
 export const useNotificationUnreadCount = () => {
@@ -31,8 +32,8 @@ export const useNotificationUnreadCount = () => {
 
     fetchUnreadCount();
 
-    const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
-    const wsUrl = `${wsProtocol}://${window.location.host}${WS_PATH}`;
+    const wsBase = WS_BASE_URL || `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}`;
+    const wsUrl = `${wsBase}${WS_PATH}`;
 
     const client = new Client({
       brokerURL: wsUrl,
