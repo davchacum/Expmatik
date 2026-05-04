@@ -39,7 +39,7 @@ public class MaintenanceDetailService {
         MaintenanceDetail newMaintenanceDetail = new MaintenanceDetail();
         newMaintenanceDetail.setExpirationDate(maintenanceDetailCreate.expirationDate());
         newMaintenanceDetail.setQuantityToRestock(maintenanceDetailCreate.quantityToRestock());
-        VendingSlot vendingSlot = 
+        VendingSlot vendingSlot =
             vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(
                     maintenance.getVendingMachine().getName(),
                     maintenanceDetailCreate.rowNumber(),
@@ -49,9 +49,29 @@ public class MaintenanceDetailService {
         newMaintenanceDetail.setColumnNumber(maintenanceDetailCreate.columnNumber());
         validateProduct(vendingSlot, maintenanceDetailCreate);
         validateExpirationDate(maintenance, maintenanceDetailCreate, vendingSlot.getProduct());
+        validateSlotCapacity(maintenance, newMaintenanceDetail, vendingSlot);
         newMaintenanceDetail.setProduct(vendingSlot.getProduct());
         reserveProductStock(newMaintenanceDetail.getProduct(), newMaintenanceDetail.getQuantityToRestock(), user);
         return newMaintenanceDetail;
+    }
+
+    private void validateSlotCapacity(Maintenance maintenance, MaintenanceDetail newDetail, VendingSlot vendingSlot) {
+        Integer alreadyRequestedForSlot = maintenanceDetailRepository.sumQuantityToRestockByMaintenanceIdAndSlotCoordinates(
+            maintenance.getId(),
+            maintenance.getVendingMachine().getName(),
+            newDetail.getRowNumber(),
+            newDetail.getColumnNumber()
+        );
+
+        int availableSpace = vendingSlot.getMaxCapacity() - vendingSlot.getCurrentStock();
+        int totalRequestedForSlot = alreadyRequestedForSlot + newDetail.getQuantityToRestock();
+
+        if (totalRequestedForSlot > availableSpace) {
+            throw new ConflictException(
+                "The total quantity requested for this vending slot exceeds the available space. Available space: "
+                + availableSpace + ", requested: " + totalRequestedForSlot + "."
+            );
+        }
     }
 
     private void reserveProductStock(Product product, Integer quantityToReserve, User user) {

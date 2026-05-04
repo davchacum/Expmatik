@@ -12,6 +12,27 @@ import com.expmatik.backend.vendingSlot.VendingSlot;
 public interface MaintenanceDetailRepository extends JpaRepository<MaintenanceDetail, UUID> {
 
     @Query("""
+        SELECT COALESCE(SUM(md.quantityToRestock), 0)
+        FROM MaintenanceDetail md
+        WHERE md.rowNumber = :row
+          AND md.columnNumber = :column
+          AND EXISTS (
+              SELECT 1
+              FROM Maintenance m
+              JOIN m.maintenanceDetails md2
+              WHERE m.id = :maintenanceId
+                AND md2.id = md.id
+                AND m.vendingMachine.name = :machineName
+          )
+    """)
+    Integer sumQuantityToRestockByMaintenanceIdAndSlotCoordinates(
+        @Param("maintenanceId") UUID maintenanceId,
+        @Param("machineName") String machineName,
+        @Param("row") Integer row,
+        @Param("column") Integer column
+    );
+
+    @Query("""
         SELECT DISTINCT vs
         FROM VendingSlot vs
         WHERE EXISTS (

@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.expmatik.backend.exceptions.ConflictException;
 import com.expmatik.backend.exceptions.ResourceNotFoundException;
+import com.expmatik.backend.user.Role;
 import com.expmatik.backend.user.User;
 import com.expmatik.backend.vendingMachine.DTOs.VendingMachineCreate;
 import com.expmatik.backend.vendingMachine.DTOs.VendingMachineUpdate;
@@ -37,6 +38,7 @@ public class VendingMachineService {
     }
 
     void validateVendingMachineOwnership(VendingMachine vendingMachine, User user) {
+        if (user.getRole() == Role.MAINTAINER) return;
         if (!vendingMachine.getUser().getId().equals(user.getId())) {
             throw new AccessDeniedException("The user is not the owner of the vending machine.");
         }

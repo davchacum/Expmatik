@@ -160,6 +160,12 @@ public class MaintenanceDetailServiceTest {
                         createRequest.columnNumber(),
                         maintainer
                 )).thenReturn(vendingSlot);
+                when(maintenanceDetailRepository.sumQuantityToRestockByMaintenanceIdAndSlotCoordinates(
+                        maintenance.getId(),
+                        vendingMachine.getName(),
+                        createRequest.rowNumber(),
+                        createRequest.columnNumber()
+                )).thenReturn(0);
                 when(productInfoService.getOrCreateProductInfo(product.getId(), maintainer, null)).thenReturn(productInfo);
                 when(productInfoService.editStockQuantity(eq(productInfo.getId()), eq(maintainer), eq(-createRequest.quantityToRestock()), eq(null))).thenReturn(productInfo);
 
@@ -189,6 +195,12 @@ public class MaintenanceDetailServiceTest {
                         createRequest.columnNumber(),
                         maintainer
                 )).thenReturn(vendingSlot2);
+                when(maintenanceDetailRepository.sumQuantityToRestockByMaintenanceIdAndSlotCoordinates(
+                        maintenance.getId(),
+                        vendingMachine.getName(),
+                        createRequest.rowNumber(),
+                        createRequest.columnNumber()
+                )).thenReturn(0);
                 when(productInfoService.getOrCreateProductInfo(product.getId(), maintainer, null)).thenReturn(productInfo);
                 when(productInfoService.editStockQuantity(eq(productInfo.getId()), eq(maintainer), eq(-createRequest.quantityToRestock()), eq(null))).thenReturn(productInfo);
 
@@ -219,6 +231,12 @@ public class MaintenanceDetailServiceTest {
                         createRequest.columnNumber(),
                         maintainer
                 )).thenReturn(vendingSlot);
+                when(maintenanceDetailRepository.sumQuantityToRestockByMaintenanceIdAndSlotCoordinates(
+                        maintenance.getId(),
+                        vendingMachine.getName(),
+                        createRequest.rowNumber(),
+                        createRequest.columnNumber()
+                )).thenReturn(1);
                 when(productInfoService.getOrCreateProductInfo(product.getId(), maintainer, null)).thenReturn(productInfo);
                 when(productInfoService.editStockQuantity(eq(productInfo.getId()), eq(maintainer), eq(-createRequest.quantityToRestock()), eq(null))).thenReturn(productInfo);
 
@@ -331,6 +349,37 @@ public class MaintenanceDetailServiceTest {
                     maintenanceDetailService.createMaintenanceDetail(maintenance, createRequest, maintainer);
                 });
             }
+
+                        @Test
+                        @DisplayName("Should throw ConflictException when total maintenance details exceed slot capacity")
+                        void createMaintenanceDetail_TotalQuantityExceedsSlotCapacity_ThrowsConflictException() {
+                                MaintenanceDetailCreate createRequest = new MaintenanceDetailCreate(
+                                                9,
+                                                LocalDate.now().plusDays(1),
+                                                1,
+                                                1,
+                                                product.getBarcode()
+                                );
+
+                                when(vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(
+                                                vendingMachine.getName(),
+                                                createRequest.rowNumber(),
+                                                createRequest.columnNumber(),
+                                                maintainer
+                                )).thenReturn(vendingSlot);
+                        when(maintenanceDetailRepository.sumQuantityToRestockByMaintenanceIdAndSlotCoordinates(
+                                maintenance.getId(),
+                                vendingMachine.getName(),
+                                createRequest.rowNumber(),
+                                createRequest.columnNumber()
+                        )).thenReturn(1);
+
+                                assertThrows(ConflictException.class, () -> {
+                                        maintenanceDetailService.createMaintenanceDetail(maintenance, createRequest, maintainer);
+                                });
+
+                                verify(productInfoService, never()).getOrCreateProductInfo(any(), any(), any());
+                        }
 
             @Test
             @DisplayName("Should throw BadRequestException when vending slot does not have a product assigned")

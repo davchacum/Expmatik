@@ -37,7 +37,7 @@ public class VendingSlotController {
     }
 
     @GetMapping("/vending-machines/{machineId}")
-    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR', 'MAINTAINER')")
     public ResponseEntity<?> getVendingSlotsByMachineId(@PathVariable UUID machineId) throws AccessDeniedException {
         User currentUser = userService.getUserProfile();
         List<VendingSlot> vendingSlots = vendingSlotService.getVendingSlotsByUserIdAndMachineId(machineId, currentUser);

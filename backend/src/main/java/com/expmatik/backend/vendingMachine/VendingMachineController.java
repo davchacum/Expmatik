@@ -38,7 +38,7 @@ public class VendingMachineController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR', 'MAINTAINER')")
     public ResponseEntity<?> getVendingMachineById(@PathVariable UUID id) {
         User currentUser = userService.getUserProfile();
         VendingMachine response = vendingMachineService.getVendingMachineById(id, currentUser);

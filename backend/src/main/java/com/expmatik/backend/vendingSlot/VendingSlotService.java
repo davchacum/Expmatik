@@ -17,6 +17,7 @@ import com.expmatik.backend.notification.NotificationService;
 import com.expmatik.backend.notification.NotificationType;
 import com.expmatik.backend.product.Product;
 import com.expmatik.backend.product.ProductService;
+import com.expmatik.backend.user.Role;
 import com.expmatik.backend.user.User;
 import com.expmatik.backend.vendingMachine.VendingMachine;
 
@@ -214,6 +215,7 @@ public class VendingSlotService {
     }
  
     public void checkUserAuthorization(VendingSlot vendingSlot, User user) {
+        if (user.getRole() == Role.MAINTAINER) return;
         if (!vendingSlot.getVendingMachine().getUser().getId().equals(user.getId())) {
             throw new AccessDeniedException("The user is not the owner of the vending machine.");
         }
