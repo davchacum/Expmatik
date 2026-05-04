@@ -987,25 +987,25 @@ public class MaintenanceIntegrationTest {
 
             }
 
-                    @Test
-                    @DisplayName("Should return 409 when total maintenance details exceed slot capacity")
-                    @WithUserDetails("admin@expmatik.com")
-                    void testAddMaintenanceDetail_SlotCapacityExceeded_shouldReturn409() throws Exception {
+            @Test
+            @DisplayName("Should return 409 when total maintenance details exceed slot capacity")
+            @WithUserDetails("admin@expmatik.com")
+            void testAddMaintenanceDetail_SlotCapacityExceeded_shouldReturn409() throws Exception {
 
-                    MaintenanceDetailCreate maintenanceDetailCreate = new MaintenanceDetailCreate(
-                        3,
-                        LocalDate.of(2050, 5, 15),
-                        1,
-                        1,
-                        "20000001"
-                    );
+            MaintenanceDetailCreate maintenanceDetailCreate = new MaintenanceDetailCreate(
+                3,
+                LocalDate.of(2050, 5, 15),
+                1,
+                1,
+                "20000001"
+            );
 
-                    mockMvc.perform(MockMvcRequestBuilders.post("/api/maintenances/{id}/details", "00000000-0000-0000-0000-000000000003")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(maintenanceDetailCreate)))
-                        .andExpect(status().isConflict())
-                        .andExpect(jsonPath("$.message").value("The total quantity requested for this vending slot exceeds the available space. Available space: 3, requested: 4."));
-                    }
+            mockMvc.perform(MockMvcRequestBuilders.post("/api/maintenances/{id}/details", "00000000-0000-0000-0000-000000000003")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(maintenanceDetailCreate)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("The total quantity requested for this vending slot exceeds the available space. Available space: 3, requested: 4."));
+            }
 
             @Test
             @DisplayName("Should return 400 when expiration date is before maintenance date")

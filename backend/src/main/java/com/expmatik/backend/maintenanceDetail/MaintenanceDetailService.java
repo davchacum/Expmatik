@@ -63,7 +63,7 @@ public class MaintenanceDetailService {
             newDetail.getColumnNumber()
         );
 
-        int availableSpace = vendingSlot.getMaxCapacity() - vendingSlot.getCurrentStock();
+        int availableSpace = vendingSlot.getMaxCapacity();
         int totalRequestedForSlot = alreadyRequestedForSlot + newDetail.getQuantityToRestock();
 
         if (totalRequestedForSlot > availableSpace) {
