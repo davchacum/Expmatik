@@ -18,7 +18,11 @@ public record MaintenanceDetailResponse(
 
     Integer columnNumber,
 
-    ProductResponse product
+    ProductResponse product,
+
+    Integer quantityRestocked,
+
+    Integer quantityReturned
 ) {
 
     public static MaintenanceDetailResponse fromMaintenanceDetail(MaintenanceDetail maintenanceDetail) {
@@ -28,7 +32,9 @@ public record MaintenanceDetailResponse(
             maintenanceDetail.getExpirationDate(),
             maintenanceDetail.getRowNumber(),
             maintenanceDetail.getColumnNumber(),
-            ProductResponse.fromProduct(maintenanceDetail.getProduct())
+            ProductResponse.fromProduct(maintenanceDetail.getProduct()),
+            maintenanceDetail.getQuantityRestocked(),
+            maintenanceDetail.getQuantityReturned()
         );
     }
 

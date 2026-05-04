@@ -1,10 +1,12 @@
 package com.expmatik.backend.maintenanceDetail;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -305,29 +307,6 @@ public class MaintenanceDetailServiceTest {
             }
 
             @Test
-            @DisplayName("Should throw BadRequestException when total quantity to restock exceeds vending slot capacity")
-            void createMaintenanceDetail_ExceedsSlotCapacity_ThrowsBadRequestException() {
-                MaintenanceDetailCreate createRequest = new MaintenanceDetailCreate(
-                        10,
-                        LocalDate.now().plusDays(1),
-                        1,
-                        1,
-                        product.getBarcode()
-                );
-
-                when(vendingSlotService.getVendingSlotByMachineNameAndRowAndColumn(
-                        vendingMachine.getName(),
-                        createRequest.rowNumber(),
-                        createRequest.columnNumber(),
-                        maintainer
-                )).thenReturn(vendingSlot);
-
-                assertThrows(BadRequestException.class, () -> {
-                    maintenanceDetailService.createMaintenanceDetail(maintenance, createRequest, maintainer);
-                });
-            }
-
-            @Test
             @DisplayName("Should throw ConflictException when inventory stock is insufficient")
             void createMaintenanceDetail_InsufficientInventoryStock_ThrowsConflictException() {
                 MaintenanceDetailCreate createRequest = new MaintenanceDetailCreate(
@@ -412,21 +391,109 @@ public class MaintenanceDetailServiceTest {
         class SuccessCases {
 
             @Test
-            @DisplayName("Should perform maintenance on affected vending slots successfully")
-            void performSlotsMaintenance_AffectedSlots_MaintenancePerformedSuccessfully() {
+            @DisplayName("Should restock full quantity when slot has enough space")
+            void performSlotsMaintenance_SlotHasEnoughSpace_FullQuantityRestocked() {
+                MaintenanceDetail detail = maintenanceDetails.get(0);
+                detail.setQuantityToRestock(5);
+                // vendingSlot: currentStock=1, maxCapacity=10 → remainingSpace=9 → full fit
+
                 when(maintenanceDetailRepository.findDistinctVendingSlotsByMaintenance(maintenance.getId()))
                         .thenReturn(List.of(vendingSlot));
-
                 when(maintenanceDetailRepository.findMaintenanceDetailsByMaintenanceIdAndSlotCoordinates(
-                        maintenance.getId(),
-                        vendingSlot.getVendingMachine().getName(),
-                        vendingSlot.getRowNumber(),
-                        vendingSlot.getColumnNumber()
-                )).thenReturn(List.of(maintenanceDetails.get(0)));
+                        maintenance.getId(), vendingSlot.getVendingMachine().getName(),
+                        vendingSlot.getRowNumber(), vendingSlot.getColumnNumber()))
+                        .thenReturn(List.of(detail));
 
-                assertDoesNotThrow(() -> {
-                    maintenanceDetailService.performSlotsMaintenance(maintenance, maintainer);
-                });
+                maintenanceDetailService.performSlotsMaintenance(maintenance, maintainer);
+
+                verify(vendingSlotService).addStockToVendingSlot(
+                        eq(vendingSlot.getId()), eq(5), eq(detail.getExpirationDate()), eq(maintainer));
+                verify(productInfoService, never()).getOrCreateProductInfo(any(), any(), any());
+                assertEquals(5, detail.getQuantityRestocked());
+                assertEquals(0, detail.getQuantityReturned());
+            }
+
+            @Test
+            @DisplayName("Should partially restock and return overflow to inventory when slot is partially full")
+            void performSlotsMaintenance_SlotPartiallyFull_PartialRestockAndOverflowReturned() {
+                MaintenanceDetail detail = maintenanceDetails.get(0);
+                detail.setQuantityToRestock(5);
+                vendingSlot.setCurrentStock(7); // remainingSpace = 10 - 7 = 3 → add 3, return 2
+
+                when(maintenanceDetailRepository.findDistinctVendingSlotsByMaintenance(maintenance.getId()))
+                        .thenReturn(List.of(vendingSlot));
+                when(maintenanceDetailRepository.findMaintenanceDetailsByMaintenanceIdAndSlotCoordinates(
+                        maintenance.getId(), vendingSlot.getVendingMachine().getName(),
+                        vendingSlot.getRowNumber(), vendingSlot.getColumnNumber()))
+                        .thenReturn(List.of(detail));
+                when(productInfoService.getOrCreateProductInfo(product.getId(), administrator, null))
+                        .thenReturn(productInfo);
+                when(productInfoService.editStockQuantity(eq(productInfo.getId()), eq(administrator), eq(2), eq(null)))
+                        .thenReturn(productInfo);
+
+                maintenanceDetailService.performSlotsMaintenance(maintenance, maintainer);
+
+                verify(vendingSlotService).addStockToVendingSlot(
+                        eq(vendingSlot.getId()), eq(3), eq(detail.getExpirationDate()), eq(maintainer));
+                verify(productInfoService).editStockQuantity(
+                        eq(productInfo.getId()), eq(administrator), eq(2), eq(null));
+                assertEquals(3, detail.getQuantityRestocked());
+                assertEquals(2, detail.getQuantityReturned());
+            }
+
+            @Test
+            @DisplayName("Should return all quantity to inventory when product expiration date is in the past")
+            void performSlotsMaintenance_ExpiredProduct_AllQuantityReturnedToInventory() {
+                MaintenanceDetail detail = maintenanceDetails.get(0);
+                detail.setQuantityToRestock(3);
+                detail.setExpirationDate(LocalDate.now().minusDays(1)); // expired yesterday
+                // vendingSlot: currentStock=1, maxCapacity=10 → space available but product is expired
+
+                when(maintenanceDetailRepository.findDistinctVendingSlotsByMaintenance(maintenance.getId()))
+                        .thenReturn(List.of(vendingSlot));
+                when(maintenanceDetailRepository.findMaintenanceDetailsByMaintenanceIdAndSlotCoordinates(
+                        maintenance.getId(), vendingSlot.getVendingMachine().getName(),
+                        vendingSlot.getRowNumber(), vendingSlot.getColumnNumber()))
+                        .thenReturn(List.of(detail));
+                when(productInfoService.getOrCreateProductInfo(product.getId(), administrator, null))
+                        .thenReturn(productInfo);
+                when(productInfoService.editStockQuantity(eq(productInfo.getId()), eq(administrator), eq(3), eq(null)))
+                        .thenReturn(productInfo);
+
+                maintenanceDetailService.performSlotsMaintenance(maintenance, maintainer);
+
+                verify(vendingSlotService, never()).addStockToVendingSlot(any(), any(), any(), any());
+                verify(productInfoService).editStockQuantity(
+                        eq(productInfo.getId()), eq(administrator), eq(3), eq(null));
+                assertEquals(0, detail.getQuantityRestocked());
+                assertEquals(3, detail.getQuantityReturned());
+            }
+
+            @Test
+            @DisplayName("Should return all quantity to inventory when slot is completely full")
+            void performSlotsMaintenance_SlotCompletelyFull_AllQuantityReturnedToInventory() {
+                MaintenanceDetail detail = maintenanceDetails.get(0);
+                detail.setQuantityToRestock(5);
+                vendingSlot.setCurrentStock(10); // remainingSpace = 0 → add 0, return 5
+
+                when(maintenanceDetailRepository.findDistinctVendingSlotsByMaintenance(maintenance.getId()))
+                        .thenReturn(List.of(vendingSlot));
+                when(maintenanceDetailRepository.findMaintenanceDetailsByMaintenanceIdAndSlotCoordinates(
+                        maintenance.getId(), vendingSlot.getVendingMachine().getName(),
+                        vendingSlot.getRowNumber(), vendingSlot.getColumnNumber()))
+                        .thenReturn(List.of(detail));
+                when(productInfoService.getOrCreateProductInfo(product.getId(), administrator, null))
+                        .thenReturn(productInfo);
+                when(productInfoService.editStockQuantity(eq(productInfo.getId()), eq(administrator), eq(5), eq(null)))
+                        .thenReturn(productInfo);
+
+                maintenanceDetailService.performSlotsMaintenance(maintenance, maintainer);
+
+                verify(vendingSlotService, never()).addStockToVendingSlot(any(), any(), any(), any());
+                verify(productInfoService).editStockQuantity(
+                        eq(productInfo.getId()), eq(administrator), eq(5), eq(null));
+                assertEquals(0, detail.getQuantityRestocked());
+                assertEquals(5, detail.getQuantityReturned());
             }
         }
     }

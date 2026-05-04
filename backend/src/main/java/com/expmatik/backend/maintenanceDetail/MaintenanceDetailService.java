@@ -1,5 +1,6 @@
 package com.expmatik.backend.maintenanceDetail;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -15,7 +16,6 @@ import com.expmatik.backend.product.Product;
 import com.expmatik.backend.productInfo.ProductInfo;
 import com.expmatik.backend.productInfo.ProductInfoService;
 import com.expmatik.backend.user.User;
-import com.expmatik.backend.vendingSlot.SlotLabelFormatter;
 import com.expmatik.backend.vendingSlot.VendingSlot;
 import com.expmatik.backend.vendingSlot.VendingSlotService;
 
@@ -49,7 +49,6 @@ public class MaintenanceDetailService {
         newMaintenanceDetail.setColumnNumber(maintenanceDetailCreate.columnNumber());
         validateProduct(vendingSlot, maintenanceDetailCreate);
         validateExpirationDate(maintenance, maintenanceDetailCreate, vendingSlot.getProduct());
-        validateSlotStock(maintenance.getMaintenanceDetails(), maintenanceDetailCreate, vendingSlot, user);
         newMaintenanceDetail.setProduct(vendingSlot.getProduct());
         reserveProductStock(newMaintenanceDetail.getProduct(), newMaintenanceDetail.getQuantityToRestock(), user);
         return newMaintenanceDetail;
@@ -79,16 +78,6 @@ public class MaintenanceDetailService {
         }
     }
 
-    private void validateSlotStock(List<MaintenanceDetail> currentMaintenanceDetails,MaintenanceDetailCreate newDetail,VendingSlot vendingSlot, User user) {
-        List<MaintenanceDetail> sameSlot = currentMaintenanceDetails.stream()
-            .filter(detail -> detail.getRowNumber().equals(newDetail.rowNumber()) && detail.getColumnNumber().equals(newDetail.columnNumber()))
-            .toList();
-        Integer totalQuantity = sameSlot.stream().map(MaintenanceDetail::getQuantityToRestock).reduce(0, Integer::sum);
-        if(totalQuantity + newDetail.quantityToRestock() > vendingSlot.getMaxCapacity()){
-            throw new BadRequestException("The total quantity to restock for this slot: " + SlotLabelFormatter.toFrontendLabel(vendingSlot.getRowNumber(), vendingSlot.getColumnNumber()) + " exceeds its maximum capacity.");
-        }
-    }
-
     private void validateExpirationDate(Maintenance maintenance, MaintenanceDetailCreate newDetail, Product product) {
         if(product.getIsPerishable()){
             if (newDetail.expirationDate() == null) {
@@ -105,15 +94,47 @@ public class MaintenanceDetailService {
     }
 
     @Transactional
-    public void performSlotsMaintenance(Maintenance maintenance,User user) {
+    public void performSlotsMaintenance(Maintenance maintenance, User user) {
         List<VendingSlot> affectedSlots = maintenanceDetailRepository.findDistinctVendingSlotsByMaintenance(maintenance.getId());
+        User administrator = maintenance.getAdministrator();
 
         for (VendingSlot slot : affectedSlots) {
-            List<MaintenanceDetail> detailsForSlot = maintenanceDetailRepository.findMaintenanceDetailsByMaintenanceIdAndSlotCoordinates(maintenance.getId(), slot.getVendingMachine().getName(), slot.getRowNumber(), slot.getColumnNumber());
+            List<MaintenanceDetail> detailsForSlot = maintenanceDetailRepository.findMaintenanceDetailsByMaintenanceIdAndSlotCoordinates(
+                maintenance.getId(), slot.getVendingMachine().getName(), slot.getRowNumber(), slot.getColumnNumber());
+
+            int remainingSpace = slot.getMaxCapacity() - slot.getCurrentStock();
+
             for (MaintenanceDetail detail : detailsForSlot) {
-                vendingSlotService.addStockToVendingSlot(slot.getId(), detail.getQuantityToRestock(), detail.getExpirationDate(), user);
+                int quantityToAdd = Math.min(detail.getQuantityToRestock(), remainingSpace);
+                int quantityToReturn = detail.getQuantityToRestock() - quantityToAdd;
+
+                boolean isExpired = detail.getProduct().getIsPerishable()
+                        && detail.getExpirationDate() != null
+                        && detail.getExpirationDate().isBefore(LocalDate.now());
+                if (isExpired) {
+                    quantityToReturn += quantityToAdd;
+                    quantityToAdd = 0;
+                }
+
+                if (quantityToAdd > 0) {
+                    vendingSlotService.addStockToVendingSlot(slot.getId(), quantityToAdd, detail.getExpirationDate(), user);
+                }
+                if (quantityToReturn > 0) {
+                    releasePartialStock(detail.getProduct(), quantityToReturn, administrator);
+                }
+
+                detail.setQuantityRestocked(quantityToAdd);
+                detail.setQuantityReturned(quantityToReturn);
+                maintenanceDetailRepository.save(detail);
+
+                remainingSpace -= quantityToAdd;
             }
         }
+    }
+
+    private void releasePartialStock(Product product, Integer quantity, User user) {
+        ProductInfo productInfo = productInfoService.getOrCreateProductInfo(product.getId(), user, null);
+        productInfoService.editStockQuantity(productInfo.getId(), user, quantity, null);
     }
 
     @Transactional(readOnly = true)

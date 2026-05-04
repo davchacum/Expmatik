@@ -229,7 +229,7 @@ public class MaintenanceServiceTest {
             }
 
             @ParameterizedTest
-            @ValueSource(strings = {"REJECTED_EXPIRED", "PENDING", "DELAYED","COMPLETED"})
+            @ValueSource(strings = {"REJECTED_EXPIRED", "PENDING", "DELAYED", "COMPLETED", "CANCELED"})
             void testPendingMaintenance_toPendingFromInvalidStatus_shouldThrowBadRequestException(String invalidStatus) {
                 maintenance.setStatus(MaintenanceStatus.valueOf(invalidStatus));
                 when(maintenanceRepository.findById(any(UUID.class))).thenReturn(Optional.of(maintenance));
@@ -309,7 +309,7 @@ public class MaintenanceServiceTest {
             }
 
             @ParameterizedTest
-            @ValueSource(strings = {"REJECTED_EXPIRED", "DRAFT","COMPLETED"})
+            @ValueSource(strings = {"REJECTED_EXPIRED", "DRAFT", "COMPLETED", "CANCELED"})
             void testCompletedMaintenance_toCompletedFromInvalidStatus_shouldThrowBadRequestException(String invalidStatus) {
                 maintenance.setStatus(MaintenanceStatus.valueOf(invalidStatus));
                 when(maintenanceRepository.findById(any(UUID.class))).thenReturn(Optional.of(maintenance));
@@ -493,6 +493,74 @@ public class MaintenanceServiceTest {
                 when(maintenanceRepository.findById(any(UUID.class))).thenReturn(Optional.of(maintenance));
 
                 assertThrows(BadRequestException.class, () -> maintenanceService.deleteMaintenance(UUID.randomUUID(), administrator));
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("cancelMaintenance")
+    class CancelMaintenance {
+
+        @Nested
+        @DisplayName("Success Cases")
+        class SuccessCases {
+
+            @Test
+            @DisplayName("should cancel maintenance and release stock when status is PENDING")
+            void testCancelMaintenance_fromPendingByAdministrator_shouldCancelAndReleaseStock() {
+                maintenance.setStatus(MaintenanceStatus.PENDING);
+                when(maintenanceRepository.findById(any(UUID.class))).thenReturn(Optional.of(maintenance));
+                when(maintenanceRepository.save(any(Maintenance.class))).thenReturn(maintenance);
+
+                Maintenance result = maintenanceService.cancelMaintenance(UUID.randomUUID(), administrator);
+
+                assertEquals(MaintenanceStatus.CANCELED, result.getStatus());
+                verify(maintenanceDetailService).releaseReservedStock(eq(maintenanceDetails.get(0)), eq(administrator));
+            }
+
+            @Test
+            @DisplayName("should cancel maintenance and release stock when status is DELAYED")
+            void testCancelMaintenance_fromDelayedByAdministrator_shouldCancelAndReleaseStock() {
+                maintenance.setStatus(MaintenanceStatus.DELAYED);
+                when(maintenanceRepository.findById(any(UUID.class))).thenReturn(Optional.of(maintenance));
+                when(maintenanceRepository.save(any(Maintenance.class))).thenReturn(maintenance);
+
+                Maintenance result = maintenanceService.cancelMaintenance(UUID.randomUUID(), administrator);
+
+                assertEquals(MaintenanceStatus.CANCELED, result.getStatus());
+                verify(maintenanceDetailService).releaseReservedStock(eq(maintenanceDetails.get(0)), eq(administrator));
+            }
+        }
+
+        @Nested
+        @DisplayName("Failure Cases")
+        class FailureCases {
+
+            @Test
+            @DisplayName("should throw ResourceNotFoundException when maintenance does not exist")
+            void testCancelMaintenance_maintenanceDoesNotExist_shouldThrowResourceNotFoundException() {
+                when(maintenanceRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
+
+                assertThrows(ResourceNotFoundException.class, () -> maintenanceService.cancelMaintenance(UUID.randomUUID(), administrator));
+            }
+
+            @Test
+            @DisplayName("should throw AccessDeniedException when user is not authorized")
+            void testCancelMaintenance_userNotAuthorized_shouldThrowAccessDeniedException() {
+                maintenance.setStatus(MaintenanceStatus.PENDING);
+                when(maintenanceRepository.findById(any(UUID.class))).thenReturn(Optional.of(maintenance));
+
+                assertThrows(AccessDeniedException.class, () -> maintenanceService.cancelMaintenance(UUID.randomUUID(), otherUser));
+            }
+
+            @ParameterizedTest
+            @ValueSource(strings = {"DRAFT", "COMPLETED", "REJECTED_EXPIRED", "CANCELED"})
+            @DisplayName("should throw BadRequestException when status is not PENDING or DELAYED")
+            void testCancelMaintenance_fromInvalidStatus_shouldThrowBadRequestException(String invalidStatus) {
+                maintenance.setStatus(MaintenanceStatus.valueOf(invalidStatus));
+                when(maintenanceRepository.findById(any(UUID.class))).thenReturn(Optional.of(maintenance));
+
+                assertThrows(BadRequestException.class, () -> maintenanceService.cancelMaintenance(UUID.randomUUID(), administrator));
             }
         }
     }

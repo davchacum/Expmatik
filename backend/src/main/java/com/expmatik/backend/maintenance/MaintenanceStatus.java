@@ -1,5 +1,5 @@
 package com.expmatik.backend.maintenance;
 
 public enum MaintenanceStatus {
-    DRAFT, PENDING, DELAYED, COMPLETED, REJECTED_EXPIRED;
+    DRAFT, PENDING, DELAYED, COMPLETED, REJECTED_EXPIRED, CANCELED;
 }

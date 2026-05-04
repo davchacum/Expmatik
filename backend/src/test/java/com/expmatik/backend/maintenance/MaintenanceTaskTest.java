@@ -143,6 +143,32 @@ public class MaintenanceTaskTest {
 
                 verify(maintenanceDetailService, never()).releaseReservedStock(detail, delayedMaintenance.getAdministrator());
             }
+
+            @Test
+            @DisplayName("checkAllMaintenances should release only non-expired stock when maintenance becomes REJECTED_EXPIRED")
+            void testCheckAllMaintenances_MixedExpiration_ShouldReleaseOnlyNonExpiredReservedStock() {
+                LocalDate today = LocalDate.now();
+                Maintenance delayedMaintenance = createMaintenance(MaintenanceStatus.DELAYED, today.minusDays(2));
+
+                MaintenanceDetail expiredDetail = new MaintenanceDetail();
+                expiredDetail.setExpirationDate(today.minusDays(1));
+                expiredDetail.setQuantityToRestock(2);
+
+                MaintenanceDetail futureDetail = new MaintenanceDetail();
+                futureDetail.setExpirationDate(today.plusDays(1));
+                futureDetail.setQuantityToRestock(3);
+
+                delayedMaintenance.setMaintenanceDetails(List.of(expiredDetail, futureDetail));
+
+                when(maintenanceRepository.findPendingMaintenancesByMaintenanceDateAfter(MaintenanceStatus.PENDING, today.minusDays(1))).thenReturn(List.of());
+                when(maintenanceRepository.findDelayedMaintenanceByDetailsExpirationDate(MaintenanceStatus.DELAYED, today)).thenReturn(List.of(delayedMaintenance));
+
+                maintenanceTask.checkAllMaintenances();
+
+                verify(maintenanceDetailService, never()).releaseReservedStock(expiredDetail, delayedMaintenance.getAdministrator());
+                verify(maintenanceDetailService).releaseReservedStock(futureDetail, delayedMaintenance.getAdministrator());
+                verify(maintenanceRepository).save(delayedMaintenance);
+            }
         }
     }
 }

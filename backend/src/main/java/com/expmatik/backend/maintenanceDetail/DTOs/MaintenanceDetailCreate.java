@@ -2,7 +2,6 @@ package com.expmatik.backend.maintenanceDetail.DTOs;
 
 import java.time.LocalDate;
 
-import com.expmatik.backend.maintenanceDetail.MaintenanceDetail;
 import com.expmatik.backend.validation.ValidBarcode;
 
 import jakarta.validation.constraints.FutureOrPresent;
@@ -29,15 +28,5 @@ public record MaintenanceDetailCreate(
     @ValidBarcode
     String barcode
 ) {
-
-    public static MaintenanceDetailCreate fromMaintenanceDetail(MaintenanceDetail maintenanceDetail) {
-        return new MaintenanceDetailCreate(
-            maintenanceDetail.getQuantityToRestock(),
-            maintenanceDetail.getExpirationDate(),
-            maintenanceDetail.getRowNumber(),
-            maintenanceDetail.getColumnNumber(),
-            maintenanceDetail.getProduct().getBarcode()
-        );
-    }
 
 }

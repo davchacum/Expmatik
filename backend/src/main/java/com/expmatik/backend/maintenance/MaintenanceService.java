@@ -133,6 +133,21 @@ public class MaintenanceService {
     }
 
     @Transactional
+    public Maintenance cancelMaintenance(UUID id, User user) {
+        Maintenance maintenance = findById(id, user);
+        if (!(maintenance.getStatus() == MaintenanceStatus.PENDING || maintenance.getStatus() == MaintenanceStatus.DELAYED)) {
+            throw new BadRequestException("Only maintenance records in PENDING or DELAYED status can be canceled.");
+        }
+
+        for (MaintenanceDetail detail : maintenance.getMaintenanceDetails()) {
+            maintenanceDetailService.releaseReservedStock(detail, user);
+        }
+
+        maintenance.setStatus(MaintenanceStatus.CANCELED);
+        return save(maintenance);
+    }
+
+    @Transactional
     public void deleteMaintenance(UUID id, User user) {
         Maintenance maintenance = findById(id, user);
         if (maintenance.getStatus() != MaintenanceStatus.DRAFT) {

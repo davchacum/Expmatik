@@ -68,6 +68,13 @@ public class MaintenanceController {
         return ResponseEntity.ok(MaintenanceResponse.fromMaintenance(maintenanceService.completedMaintenance(id, user)));
     }
 
+    @PatchMapping("/{id}/canceled")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    public ResponseEntity<?> cancelMaintenance(@PathVariable UUID id) {
+        User user = userService.getUserProfile();
+        return ResponseEntity.ok(MaintenanceResponse.fromMaintenance(maintenanceService.cancelMaintenance(id, user)));
+    }
+
     @PatchMapping("/{id}/pending")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> pendingMaintenance(@PathVariable UUID id) {

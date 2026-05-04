@@ -807,15 +807,19 @@ public class MaintenanceIntegrationTest {
                         .andExpect(status().isNotFound());
             }
 
-            //incrementing stock beyond max capacity should return 409
             @Test
-            @DisplayName("Should return 409 when trying to update maintenance status to COMPLETED but vending slot stock would exceed max capacity")
+            @DisplayName("Should complete successfully and return to inventory when slot overflow or expired products — no error thrown")
             @WithUserDetails("repo@expmatik.com")
-            void testCompletedMaintenance_StockExceedsMaxCapacity_shouldReturn409() throws Exception {
+            void testCompletedMaintenance_SlotOverflowOrExpiredProduct_shouldReturn200AndCompleteGracefully() throws Exception {
+                // maintenance 000000000010: slot maxCapacity=5, currentStock=4, detail qty=2, expiration 2026-03-25 (past)
+                // Expected: expired product returned to inventory, completion succeeds
                 mockMvc.perform(MockMvcRequestBuilders.patch("/api/maintenances/{id}/completed", "00000000-0000-0000-0000-000000000010")
                                                 .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(status().isConflict())
-                        .andExpect(jsonPath("$.message").value("Cannot add stock to a vending slot that exceeds its maximum capacity."));
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.id").value("00000000-0000-0000-0000-000000000010"))
+                        .andExpect(jsonPath("$.status").value("COMPLETED"))
+                        .andExpect(jsonPath("$.maintenanceDetails[0].quantityRestocked").value(0))
+                        .andExpect(jsonPath("$.maintenanceDetails[0].quantityReturned").value(2));
             }
         }
     }
@@ -950,26 +954,6 @@ public class MaintenanceIntegrationTest {
             }
 
             @Test
-            @DisplayName("Should return 400 when total quantity to restock exceeds vending slot capacity")
-            @WithUserDetails("admin@expmatik.com")
-            void testAddMaintenanceDetail_ExceedingVendingSlotCapacity_shouldReturn400() throws Exception {
-
-                MaintenanceDetailCreate maintenanceDetailCreate = new MaintenanceDetailCreate(
-                        100,
-                        null,
-                        1,
-                        1,
-                        "20000000"
-                );
-
-                mockMvc.perform(MockMvcRequestBuilders.post("/api/maintenances/{id}/details", "00000000-0000-0000-0000-000000000004")
-                                                        .contentType(MediaType.APPLICATION_JSON)
-                                                        .content(objectMapper.writeValueAsString(maintenanceDetailCreate)))
-                        .andExpect(status().isBadRequest())
-                        .andExpect(jsonPath("$.message").value("The total quantity to restock for this slot: A1 exceeds its maximum capacity."));
-            }
-
-            @Test
             @DisplayName("Should return 409 when inventory stock is insufficient")
             @WithUserDetails("admin@expmatik.com")
             void testAddMaintenanceDetail_InsufficientInventoryStock_shouldReturn409() throws Exception {
@@ -1062,6 +1046,105 @@ public class MaintenanceIntegrationTest {
             }
 
 
+        }
+    }
+
+    @Nested
+    @DisplayName("PATCH /api/maintenances/{id}/canceled")
+    class CancelMaintenance {
+
+        @Nested
+        @DisplayName("Success cases")
+        class SuccessCases {
+
+            @Test
+            @DisplayName("Should cancel maintenance from PENDING and return stock to inventory")
+            @WithUserDetails("admin@expmatik.com")
+            void testCancelMaintenance_FromPending_shouldCancelAndReturnStock() throws Exception {
+                
+                // maintenance 000000000002: PENDING, detail qty=1 of Leche Entera (product_info stock=200)
+                mockMvc.perform(MockMvcRequestBuilders.patch("/api/maintenances/{id}/canceled", "00000000-0000-0000-0000-000000000002")
+                                                .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.id").value("00000000-0000-0000-0000-000000000002"))
+                        .andExpect(jsonPath("$.status").value("CANCELED"));
+
+                UUID productId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+                mockMvc.perform(get("/api/product-info/get-or-create-product/" + productId))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.productId").value(productId.toString()))
+                        .andExpect(jsonPath("$.stockQuantity").value(201));
+            }
+
+            @Test
+            @DisplayName("Should cancel maintenance from DELAYED and return stock to inventory")
+            @WithUserDetails("admin@expmatik.com")
+            void testCancelMaintenance_FromDelayed_shouldCancelAndReturnStock() throws Exception {
+                // maintenance 000000000007: DELAYED, detail qty=1 of Leche Entera (product_info stock=200)
+                mockMvc.perform(MockMvcRequestBuilders.patch("/api/maintenances/{id}/canceled", "00000000-0000-0000-0000-000000000007")
+                                                .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.id").value("00000000-0000-0000-0000-000000000007"))
+                        .andExpect(jsonPath("$.status").value("CANCELED"));
+
+                UUID productId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+                mockMvc.perform(get("/api/product-info/get-or-create-product/" + productId))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.stockQuantity").value(201));
+            }
+        }
+
+        @Nested
+        @DisplayName("Failure cases")
+        class FailureCases {
+
+            @Test
+            @DisplayName("Should return 400 when trying to cancel a DRAFT maintenance")
+            @WithUserDetails("admin@expmatik.com")
+            void testCancelMaintenance_FromDraft_shouldReturn400() throws Exception {
+                mockMvc.perform(MockMvcRequestBuilders.patch("/api/maintenances/{id}/canceled", "00000000-0000-0000-0000-000000000003")
+                                                .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isBadRequest())
+                        .andExpect(jsonPath("$.message").value("Only maintenance records in PENDING or DELAYED status can be canceled."));
+            }
+
+            @Test
+            @DisplayName("Should return 400 when trying to cancel a COMPLETED maintenance")
+            @WithUserDetails("admin@expmatik.com")
+            void testCancelMaintenance_FromCompleted_shouldReturn400() throws Exception {
+                mockMvc.perform(MockMvcRequestBuilders.patch("/api/maintenances/{id}/canceled", "00000000-0000-0000-0000-000000000001")
+                                                .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isBadRequest())
+                        .andExpect(jsonPath("$.message").value("Only maintenance records in PENDING or DELAYED status can be canceled."));
+            }
+
+            @Test
+            @DisplayName("Should return 400 when trying to cancel a REJECTED_EXPIRED maintenance")
+            @WithUserDetails("admin@expmatik.com")
+            void testCancelMaintenance_FromRejectedExpired_shouldReturn400() throws Exception {
+                mockMvc.perform(MockMvcRequestBuilders.patch("/api/maintenances/{id}/canceled", "00000000-0000-0000-0000-000000000008")
+                                                .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isBadRequest())
+                        .andExpect(jsonPath("$.message").value("Only maintenance records in PENDING or DELAYED status can be canceled."));
+            }
+
+            @Test
+            @DisplayName("Should return 403 when user is not an administrator")
+            @WithUserDetails("repo@expmatik.com")
+            void testCancelMaintenance_NotAdministrator_shouldReturn403() throws Exception {
+                mockMvc.perform(MockMvcRequestBuilders.patch("/api/maintenances/{id}/canceled", "00000000-0000-0000-0000-000000000002")
+                                                .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isForbidden());
+            }
+
+            @Test
+            @DisplayName("Should return 403 when administrator does not have access to the maintenance")
+            @WithUserDetails("admin2@expmatik.com")
+            void testCancelMaintenance_AdministratorWithoutAccess_shouldReturn403() throws Exception {
+                mockMvc.perform(MockMvcRequestBuilders.patch("/api/maintenances/{id}/canceled", "00000000-0000-0000-0000-000000000002")
+                                                .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isForbidden());
+            }
         }
     }
 
