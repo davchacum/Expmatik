@@ -59,6 +59,7 @@ public class SaleController {
     }
 
     @PostMapping("/real-time")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public ResponseEntity<?> realTimeSale(@RequestBody @Valid SaleRealTimeCreate request) throws AccessDeniedException {
         User currentUser = userService.getUserProfile();
         return ResponseEntity.ok(SaleResponse.fromSale(saleService.realTimeSale(request.vendingSlotId(), request.paymentMethod(), currentUser)));

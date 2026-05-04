@@ -53,6 +53,23 @@ public class VendingSlotIntegrationTest {
                                 .andExpect(jsonPath("$[0].maxCapacity").value(2))
                                 .andExpect(jsonPath("$[0].isBlocked").value(false));
                 }
+                
+                @Test
+                @DisplayName("GET /api/vending-slots/{id} - valid ID but MAINTAINER role should return vending slot details")
+                @WithUserDetails("repo@expmatik.com")
+                public void testGetVendingSlotById_ValidIdButMAINTAINERRole_ShouldReturnVendingSlotDetails() throws Exception {
+                        UUID vendingMachineId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+
+                        mockMvc.perform(get("/api/vending-slots/vending-machines/{machineId}", vendingMachineId))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.length()").value(1))
+                                .andExpect(jsonPath("$[0].id").exists())
+                                .andExpect(jsonPath("$[0].product").exists())
+                                .andExpect(jsonPath("$[0].currentStock").value(0))
+                                .andExpect(jsonPath("$[0].maxCapacity").value(2))
+                                .andExpect(jsonPath("$[0].isBlocked").value(false));
+                }
+
         }
 
         @Nested
@@ -63,16 +80,6 @@ public class VendingSlotIntegrationTest {
                 @DisplayName("GET /api/vending-slots/{id} - valid ID but unauthorized user should return 403 Forbidden")
                 @WithUserDetails("admin2@expmatik.com")
                 public void testGetVendingSlotById_ValidIdButUnauthorizedUser_ShouldReturn403Forbidden() throws Exception {
-                        UUID vendingMachineId = UUID.fromString("00000000-0000-0000-0000-000000000001");
-
-                        mockMvc.perform(get("/api/vending-slots/vending-machines/{machineId}", vendingMachineId))
-                                .andExpect(status().isForbidden());
-                }
-
-                @Test
-                @DisplayName("GET /api/vending-slots/{id} - not ADMINISTRATOR role should return 403 Forbidden")
-                @WithUserDetails("repo@expmatik.com")
-                public void testGetVendingSlotById_NotAdministratorRole_ShouldReturn403Forbidden() throws Exception {
                         UUID vendingMachineId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
                         mockMvc.perform(get("/api/vending-slots/vending-machines/{machineId}", vendingMachineId))

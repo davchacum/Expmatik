@@ -58,6 +58,20 @@ public class VendingMachineIntegrationTest {
                         .andExpect(jsonPath("$.rowCount").value(1))
                         .andExpect(jsonPath("$.columnCount").value(1));
             }
+
+            @Test
+            @WithUserDetails("repo@expmatik.com")
+            void testGetVendingMachineById_MaintainerRole_shouldReturnVendingMachine() throws Exception {
+                UUID vendingMachineId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+
+                mockMvc.perform(get("/api/vending-machines/{id}", vendingMachineId))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.id").value(vendingMachineId.toString()))
+                        .andExpect(jsonPath("$.name").value("Máquina 1"))
+                        .andExpect(jsonPath("$.location").value("Edificio A, Planta Baja"))
+                        .andExpect(jsonPath("$.rowCount").value(1))
+                        .andExpect(jsonPath("$.columnCount").value(1));
+            }
         }
 
         @Nested
@@ -76,15 +90,6 @@ public class VendingMachineIntegrationTest {
             @Test
             @WithUserDetails("admin2@expmatik.com")
             void getVendingMachineById_whenUserIsNotOwner_shouldReturn403() throws Exception {
-                UUID vendingMachineId = UUID.fromString("00000000-0000-0000-0000-000000000001");
-
-                mockMvc.perform(get("/api/vending-machines/{id}", vendingMachineId))
-                        .andExpect(status().isForbidden());
-            }
-
-            @Test
-            @WithUserDetails("repo@expmatik.com")
-            void getVendingMachineById_whenUserHasNoPermissionRole_shouldReturn403() throws Exception {
                 UUID vendingMachineId = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
                 mockMvc.perform(get("/api/vending-machines/{id}", vendingMachineId))

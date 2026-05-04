@@ -66,7 +66,7 @@ public class MaintenanceDetailService {
         int availableSpace = vendingSlot.getMaxCapacity();
         int totalRequestedForSlot = alreadyRequestedForSlot + newDetail.getQuantityToRestock();
 
-        if (totalRequestedForSlot > availableSpace) {
+        if (totalRequestedForSlot >= availableSpace) {
             throw new ConflictException(
                 "The total quantity requested for this vending slot exceeds the available space. Available space: "
                 + availableSpace + ", requested: " + totalRequestedForSlot + "."
