@@ -354,7 +354,7 @@ public class MaintenanceDetailServiceTest {
                 @DisplayName("Should throw ConflictException when total maintenance details exceed slot capacity")
                 void createMaintenanceDetail_TotalQuantityExceedsSlotCapacity_ThrowsConflictException() {
                         MaintenanceDetailCreate createRequest = new MaintenanceDetailCreate(
-                                        9,
+                                        10,
                                         LocalDate.now().plusDays(1),
                                         1,
                                         1,
@@ -367,12 +367,12 @@ public class MaintenanceDetailServiceTest {
                                         createRequest.columnNumber(),
                                         maintainer
                         )).thenReturn(vendingSlot);
-                when(maintenanceDetailRepository.sumQuantityToRestockByMaintenanceIdAndSlotCoordinates(
-                        maintenance.getId(),
-                        vendingMachine.getName(),
-                        createRequest.rowNumber(),
-                        createRequest.columnNumber()
-                )).thenReturn(1);
+                        when(maintenanceDetailRepository.sumQuantityToRestockByMaintenanceIdAndSlotCoordinates(
+                                maintenance.getId(),
+                                vendingMachine.getName(),
+                                createRequest.rowNumber(),
+                                createRequest.columnNumber()
+                        )).thenReturn(1);
 
                         assertThrows(ConflictException.class, () -> {
                                 maintenanceDetailService.createMaintenanceDetail(maintenance, createRequest, maintainer);
