@@ -9,7 +9,8 @@ import CreateInvoice from "./invoice/createInvoice";
 import EditInvoice from "./invoice/editInvoice";
 import ImportInvoiceCSV from "./invoice/importInvoiceCSV";
 import Invoices from "./invoice/invoiceView";
-import MaintenanceMachineView from "./maintenance/maintenanceMachineView";
+import MaintenanceDetails from "./maintenance/maintenanceDetails";
+import MaintenanceChat from "./maintenance/MaintenanceChat";
 import MaintenancesView from "./maintenance/maintenanceView";
 import NotificationsView from "./notification/notificationView";
 import PrivateRoute from "./PrivateRoute";
@@ -152,10 +153,19 @@ const AppRouter = () => {
       />
 
       <Route
-        path="/maintenance/machine/:id"
+        path="/maintenance/:id"
         element={
           <PrivateRoute allowedRoles={["ADMINISTRATOR", "MAINTAINER"]}>
-            <MaintenanceMachineView />
+            <MaintenanceDetails />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/maintenance/:id/chat"
+        element={
+          <PrivateRoute allowedRoles={["ADMINISTRATOR", "MAINTAINER"]}>
+            <MaintenanceChat />
           </PrivateRoute>
         }
       />

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 import Modal from "../components/Modal";
 import "../global-form.css";
@@ -7,10 +7,8 @@ import "../global-list.css";
 import { useAuthenticatedUser } from "../hooks/useAuthenticatedUser";
 import { useRequireTokenRedirect } from "../hooks/useRequireTokenRedirect";
 
-const MaintenanceMachineView = () => {
-  const { id } = useParams();
-  const [searchParams] = useSearchParams();
-  const maintenanceId = searchParams.get("maintenanceId");
+const MaintenanceDetails = () => {
+  const { id: maintenanceId } = useParams();
   const navigate = useNavigate();
   const token = localStorage.getItem("accessToken");
   useRequireTokenRedirect(token, navigate);
@@ -35,13 +33,16 @@ const MaintenanceMachineView = () => {
   const fetchData = useCallback(async () => {
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      const [mtRes, mRes, sRes] = await Promise.all([
-        fetch(`/api/maintenances/${maintenanceId}`, { headers }),
-        fetch(`/api/vending-machines/${id}`, { headers }),
-        fetch(`/api/vending-slots/vending-machines/${id}`, { headers }),
+      const mtRes = await fetch(`/api/maintenances/${maintenanceId}`, { headers });
+      if (!mtRes.ok) throw new Error("Error cargando datos");
+      const mt = await mtRes.json();
+      setMaintenance(mt);
+      const machineId = mt.vendingMachine.id;
+      const [mRes, sRes] = await Promise.all([
+        fetch(`/api/vending-machines/${machineId}`, { headers }),
+        fetch(`/api/vending-slots/vending-machines/${machineId}`, { headers }),
       ]);
-      if (!mtRes.ok || !mRes.ok || !sRes.ok) throw new Error("Error cargando datos");
-      setMaintenance(await mtRes.json());
+      if (!mRes.ok || !sRes.ok) throw new Error("Error cargando datos");
       setMachine(await mRes.json());
       setSlots(await sRes.json());
     } catch (err) {
@@ -49,7 +50,7 @@ const MaintenanceMachineView = () => {
     } finally {
       setLoading(false);
     }
-  }, [id, maintenanceId, token]);
+  }, [maintenanceId, token]);
 
   useEffect(() => {
     fetchData();
@@ -302,6 +303,15 @@ const MaintenanceMachineView = () => {
             </div>
           </div>
           <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "flex-end" }}>
+            {maintenance.status !== "DRAFT" && (
+              <button
+                onClick={() => navigate(`/maintenance/${maintenanceId}/chat`)}
+                className="action-btn-green"
+                style={{ padding: "8px 14px", fontSize: "0.85rem", whiteSpace: "nowrap" }}
+              >
+                Chat
+              </button>
+            )}
             {getStatusButtons().map((button) => (
               <button
                 key={button.status}
@@ -796,4 +806,4 @@ const MaintenanceMachineView = () => {
   );
 };
 
-export default MaintenanceMachineView;
+export default MaintenanceDetails;

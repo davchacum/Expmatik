@@ -65,12 +65,19 @@ public class ChatService {
     public Chat markAsRead(UUID chatId, User user) {
         Chat chat = chatRepository.findById(chatId)
             .orElseThrow(() -> new ResourceNotFoundException("Chat message not found with id: " + chatId));
-        maintenanceService.findById(chat.getMaintenance().getId(), user);
+        Maintenance maintenance = maintenanceService.findById(chat.getMaintenance().getId(), user);
         if (chat.getSender().getId().equals(user.getId())) {
             throw new AccessDeniedException("Cannot mark your own message as read.");
         }
         chat.setReadAt(LocalDateTime.now());
-        return chatRepository.save(chat);
+        Chat saved = chatRepository.save(chat);
+        chatRealtimePublisher.publishMessage(
+            maintenance.getAdministrator().getEmail(),
+            maintenance.getMaintainer().getEmail(),
+            maintenance.getId(),
+            ChatResponse.fromChat(saved)
+        );
+        return saved;
     }
 
 }

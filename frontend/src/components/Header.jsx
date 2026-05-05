@@ -39,6 +39,10 @@ const Header = () => {
     if (path === "/sales") return "Registro de Ventas";
     if (path === "/sales/create/csv") return "Importar Ventas desde CSV";
     if (path === "/maintenance") return "Tareas de Mantenimiento";
+    if (path.startsWith("/maintenance/") && path.endsWith("/chat"))
+      return "Chat de Mantenimiento";
+    if (path.startsWith("/maintenance/"))
+      return "Detalles de Mantenimiento";
     if (path === "/notifications") return "Notificaciones";
     return "Expmatik";
   };

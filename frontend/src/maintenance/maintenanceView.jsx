@@ -507,7 +507,7 @@ const Maintenances = () => {
                         onClick={() => {
                           if (m.vendingMachine?.id && m.id) {
                             navigate(
-                              `/maintenance/machine/${m.vendingMachine.id}?maintenanceId=${m.id}`,
+                              `/maintenance/${m.id}`,
                             );
                           }
                         }}
