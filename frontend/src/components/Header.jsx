@@ -43,6 +43,7 @@ const Header = () => {
       return "Chat de Mantenimiento";
     if (path.startsWith("/maintenance/"))
       return "Detalles de Mantenimiento";
+    if (path === "/predictions") return "Predicciones de Ventas";
     if (path === "/notifications") return "Notificaciones";
     return "Expmatik";
   };

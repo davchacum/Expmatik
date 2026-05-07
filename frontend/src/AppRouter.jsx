@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import AnalyticsView from "./analytics/analyticsView";
+import PredictionView from "./analytics/predictionView";
 import Login from "./auth/login";
 import Profile from "./auth/profile";
 import Register from "./auth/register";
@@ -184,6 +185,14 @@ const AppRouter = () => {
         element={
           <PrivateRoute allowedRoles={["ADMINISTRATOR"]}>
             <AnalyticsView />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/predictions"
+        element={
+          <PrivateRoute allowedRoles={["ADMINISTRATOR"]}>
+            <PredictionView />
           </PrivateRoute>
         }
       />

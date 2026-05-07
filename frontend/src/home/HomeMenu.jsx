@@ -33,6 +33,12 @@ const HomeMenu = () => {
       roles: ["ADMINISTRATOR"],
     },
     {
+      title: "Predicciones",
+      desc: "Predicción de ventas por producto.",
+      path: "/predictions",
+      roles: ["ADMINISTRATOR"],
+    },
+    {
       title: "Facturas",
       desc: "Carga y gestión de facturas.",
       path: "/invoices",
