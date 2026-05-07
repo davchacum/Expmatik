@@ -40,6 +40,7 @@ public interface AnalyticsRepository extends JpaRepository<Sale, UUID> {
         AND (:productName IS NULL OR LOWER(b.product.name) LIKE LOWER(CONCAT('%', CAST(:productName AS string), '%')))
         AND (:brand IS NULL OR LOWER(b.product.brand) LIKE LOWER(CONCAT('%', CAST(:brand AS string), '%')))
         GROUP BY b.product.id, b.product.name
+        ORDER BY SUM(b.unitPrice * b.quantity) DESC
         """,
         countQuery = """
         SELECT COUNT(DISTINCT b.product.id) FROM Batch b
@@ -84,6 +85,7 @@ public interface AnalyticsRepository extends JpaRepository<Sale, UUID> {
         AND s.status = :status
         AND (:machineId IS NULL OR s.vendingSlot.vendingMachine.id = :machineId)
         GROUP BY s.vendingSlot.vendingMachine.id, s.vendingSlot.vendingMachine.name
+        ORDER BY SUM(s.totalAmount) DESC
         """,
         countQuery = """
         SELECT COUNT(DISTINCT s.vendingSlot.vendingMachine.id) FROM Sale s
@@ -112,6 +114,7 @@ public interface AnalyticsRepository extends JpaRepository<Sale, UUID> {
         AND (:productName IS NULL OR LOWER(s.product.name) LIKE LOWER(CONCAT('%', CAST(:productName AS string), '%')))
         AND (:brand IS NULL OR LOWER(s.product.brand) LIKE LOWER(CONCAT('%', CAST(:brand AS string), '%')))
         GROUP BY s.product.id, s.product.name
+        ORDER BY SUM(s.totalAmount) DESC
         """,
         countQuery = """
         SELECT COUNT(DISTINCT s.product.id) FROM Sale s

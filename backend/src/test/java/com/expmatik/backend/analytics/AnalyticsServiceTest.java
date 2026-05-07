@@ -310,7 +310,7 @@ public class AnalyticsServiceTest {
                     .thenReturn(expensesTotal);
                 when(analyticsRepository.getIncomeBreakdownByProduct(eq(userId), eq(startDateTime), eq(endDateTime), eq(TransactionStatus.SUCCESS), eq(machineId), eq(productName), eq(brand), any(Pageable.class)))
                     .thenReturn(new PageImpl<>(List.<Object[]>of(incomeRow)));
-                when(analyticsRepository.getExpensesBreakdownByProduct(userId, startDate, endDate, InvoiceStatus.RECEIVED, productName, brand, pageable))
+                when(analyticsRepository.getExpensesBreakdownByProduct(eq(userId), eq(startDate), eq(endDate), eq(InvoiceStatus.RECEIVED), eq(productName), eq(brand), any(Pageable.class)))
                     .thenReturn(new PageImpl<>(List.<Object[]>of(expensesRow)));
 
                 AnalyticsResponse response = analyticsService.getAnalytics(
@@ -336,7 +336,7 @@ public class AnalyticsServiceTest {
                     .thenReturn(expensesTotal);
                 when(analyticsRepository.getIncomeBreakdownByProduct(eq(userId), eq(startDateTime), eq(endDateTime), eq(TransactionStatus.SUCCESS), eq(machineId), eq(productName), eq(brand), any(Pageable.class)))
                     .thenReturn(new PageImpl<>(List.<Object[]>of(incomeRow)));
-                when(analyticsRepository.getExpensesBreakdownByProduct(userId, startDate, endDate, InvoiceStatus.RECEIVED, productName, brand, pageable))
+                when(analyticsRepository.getExpensesBreakdownByProduct(eq(userId), eq(startDate), eq(endDate), eq(InvoiceStatus.RECEIVED), eq(productName), eq(brand), any(Pageable.class)))
                     .thenReturn(new PageImpl<>(List.<Object[]>of(expensesRow)));
 
                 AnalyticsResponse response = analyticsService.getAnalytics(
@@ -356,7 +356,7 @@ public class AnalyticsServiceTest {
                     .thenReturn(null);
                 when(analyticsRepository.getIncomeBreakdownByProduct(eq(userId), eq(startDateTime), eq(endDateTime), eq(TransactionStatus.SUCCESS), eq(machineId), eq(productName), eq(brand), any(Pageable.class)))
                     .thenReturn(new PageImpl<>(List.of()));
-                when(analyticsRepository.getExpensesBreakdownByProduct(userId, startDate, endDate, InvoiceStatus.RECEIVED, productName, brand, pageable))
+                when(analyticsRepository.getExpensesBreakdownByProduct(eq(userId), eq(startDate), eq(endDate), eq(InvoiceStatus.RECEIVED), eq(productName), eq(brand), any(Pageable.class)))
                     .thenReturn(new PageImpl<>(List.of()));
 
                 AnalyticsResponse response = analyticsService.getAnalytics(
@@ -368,8 +368,8 @@ public class AnalyticsServiceTest {
             }
 
             @Test
-            @DisplayName("getAnalytics should use zero income for products not present in income breakdown")
-            void testGetAnalytics_Profit_ProductNotInIncome_shouldUseZeroAsIncome() {
+            @DisplayName("getAnalytics should include products from both income and expenses, sorted by profit DESC")
+            void testGetAnalytics_Profit_ProductsFromBothSources_shouldMergeAndSort() {
                 BigDecimal incomeTotal = new BigDecimal("500.00");
                 BigDecimal expensesTotal = new BigDecimal("300.00");
 
@@ -382,7 +382,7 @@ public class AnalyticsServiceTest {
                     .thenReturn(expensesTotal);
                 when(analyticsRepository.getIncomeBreakdownByProduct(eq(userId), eq(startDateTime), eq(endDateTime), eq(TransactionStatus.SUCCESS), eq(machineId), eq(productName), eq(brand), any(Pageable.class)))
                     .thenReturn(new PageImpl<>(List.<Object[]>of(incomeRow)));
-                when(analyticsRepository.getExpensesBreakdownByProduct(userId, startDate, endDate, InvoiceStatus.RECEIVED, productName, brand, pageable))
+                when(analyticsRepository.getExpensesBreakdownByProduct(eq(userId), eq(startDate), eq(endDate), eq(InvoiceStatus.RECEIVED), eq(productName), eq(brand), any(Pageable.class)))
                     .thenReturn(new PageImpl<>(List.<Object[]>of(expensesRow)));
 
                 AnalyticsResponse response = analyticsService.getAnalytics(
@@ -390,10 +390,14 @@ public class AnalyticsServiceTest {
                 );
 
                 assertNotNull(response);
-                AnalyticsItem item = response.analyticsItem().getContent().get(0);
-                assertEquals("Product A", item.label());
-                assertEquals(new BigDecimal("-300.00"), item.amount());
-                assertEquals(0L, item.count());
+                List<AnalyticsItem> items = response.analyticsItem().getContent();
+                assertEquals(2, items.size());
+                assertEquals("Product B", items.get(0).label());
+                assertEquals(new BigDecimal("500.00"), items.get(0).amount());
+                assertEquals("Product A", items.get(1).label());
+                assertEquals(new BigDecimal("-300.00"), items.get(1).amount());
+                assertEquals(0L, items.get(0).count());
+                assertEquals(0L, items.get(1).count());
             }
         }
     }
