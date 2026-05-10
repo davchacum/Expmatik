@@ -93,13 +93,13 @@ public class MaintenanceService {
 
     private void createPendingNotification(Maintenance maintenance) {
         String message = "Tienes una tarea de mantenimiento asignada para el día " + maintenance.getMaintenanceDate() + ". Por favor, revisa el mantenimiento y realízalo lo antes posible.";
-        String link = "Unknown";
+        String link = "/maintenance/" + maintenance.getId();
         notificationService.createNotification(NotificationType.ASSIGNED_RESTOCKING, message, link, maintenance.getMaintainer());
     }
 
     private void createCompletedNotification(Maintenance maintenance) {
         String message = "La tarea de mantenimiento asignada a " + maintenance.getMaintainer().getEmail() + " para el día " + maintenance.getMaintenanceDate() + " ha sido completada.";
-        String link = "Unknown";
+        String link = "/maintenance/" + maintenance.getId();
         notificationService.createNotification(NotificationType.COMPLETED_RESTOCKING, message, link, maintenance.getAdministrator());
     }
 

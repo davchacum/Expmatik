@@ -57,25 +57,25 @@ public class MaintenanceTask {
 
     private void createDelayNotificationMaintainer(Maintenance maintenance) {
         String message = "Tienes una tarea de mantenimiento asignada para el día de ayer y todavía no la has completado. Por favor, revisa el mantenimiento y realízalo lo antes posible.";
-        String link = "Unknown";
+        String link = "/maintenance/" + maintenance.getId();
         notificationService.createNotification(NotificationType.DELAYED_MAINTENANCE, message, link, maintenance.getMaintainer());
     }
 
     private void createDelayNotificationAdministrator(Maintenance maintenance) {
         String message = "La tarea de mantenimiento asignada a " + maintenance.getMaintainer().getEmail() + " para el día de ayer todavía no ha sido completada. Por favor, revisa el mantenimiento y contacta con el mantenedor para que lo realice lo antes posible.";
-        String link = "Unknown";
+        String link = "/maintenance/" + maintenance.getId();
         notificationService.createNotification(NotificationType.DELAYED_MAINTENANCE, message, link, maintenance.getAdministrator());
     }
 
     private void createExpirationNotificationMaintainer(Maintenance maintenance) {
         String message = "Tienes una tarea de mantenimiento asignada que ha caducado. Ya no se puede completar.";
-        String link = "Unknown";
+        String link = "/maintenance/" + maintenance.getId();
         notificationService.createNotification(NotificationType.EXPIRED_MAINTENANCE, message, link, maintenance.getMaintainer());
     }
 
     private void createExpirationNotificationAdministrator(Maintenance maintenance) {
         String message = "La tarea de mantenimiento asignada a " + maintenance.getMaintainer().getEmail() + " ha caducado. Por favor, revisa el mantenimiento y contacta con el mantenedor para que lo realice lo antes posible.";
-        String link = "Unknown";
+        String link = "/maintenance/" + maintenance.getId();
         notificationService.createNotification(NotificationType.EXPIRED_MAINTENANCE, message, link, maintenance.getAdministrator());
     }
 }
