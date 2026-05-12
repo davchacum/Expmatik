@@ -60,9 +60,10 @@ const MaintenanceChat = () => {
   }, [maintenanceId, token, user, markAsRead]);
 
   useEffect(() => {
-    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+    const wsBase = import.meta.env.VITE_WS_URL ||
+      `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}`;
     const client = new Client({
-      brokerURL: `${protocol}://${window.location.host}/ws`,
+      brokerURL: `${wsBase}/ws`,
       connectHeaders: { Authorization: `Bearer ${token}` },
       reconnectDelay: 5000,
       onConnect: () => {
