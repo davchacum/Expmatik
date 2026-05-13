@@ -254,7 +254,7 @@ public class SalesPredictionServiceTest {
 
                 salesPredictionService.predict(barcode, user);
 
-                assertTrue(salesPredictionService.getModelsByProduct().containsKey(barcode));
+                assertTrue(salesPredictionService.getModelsByProduct().containsKey(user.getId() + ":" + barcode));
             }
         }
     }
