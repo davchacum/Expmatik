@@ -61,6 +61,20 @@ docker compose down -v     # parar y borrar datos
 
 ---
 
+## Cuentas de prueba
+
+| Email | Contraseña | Rol |
+|---|---|---|
+| admin@expmatik.com | admin123 | Administrador |
+| admin2@expmatik.com | admin123 | Administrador |
+| repo@expmatik.com | repo123 | Reponedor |
+| repo2@expmatik.com | repo123 | Reponedor |
+| prediction@expmatik.com | repo123 | Administrador |
+
+> **prediction@expmatik.com** es la cuenta que contiene datos históricos de ventas necesarios para que la funcionalidad de predicción funcione correctamente.
+
+---
+
 ## Tests
 
 ```bash
