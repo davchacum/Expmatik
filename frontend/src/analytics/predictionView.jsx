@@ -28,6 +28,22 @@ const MONTH_LABELS = {
   DECEMBER: "Diciembre",
 };
 
+const MONTH_ORDER = [
+  "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
+  "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER",
+];
+
+const sortFromCurrentMonth = (predictions) => {
+  const currentMonthIndex = new Date().getMonth();
+  const ordered = [
+    ...MONTH_ORDER.slice(currentMonthIndex),
+    ...MONTH_ORDER.slice(0, currentMonthIndex),
+  ];
+  return [...predictions].sort(
+    (a, b) => ordered.indexOf(a.month) - ordered.indexOf(b.month)
+  );
+};
+
 const r2Reliability = (r2) => {
   if (r2 >= 0.7) return { label: "Fiable", color: "#16a34a" };
   if (r2 >= 0.4) return { label: "Poco fiable", color: "#d97706" };
@@ -83,11 +99,12 @@ const PredictionView = () => {
     }
   }, [selectedProduct, token]);
 
-  const chartData =
-    prediction?.predictions?.map((p) => ({
-      month: MONTH_LABELS[p.month] ?? p.month,
-      ventas: Math.round(p.predictedSales * 10) / 10,
-    })) ?? [];
+  const sortedPredictions = prediction ? sortFromCurrentMonth(prediction.predictions) : [];
+
+  const chartData = sortedPredictions.map((p) => ({
+    month: MONTH_LABELS[p.month] ?? p.month,
+    ventas: Math.round(p.predictedSales * 10) / 10,
+  }));
 
   const reliability = prediction ? r2Reliability(prediction.modelR2) : null;
 
@@ -263,7 +280,7 @@ const PredictionView = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {prediction.predictions.map((p) => (
+                    {sortedPredictions.map((p) => (
                       <tr key={p.month}>
                         <td>{MONTH_LABELS[p.month] ?? p.month}</td>
                         <td style={{ textAlign: "right", fontWeight: "600" }}>

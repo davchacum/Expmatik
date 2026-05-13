@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://expmatik-deploy.onrender.com/api/:path*"
+      "destination": "https://expmatik.onrender.com/api/:path*"
     },
     {
       "source": "/(.*)",
