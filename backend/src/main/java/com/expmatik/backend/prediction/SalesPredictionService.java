@@ -29,8 +29,8 @@ public class SalesPredictionService {
         this.saleRepository = saleRepository;
     }
 
-    public PredictionResponse predict(String barcode,User currentUser) {
-        SalesPredictionModel model = getModel(barcode,currentUser);
+    public PredictionResponse predict(String barcode, User currentUser) {
+        SalesPredictionModel model = getModel(barcode, currentUser);
 
 
 
@@ -45,8 +45,9 @@ public class SalesPredictionService {
         return modelsByProduct;
     }
 
-    private SalesPredictionModel getModel(String barcode,User currentUser) {
-        return modelsByProduct.computeIfAbsent(barcode, b -> buildModel(b,currentUser));
+    private SalesPredictionModel getModel(String barcode, User currentUser) {
+        String cacheKey = currentUser.getId() + ":" + barcode;
+        return modelsByProduct.computeIfAbsent(cacheKey, k -> buildModel(barcode, currentUser));
     }
 
     private SalesPredictionModel buildModel(String barcode,User currentUser) {

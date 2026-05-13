@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   CartesianGrid,
@@ -55,26 +55,18 @@ const PredictionView = () => {
   const token = localStorage.getItem("accessToken");
   useRequireTokenRedirect(token, navigate);
 
-  const [products, setProducts] = useState([]);
-  const [productSearch, setProductSearch] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [barcode, setBarcode] = useState("");
   const [prediction, setPrediction] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const params = new URLSearchParams({ size: 50 });
-    if (productSearch) params.set("name", productSearch);
-    fetch(`/api/products?${params}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => (r.ok ? r.json() : { content: [] }))
-      .then((d) => setProducts(d.content ?? []))
-      .catch(console.error);
-  }, [token, productSearch]);
-
   const handlePredict = useCallback(async () => {
-    if (!selectedProduct) return;
+    const trimmed = barcode.trim();
+    if (!trimmed) return;
+    if (!/^\d{8,13}$/.test(trimmed)) {
+      setError("El código de barras debe tener entre 8 y 13 dígitos numéricos.");
+      return;
+    }
     setLoading(true);
     setError("");
     setPrediction(null);
@@ -85,7 +77,7 @@ const PredictionView = () => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ barcode: selectedProduct.barcode }),
+        body: JSON.stringify({ barcode: trimmed }),
       });
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
@@ -97,7 +89,7 @@ const PredictionView = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedProduct, token]);
+  }, [barcode, token]);
 
   const sortedPredictions = prediction ? sortFromCurrentMonth(prediction.predictions) : [];
 
@@ -118,45 +110,24 @@ const PredictionView = () => {
           style={{ padding: "16px", marginBottom: "20px" }}
         >
           <h2 id="product-heading" className="section-label" style={{ marginBottom: "14px" }}>
-            Seleccionar producto
+            Introducir código de barras
           </h2>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", alignItems: "flex-end" }}>
-            <div className="input-group" style={{ margin: 0, minWidth: "180px", flex: 1 }}>
-              <label htmlFor="p-search" className="input-label">Buscar por nombre</label>
+            <div className="input-group" style={{ margin: 0, flex: 1 }}>
+              <label htmlFor="barcode-input" className="input-label">Código de barras</label>
               <input
-                id="p-search"
+                id="barcode-input"
                 type="text"
                 className="dark-input"
-                placeholder="Filtrar por nombre..."
-                value={productSearch}
+                placeholder="Ej: 8410188020100"
+                value={barcode}
                 onChange={(e) => {
-                  setProductSearch(e.target.value);
-                  setSelectedProduct(null);
+                  setBarcode(e.target.value);
                   setPrediction(null);
                   setError("");
                 }}
+                onKeyDown={(e) => e.key === "Enter" && handlePredict()}
               />
-            </div>
-            <div className="input-group" style={{ margin: 0, minWidth: "550px", flex: 4 }}>
-              <label htmlFor="p-select" className="input-label">Producto</label>
-              <select
-                id="p-select"
-                className="dark-input"
-                value={selectedProduct?.id ?? ""}
-                onChange={(e) => {
-                  const product = products.find((p) => p.id === e.target.value);
-                  setSelectedProduct(product ?? null);
-                  setPrediction(null);
-                  setError("");
-                }}
-              >
-                <option value="">Selecciona un producto</option>
-                {products.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}{p.isCustom ? " (Personalizado)" : ""} — {p.barcode}
-                  </option>
-                ))}
-              </select>
             </div>
             <div className="input-group" style={{ margin: 0 }}>
               <label className="input-label" aria-hidden="true" style={{ visibility: "hidden" }}>
@@ -165,8 +136,8 @@ const PredictionView = () => {
               <button
                 className="btn-primary"
                 onClick={handlePredict}
-                disabled={!selectedProduct || loading}
-                aria-label="Generar predicción para el producto seleccionado"
+                disabled={!barcode.trim() || loading}
+                aria-label="Generar predicción para el código de barras introducido"
                 style={{ height: "44px", padding: "0 24px", fontSize: "0.85rem", whiteSpace: "nowrap" }}
               >
                 {loading ? "Calculando..." : "Predecir"}
@@ -225,7 +196,7 @@ const PredictionView = () => {
 
             <div className="form-container" style={{ padding: "20px", marginBottom: "20px" }}>
               <h3 className="section-label" style={{ marginBottom: "16px", fontSize: "0.85rem" }}>
-                Predicción mensual — {selectedProduct.name}
+                Predicción mensual — {barcode}
               </h3>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={chartData} margin={{ top: 8, right: 24, left: 8, bottom: 24 }}>
